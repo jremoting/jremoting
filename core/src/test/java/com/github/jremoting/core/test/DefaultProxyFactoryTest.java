@@ -4,15 +4,15 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.github.jremoting.core.DefaultProxyFactory;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvokePipeline;
+import com.github.jremoting.core.JdkProxyFactory;
 
 public class DefaultProxyFactoryTest {
 	
 	@Test
 	public void testGetProxy() {
-		DefaultProxyFactory proxyFactory = new DefaultProxyFactory();
+		JdkProxyFactory proxyFactory = new JdkProxyFactory();
 		
 		InvokePipeline pipeline = new InvokePipeline() {
 			
