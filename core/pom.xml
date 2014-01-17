@@ -6,4 +6,21 @@
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>core</artifactId>
+  <dependencies>
+  	<dependency>
+  		<groupId>io.netty</groupId>
+  		<artifactId>netty-all</artifactId>
+  		<version>4.0.13.Final</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>javassist</groupId>
+  		<artifactId>javassist</artifactId>
+  		<version>3.12.1.GA</version>
+  	</dependency>
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<scope>test</scope>
+	</dependency>
+  </dependencies>
 </project>
