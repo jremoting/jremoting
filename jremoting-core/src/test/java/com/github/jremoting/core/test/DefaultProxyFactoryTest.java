@@ -22,7 +22,7 @@ public class DefaultProxyFactoryTest {
 			}
 		};
 		
-	   TestService serviceProxy	= (TestService) proxyFactory.getProxy(TestService.class, pipeline);
+	   TestService serviceProxy	= (TestService) proxyFactory.getProxy(TestService.class, "1.0", pipeline);
 	   
 	   String result =  serviceProxy.hello("xhan");
 	   

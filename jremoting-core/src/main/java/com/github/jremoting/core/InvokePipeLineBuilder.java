@@ -22,7 +22,7 @@ public class InvokePipeLineBuilder {
 			throw new RemotingException("invoke pipeline filters can not be empty!");
 		}
 		
-		if(!(arrayFilters[arrayFilters.length-1] instanceof RpcInvoker)) {
+		if(!(arrayFilters[arrayFilters.length-1] instanceof FinalFilter)) {
 			throw new RemotingException("last filter in  pipeline must be one of RpcInvoker!");
 		}
 		

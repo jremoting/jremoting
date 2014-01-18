@@ -1,9 +1,9 @@
 package com.github.jremoting.core;
 
-public abstract class RpcInvoker implements InvokeFilter  {
+public abstract class FinalFilter implements InvokeFilter  {
 
 	@Override
-	public Object invoke(Invocation invocation, InvokeChain chain) {
+	public final Object invoke(Invocation invocation, InvokeChain chain) {
 		return doRpcInvoke(invocation);
 	}
 	

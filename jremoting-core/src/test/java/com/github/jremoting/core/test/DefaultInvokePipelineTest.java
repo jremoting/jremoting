@@ -22,6 +22,36 @@ public class DefaultInvokePipelineTest {
 				// TODO Auto-generated method stub
 				return null;
 			}
+
+			@Override
+			public Class<?>[] getParameterTypes() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public Class<?> getReturnType() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getServiceName() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getServiceVersion() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getMethodName() {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		};
 		InvokeFilter first = new InvokeFilter() {
 			

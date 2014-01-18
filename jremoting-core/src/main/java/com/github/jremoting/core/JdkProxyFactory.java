@@ -7,13 +7,18 @@ import java.lang.reflect.Proxy;
 public class JdkProxyFactory implements ProxyFactory {
 
 	@Override
-	public Object getProxy(Class<?> interfaceType, final InvokePipeline pipeline) {
+	public Object getProxy(final Class<?> interfaceType, final String serviceVersion, final InvokePipeline pipeline) {
 		
 		InvocationHandler invocationHandler = new InvocationHandler() {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)
 					throws Throwable {
-				return pipeline.invoke(new DefaultInvocation(args));
+				return pipeline.invoke(new DefaultInvocation(interfaceType.getName(), 
+						serviceVersion,
+						method.getName(),
+						args,
+						method.getParameterTypes(),
+						method.getReturnType()));
 			}
 		};
 		return Proxy.newProxyInstance(interfaceType.getClassLoader(), 
