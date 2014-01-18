@@ -52,6 +52,12 @@ public class DefaultInvokePipelineTest {
 				// TODO Auto-generated method stub
 				return null;
 			}
+
+			@Override
+			public String getAddress() {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		};
 		InvokeFilter first = new InvokeFilter() {
 			

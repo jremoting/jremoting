@@ -19,11 +19,11 @@ public class InvokePipeLineBuilder {
 		InvokeFilter[] arrayFilters = (InvokeFilter[]) filters.toArray();
 		
 		if(arrayFilters.length == 0){
-			throw new RemotingException("invoke pipeline filters can not be empty!");
+			throw new RpcException("invoke pipeline filters can not be empty!");
 		}
 		
 		if(!(arrayFilters[arrayFilters.length-1] instanceof FinalFilter)) {
-			throw new RemotingException("last filter in  pipeline must be one of RpcInvoker!");
+			throw new RpcException("last filter in  pipeline must be one of RpcInvoker!");
 		}
 		
 		return new DefaultInvokePipeLine(arrayFilters);

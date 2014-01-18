@@ -7,5 +7,6 @@ public interface Invocation {
 	String getServiceName();
 	String getServiceVersion();
 	String getMethodName();
+	String getAddress();
 	
 }

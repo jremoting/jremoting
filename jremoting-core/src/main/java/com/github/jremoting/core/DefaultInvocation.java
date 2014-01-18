@@ -49,4 +49,9 @@ public class DefaultInvocation implements Invocation {
 	public Class<?> getReturnType() {
 		return returnType;
 	}
+
+	@Override
+	public String getAddress() {
+		return "127.0.0.1:20880";
+	}
 }

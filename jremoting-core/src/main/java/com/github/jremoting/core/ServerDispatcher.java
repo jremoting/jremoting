@@ -1,5 +1,5 @@
 package com.github.jremoting.core;
 
-public class ServerDispatcher {
+public interface ServerDispatcher {
 
 }
