@@ -2,10 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.github.jremoting</groupId>
-    <artifactId>jremoting-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>jremoting</artifactId>
+    <version>1.0.0</version>
   </parent>
-  <artifactId>core</artifactId>
+  <artifactId>jremoting-core</artifactId>
   <dependencies>
   	<dependency>
   		<groupId>io.netty</groupId>
