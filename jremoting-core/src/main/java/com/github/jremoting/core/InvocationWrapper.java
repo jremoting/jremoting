@@ -13,10 +13,6 @@ public abstract class InvocationWrapper implements Invocation {
 		return targetInvocation.getArgs();
 	}
 
-	@Override
-	public Class<?>[] getParameterTypes() {
-		return targetInvocation.getParameterTypes();
-	}
 
 	@Override
 	public Class<?> getReturnType() {
@@ -46,6 +42,16 @@ public abstract class InvocationWrapper implements Invocation {
 	@Override
 	public long getInvocationId() {
 		return targetInvocation.getInvocationId();
+	}
+	
+	@Override
+	public String getProtocalName() {
+		return targetInvocation.getProtocalName();
+	}
+
+	@Override
+	public String getSerializeName() {
+		return targetInvocation.getSerializeName();
 	}
 
 }

@@ -24,12 +24,6 @@ public class DefaultInvokePipelineTest {
 			}
 
 			@Override
-			public Class<?>[] getParameterTypes() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
 			public Class<?> getReturnType() {
 				// TODO Auto-generated method stub
 				return null;
@@ -63,6 +57,18 @@ public class DefaultInvokePipelineTest {
 			public long getInvocationId() {
 				// TODO Auto-generated method stub
 				return 0;
+			}
+
+			@Override
+			public String getProtocalName() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getSerializeName() {
+				// TODO Auto-generated method stub
+				return null;
 			}
 		};
 		InvokeFilter first = new InvokeFilter() {

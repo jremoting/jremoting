@@ -15,6 +15,37 @@ public class JRemotingChannelBuffer implements ChannelBuffer {
 	public JRemotingChannelBuffer(ByteBuf nettyBuffer) {
 		this.nettyBuffer = nettyBuffer;
 	}
+	
+	@Override
+	public void writeLong(long value) {
+		nettyBuffer.writeLong(value);
+	}
+	@Override
+	public void writeShort(short value) {
+		nettyBuffer.writeShort(value);
+	}
+	
+	@Override
+	public void writeInt(int value) {
+		nettyBuffer.writeInt(value);
+	}
+	
+	@Override
+	public long readLong() {
+		return nettyBuffer.readLong();
+	}
+
+	@Override
+	public short readShort() {
+		return nettyBuffer.readShort();
+	}
+
+	@Override
+	public int readInt() {
+		return nettyBuffer.readInt();
+	}
+
+
 
 	@Override
 	public int compareTo(ChannelBuffer o) {
@@ -349,6 +380,7 @@ public class JRemotingChannelBuffer implements ChannelBuffer {
 	public int arrayOffset() {
 		return nettyBuffer.arrayOffset();
 	}
+
 
 
 }

@@ -14,7 +14,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.ByteToMessageCodec;
+import io.netty.handler.codec.MessageToByteEncoder;
+import io.netty.handler.codec.ReplayingDecoder;
 
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
@@ -22,6 +23,7 @@ import com.github.jremoting.core.InvocationResult;
 import com.github.jremoting.core.InvocationWrapper;
 import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.RpcFuture;
+import com.github.jremoting.exception.RpcConnectFailedException;
 import com.github.jremoting.exception.RpcInvokeTimeoutException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
@@ -56,7 +58,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 			
 		connect(invocation.getRemoteAddress());
 		
-		nettyChannel.write(invocation);
+		nettyChannel.writeAndFlush(invocation);
 	     
 		JRemotingRpcFuture rpcFuture = new JRemotingRpcFuture(invocation);
 
@@ -93,7 +95,9 @@ public class JRemotingClientChannel implements InvocationHolder   {
 						.remoteAddress(remoteAddress)
 						.handler(new ChannelInitializer<SocketChannel>() {
 							public void initChannel(SocketChannel ch) throws Exception {
-								ch.pipeline().addLast(new NettyClientCodec(), new NettyClientHandler());
+				
+								ch.pipeline().addLast(new NettyClientEncoder(), new NettyClientDecoder(),
+										new NettyClientHandler());
 							}
 						});
 				try {
@@ -104,26 +108,16 @@ public class JRemotingClientChannel implements InvocationHolder   {
 					//TODO send heartbeat request in fixed internal
 
 				} catch (Exception e) {
-					throw new RuntimeException(e);
+					throw new RpcConnectFailedException("connection failed!",e);
 				}
 			}
 		}
 	}
 	
-	private class NettyClientCodec extends ByteToMessageCodec<Invocation> {
-
-		@Override
-		protected void encode(ChannelHandlerContext ctx, Invocation msg, ByteBuf out)
-				throws Exception {
-			
-			clientDispatcher.getProtocal().writeRequest(msg, new JRemotingChannelBuffer(out));
-			
-		}
-
+	private class NettyClientDecoder extends ReplayingDecoder<Void> {
 		@Override
 		protected void decode(ChannelHandlerContext ctx, ByteBuf in,
 				List<Object> out) throws Exception {
-		
 			InvocationResult result = clientDispatcher.getProtocal()
 					.readResponse(JRemotingClientChannel.this,
 							new JRemotingChannelBuffer(in));
@@ -131,7 +125,16 @@ public class JRemotingClientChannel implements InvocationHolder   {
 				out.add(result);
 			}
 		}
+	}
+	
+	private class NettyClientEncoder extends MessageToByteEncoder<Invocation> {
 
+		@Override
+		protected void encode(ChannelHandlerContext ctx, Invocation msg,
+				ByteBuf out) throws Exception {
+			clientDispatcher.getProtocal().writeRequest(msg, new JRemotingChannelBuffer(out));
+		}
+		
 	}
 	
 	

@@ -4,13 +4,15 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
-import com.github.jremoting.core.ClientDispatcher;
+import com.github.jremoting.core.FinalFilter;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcFuture;
+import com.github.jremoting.exception.RpcException;
 
-public class JRemotingClientDispatcher implements ClientDispatcher {
+public class JRemotingClientDispatcher extends FinalFilter {
 	
 	private ConcurrentHashMap<String, JRemotingClientChannel> channels = new ConcurrentHashMap<String, JRemotingClientChannel>(); 
 	
@@ -21,20 +23,27 @@ public class JRemotingClientDispatcher implements ClientDispatcher {
 	public JRemotingClientDispatcher(Protocal protocal) {
 		this.protocal = protocal;
 	}
-
+	
 	@Override
-	public RpcFuture dispatch(Invocation invocation) {
-		
+	protected Object doRpcInvoke(Invocation invocation)  {
 		String address = invocation.getRemoteAddress();
-		
+
 		JRemotingClientChannel channel = channels.get(address);
-		
-		if(channel == null) {
+
+		if (channel == null) {
 			channels.putIfAbsent(address, new JRemotingClientChannel(this));
 		}
-		
-		return channel.write(invocation);
+
+		RpcFuture rpcFuture = channel.write(invocation);
+		try {
+			return rpcFuture.get();
+		} catch (InterruptedException e) {
+			throw new RpcException(e);
+		} catch (ExecutionException e) {
+			throw new RpcException(e);
+		}
 	}
+	
 
 	public EventLoopGroup getEventLoopGroup() {
 		return eventLoopGroup;
@@ -47,6 +56,8 @@ public class JRemotingClientDispatcher implements ClientDispatcher {
 	public Protocal getProtocal() {
 		return protocal;
 	}
+
+	
 
 
 }

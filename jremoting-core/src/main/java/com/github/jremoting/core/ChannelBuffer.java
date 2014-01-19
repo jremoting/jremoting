@@ -215,6 +215,13 @@ import java.nio.charset.Charset;
 public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 	
 
+	void writeLong(long value);
+	void writeShort(short value);
+	void writeInt(int value);
+	
+	long readLong();
+	short readShort();
+	int readInt();
     /**
      * Returns the number of bytes (octets) this buffer can contain.
      */

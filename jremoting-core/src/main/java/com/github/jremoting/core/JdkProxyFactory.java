@@ -13,12 +13,12 @@ public class JdkProxyFactory implements ProxyFactory {
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)
 					throws Throwable {
-				return pipeline.invoke(new DefaultClientInvocation(interfaceType.getName(), 
+				return pipeline.invoke(new DefaultInvocation(interfaceType.getName(), 
 						serviceVersion,
 						method.getName(),
 						args,
-						method.getParameterTypes(),
 						method.getReturnType()));
+				
 			}
 		};
 		return Proxy.newProxyInstance(interfaceType.getClassLoader(), 
