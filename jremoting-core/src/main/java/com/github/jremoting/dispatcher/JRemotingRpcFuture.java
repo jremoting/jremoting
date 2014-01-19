@@ -10,7 +10,7 @@ import com.github.jremoting.core.RpcFutureListener;
 
 public class JRemotingRpcFuture implements RpcFuture {
 	
-	private Invocation invocation;
+	private final Invocation invocation;
 	private Object result;
 
 	public JRemotingRpcFuture(Invocation invocation) {
@@ -58,8 +58,11 @@ public class JRemotingRpcFuture implements RpcFuture {
 		
 	}
 	
-	public void setResult(Object obj) {
+	public void setResult(Object result) {
 		this.result = result;
 	}
 
+	public Invocation getInvocation() {
+		return invocation;
+	}
 }

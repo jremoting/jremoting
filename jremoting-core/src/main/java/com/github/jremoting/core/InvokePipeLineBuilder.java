@@ -2,6 +2,8 @@ package com.github.jremoting.core;
 
 import java.util.LinkedList;
 
+import com.github.jremoting.exception.RpcException;
+
 public class InvokePipeLineBuilder {
 	
 	private LinkedList<InvokeFilter> filters = new LinkedList<InvokeFilter>();

@@ -1,23 +1,40 @@
 package com.github.jremoting.protocal;
 
-import com.github.jremoting.core.Channel;
+import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.ChannelBuffer;
-import com.github.jremoting.core.Protocol;
+import com.github.jremoting.core.Invocation;
+import com.github.jremoting.core.InvocationResult;
+import com.github.jremoting.core.Protocal;
 
-public class JRemotingProtocal implements Protocol {
-
+public class JRemotingProtocal implements Protocal {
 
 	@Override
-	public void writeRequest(ChannelBuffer buffer) {
+	public boolean writeRequest(Invocation invocation, ChannelBuffer buffer) {
+		return false;
+	}
+
+	@Override
+	public InvocationResult readResponse(InvocationHolder holder, ChannelBuffer buffer) {
 		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
+	
+	@Override
+	public boolean writeResponse(InvocationResult invocationResult,
+			ChannelBuffer buffer) {
+		return false;
 		
 	}
 
 	@Override
-	public Object readResponse(Channel channel, ChannelBuffer buffer) {
+	public Invocation readRequest(ChannelBuffer buffer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+
 	
 	
 /*	private static class ProtocalRequestFormat {

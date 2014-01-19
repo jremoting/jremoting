@@ -54,9 +54,15 @@ public class DefaultInvokePipelineTest {
 			}
 
 			@Override
-			public String getAddress() {
+			public String getRemoteAddress() {
 				// TODO Auto-generated method stub
 				return null;
+			}
+
+			@Override
+			public long getInvocationId() {
+				// TODO Auto-generated method stub
+				return 0;
 			}
 		};
 		InvokeFilter first = new InvokeFilter() {

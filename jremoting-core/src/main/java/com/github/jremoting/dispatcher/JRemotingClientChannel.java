@@ -16,49 +16,59 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.ByteToMessageCodec;
 
-import com.github.jremoting.core.Channel;
+import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
+import com.github.jremoting.core.InvocationWrapper;
+import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.RpcFuture;
-import com.github.jremoting.core.RpcTimeoutException;
+import com.github.jremoting.exception.RpcInvokeTimeoutException;
+import com.github.jremoting.util.Logger;
+import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtils;
 
-
-
-public class JRemotingChannel implements Channel {
+public class JRemotingClientChannel implements InvocationHolder   {
 	
-
+	private static final Logger logger = LoggerFactory.getLogger(JRemotingClientChannel.class);
+	
 	private volatile io.netty.channel.Channel nettyChannel;
 
 	private final JRemotingClientDispatcher clientDispatcher;
 	
-	private AtomicLong nextInvocationId = new AtomicLong(0);
+	private final AtomicLong nextInvocationId = new AtomicLong(0);
 	
-	private ConcurrentHashMap<Long, JRemotingRpcFuture> futures = new ConcurrentHashMap<Long, JRemotingRpcFuture>();
+	private final ConcurrentHashMap<Long, JRemotingRpcFuture> futures = new ConcurrentHashMap<Long, JRemotingRpcFuture>();
 	
-	public JRemotingChannel(JRemotingClientDispatcher clientDispatcher) {
+	public JRemotingClientChannel(JRemotingClientDispatcher clientDispatcher) {
 		this.clientDispatcher = clientDispatcher;
 	}
-	
-	@Override
-	public RpcFuture write(Invocation invocation) {
 
-		connect(invocation.getAddress());
+	public RpcFuture write(Invocation targetInvocation) {
 
+	    final long invocationId = nextInvocationId.getAndIncrement();
+	    
+	    Invocation invocation =  new InvocationWrapper(targetInvocation) {
+	    	@Override
+	    	public long getInvocationId() {
+	    		return invocationId;
+	    	}
+		}; 
+			
+		connect(invocation.getRemoteAddress());
+		
 		nettyChannel.write(invocation);
-	
-	    JRemotingRpcFuture rpcFuture = new JRemotingRpcFuture(invocation);
+	     
+		JRemotingRpcFuture rpcFuture = new JRemotingRpcFuture(invocation);
+
 	    
-	    final long invocationIdId = nextInvocationId.getAndIncrement();
-	    
-	    futures.put(invocationIdId, rpcFuture);
+	    futures.put(invocationId, rpcFuture);
 	    
 	    nettyChannel.eventLoop().scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
-				JRemotingRpcFuture rpcFuture = futures.remove(invocationIdId);
+				JRemotingRpcFuture rpcFuture = futures.remove(invocationId);
 				if(rpcFuture != null) {
-					rpcFuture.setResult(new RpcTimeoutException("timout!"));
+					rpcFuture.setResult(new RpcInvokeTimeoutException("timout!"));
 				}
 			}
 		}, 5000, 0, TimeUnit.MILLISECONDS);
@@ -83,13 +93,15 @@ public class JRemotingChannel implements Channel {
 						.remoteAddress(remoteAddress)
 						.handler(new ChannelInitializer<SocketChannel>() {
 							public void initChannel(SocketChannel ch) throws Exception {
-								ch.pipeline().addLast(new NettyCodec(), new NettyClientHandler());
+								ch.pipeline().addLast(new NettyClientCodec(), new NettyClientHandler());
 							}
 						});
 				try {
 					
 					ChannelFuture f = b.connect().sync();
 					nettyChannel = f.channel();	
+					
+					//TODO send heartbeat request in fixed internal
 
 				} catch (Exception e) {
 					throw new RuntimeException(e);
@@ -98,19 +110,26 @@ public class JRemotingChannel implements Channel {
 		}
 	}
 	
-	private class NettyCodec extends ByteToMessageCodec<Invocation> {
+	private class NettyClientCodec extends ByteToMessageCodec<Invocation> {
 
 		@Override
 		protected void encode(ChannelHandlerContext ctx, Invocation msg, ByteBuf out)
 				throws Exception {
-			// TODO Auto-generated method stub
+			
+			clientDispatcher.getProtocal().writeRequest(msg, new JRemotingChannelBuffer(out));
 			
 		}
 
 		@Override
 		protected void decode(ChannelHandlerContext ctx, ByteBuf in,
 				List<Object> out) throws Exception {
-			// TODO Auto-generated method stub
+		
+			InvocationResult result = clientDispatcher.getProtocal()
+					.readResponse(JRemotingClientChannel.this,
+							new JRemotingChannelBuffer(in));
+			if (result != null) {
+				out.add(result);
+			}
 		}
 
 	}
@@ -119,16 +138,24 @@ public class JRemotingChannel implements Channel {
 	private class NettyClientHandler extends ChannelInboundHandlerAdapter {
 		@Override
 		public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+			
+			//maybe server provider is down so remove this channel from client dispatcher
 			InetSocketAddress  socketAddress = (InetSocketAddress) ctx.channel().localAddress();
 			
 			String address =  NetUtils.toStringAddress(socketAddress);
 			
-			clientDispatcher.removeAddress(address);
+			clientDispatcher.removeChannel(address);
 		}
 
 		@Override
 		public void channelRead(ChannelHandlerContext ctx, Object msg)
 				throws Exception {
+			if(msg instanceof Pong) {
+				if(logger.isDebugEnabled()) {
+					logger.debug("PONG  from " + NetUtils.toStringAddress((InetSocketAddress)ctx.channel().remoteAddress()));
+				}
+			}
+			
 			if(msg instanceof InvocationResult) {
 				InvocationResult invocationResult = (InvocationResult)msg;
 				JRemotingRpcFuture rpcFuture =  futures.remove(invocationResult.getInvocationId());
@@ -137,6 +164,16 @@ public class JRemotingChannel implements Channel {
 				}
 			}
 		}
+	}
+
+
+	@Override
+	public Invocation getInvocation(long invocationId) {
+		JRemotingRpcFuture future = futures.get(invocationId);
+		if (future != null) {
+			return future.getInvocation();
+		}
+		return null;
 	}
 	
 	

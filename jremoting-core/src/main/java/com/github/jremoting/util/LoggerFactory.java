@@ -5,7 +5,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class LoggerFactory {
 	
-	 public Logger getLogger(Class<?> clazz) {
+	 public static Logger getLogger(Class<?> clazz) {
 		 return  new NettyLoggerAdapter(InternalLoggerFactory.getInstance(clazz));
 	 }
 
