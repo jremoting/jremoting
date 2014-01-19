@@ -8,5 +8,6 @@ public interface Invocation {
 	String getServiceVersion();
 	String getMethodName();
 	String getAddress();
+	long getInvocationId();
 	
 }

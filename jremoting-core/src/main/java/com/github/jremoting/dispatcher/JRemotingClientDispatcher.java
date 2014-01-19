@@ -14,7 +14,7 @@ public class JRemotingClientDispatcher implements ClientDispatcher {
 	
 	private ConcurrentHashMap<String, Channel> channels = new ConcurrentHashMap<String, Channel>(); 
 	
-	private EventLoopGroup group = new NioEventLoopGroup();
+	private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
 	
 	
 	
@@ -31,8 +31,8 @@ public class JRemotingClientDispatcher implements ClientDispatcher {
 		return channel.write(invocation);
 	}
 
-	public EventLoopGroup getGroup() {
-		return group;
+	public EventLoopGroup getEventLoopGroup() {
+		return eventLoopGroup;
 	}
 	
 	public void removeAddress(String address) {

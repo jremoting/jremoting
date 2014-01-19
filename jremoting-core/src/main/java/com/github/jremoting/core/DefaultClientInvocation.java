@@ -1,6 +1,6 @@
 package com.github.jremoting.core;
 
-public class DefaultInvocation implements Invocation {
+public class DefaultClientInvocation implements Invocation {
 
 	private final String serviceVersion;
 	private final String methodName;
@@ -10,7 +10,7 @@ public class DefaultInvocation implements Invocation {
 	private final Class<?> returnType;
 	
 	
-	public DefaultInvocation(String serviceName, String serviceVersion,String methodName , Object[] args, 
+	public DefaultClientInvocation(String serviceName, String serviceVersion,String methodName , Object[] args, 
 			Class<?>[] parameterTypes, Class<?> returnType) {
 		this.args = args;
 		this.parameterTypes = parameterTypes;
@@ -53,5 +53,10 @@ public class DefaultInvocation implements Invocation {
 	@Override
 	public String getAddress() {
 		return "127.0.0.1:20880";
+	}
+
+	@Override
+	public long getInvocationId() {
+		return 0;
 	}
 }
