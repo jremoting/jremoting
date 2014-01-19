@@ -11,8 +11,6 @@ import com.github.jremoting.core.InvocationResult;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.exception.RpcException;
-import com.github.jremoting.serializer.ChannelBufferInputStream;
-import com.github.jremoting.serializer.ChannelBufferOutputStream;
 
 public class JRemotingProtocal implements Protocal {
 	

@@ -1,4 +1,4 @@
-package com.github.jremoting.serializer;
+package com.github.jremoting.protocal;
 
 import java.io.IOException;
 import java.io.OutputStream;
