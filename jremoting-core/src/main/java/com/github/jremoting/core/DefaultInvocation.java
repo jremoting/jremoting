@@ -10,7 +10,7 @@ public  class DefaultInvocation implements Invocation {
 	private final Protocal protocal;
 	private final int serializerId;
 	
-	private String remoteAddress;
+	private String remoteAddress = "127.0.0.1:6688";
 	private  long invacationId;
 	
 	
@@ -79,5 +79,10 @@ public  class DefaultInvocation implements Invocation {
 	@Override
 	public int getSerializerId() {
 		return serializerId;
+	}
+
+	@Override
+	public String getService() {
+		return this.serviceName + ":" + this.serviceVersion;
 	}
 }

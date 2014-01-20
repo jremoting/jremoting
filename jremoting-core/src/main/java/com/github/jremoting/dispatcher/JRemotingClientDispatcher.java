@@ -1,14 +1,12 @@
 package com.github.jremoting.dispatcher;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import com.github.jremoting.core.FinalFilter;
 import com.github.jremoting.core.Invocation;
-import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcFuture;
 import com.github.jremoting.exception.RpcException;
 import com.github.jremoting.protocal.Protocals;
@@ -33,7 +31,8 @@ public class JRemotingClientDispatcher extends FinalFilter {
 		JRemotingClientChannel channel = channels.get(address);
 
 		if (channel == null) {
-			channels.putIfAbsent(address, new JRemotingClientChannel(this));
+			channel = new JRemotingClientChannel(this, address); 
+			channels.putIfAbsent(address, channel);
 		}
 
 		RpcFuture rpcFuture = channel.write(invocation);

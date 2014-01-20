@@ -5,6 +5,7 @@ public interface Invocation {
 	Class<?> getReturnType();
 	String getServiceName();
 	String getServiceVersion();
+	String getService();
 	String getMethodName();
 	String getRemoteAddress();
 	void setRemoteAddress(String address);

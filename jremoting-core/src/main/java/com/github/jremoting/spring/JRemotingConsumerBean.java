@@ -18,14 +18,14 @@ public class JRemotingConsumerBean implements FactoryBean {
 	private Protocal protocal;
 	private Serializer serializer;
 	private InvokePipeline pipeline;
-	
+	private String address;
 	private int invokeTimeout;
 	 
 	
 	@Override
 	public Object getObject() throws Exception {
 		return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{getObjectType()}, 
-				new ClientInvoker(pipeline, protocal, serializer, serviceName, serviceVersion));
+				new ClientInvoker(pipeline, protocal, serializer, serviceName, serviceVersion, address));
 	}
 	
 	@Override
@@ -76,5 +76,13 @@ public class JRemotingConsumerBean implements FactoryBean {
 	}
 	public void setPipeline(InvokePipeline pipeline) {
 		this.pipeline = pipeline;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
 	}
 }

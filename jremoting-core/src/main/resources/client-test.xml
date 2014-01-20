@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<import resource="classpath:jremoting-context.xml"/>
+	
+	<bean id="testService" class="com.github.jremoting.spring.JRemotingConsumerBean">
+		<property name="serviceName" value="com.github.jremoting.core.test.TestService" />
+		<property name="serviceVersion" value="1.0" />
+		<property name="protocal"  ref="jremotingProtocal"/>
+		<property name="serializer" ref="jsonSerializer"/>
+		<property name="pipeline" ref="clientPipeline" />
+		<property name="address" value="220.181.111.86:80"></property>
+	</bean>
+	
+</beans>

@@ -33,6 +33,8 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	private static final Logger logger = LoggerFactory.getLogger(JRemotingClientChannel.class);
 	
 	private volatile io.netty.channel.Channel nettyChannel;
+	
+	private final String remoteAddress;
 
 	private final JRemotingClientDispatcher clientDispatcher;
 	
@@ -40,8 +42,9 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	
 	private final ConcurrentHashMap<Long, JRemotingRpcFuture> futures = new ConcurrentHashMap<Long, JRemotingRpcFuture>();
 	
-	public JRemotingClientChannel(JRemotingClientDispatcher clientDispatcher) {
+	public JRemotingClientChannel(JRemotingClientDispatcher clientDispatcher, String remoteAddress) {
 		this.clientDispatcher = clientDispatcher;
+		this.remoteAddress = remoteAddress;
 	}
 
 	public RpcFuture write(final Invocation invocation) {
@@ -49,7 +52,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	    long invocationId = nextInvocationId.getAndIncrement();
 	    invocation.setInvocationId(invocationId);
 	    
-		connect(invocation.getRemoteAddress());
+		connect();
 		
 		nettyChannel.writeAndFlush(invocation);
 	     
@@ -58,7 +61,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	    
 	    futures.put(invocationId, rpcFuture);
 	    
-	    nettyChannel.eventLoop().scheduleWithFixedDelay(new Runnable() {
+/*	    nettyChannel.eventLoop().scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
 				JRemotingRpcFuture rpcFuture = futures.remove(invocation.getInvocationId());
@@ -66,12 +69,12 @@ public class JRemotingClientChannel implements InvocationHolder   {
 					rpcFuture.setResult(new RpcInvokeTimeoutException("timout!"));
 				}
 			}
-		}, 5000, 0, TimeUnit.MILLISECONDS);
+		}, 5000, 0, TimeUnit.MILLISECONDS);*/
 	    
 	    return rpcFuture;
 	}
 	
-	private void connect(String address) {
+	private void connect() {
 		
 		if(nettyChannel == null || !nettyChannel.isActive()){
 			
@@ -81,11 +84,11 @@ public class JRemotingClientChannel implements InvocationHolder   {
 					return;
 				}
 				
-				InetSocketAddress remoteAddress = NetUtil.toInetSocketAddress(address);
+				InetSocketAddress address = NetUtil.toInetSocketAddress(remoteAddress);
 				
 				Bootstrap b = new Bootstrap();
 				b.group(clientDispatcher.getEventLoopGroup()).channel(NioSocketChannel.class)
-						.remoteAddress(remoteAddress)
+						.remoteAddress(address)
 						.handler(new ChannelInitializer<SocketChannel>() {
 							public void initChannel(SocketChannel ch) throws Exception {
 				

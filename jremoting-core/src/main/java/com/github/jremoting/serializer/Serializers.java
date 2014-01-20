@@ -13,6 +13,8 @@ public class Serializers {
 			}
 		}
 		
+		maxId++;
+		
 		serializers = new Serializer[maxId];
 		
 		for (Serializer serialize : serializes) {

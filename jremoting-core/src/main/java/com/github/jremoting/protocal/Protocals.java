@@ -26,16 +26,17 @@ public class Protocals  {
 		return null;
 	}
 
-	public boolean writeResponse(Invocation invocation, InvocationResult invocationResult,
-			ChannelBuffer buffer) {
+	public Invocation readRequest(ChannelBuffer buffer) {
 		for (Protocal protocal : protocals) {
-			buffer.markWriterIndex();
-			if(protocal.writeResponse(invocation,invocationResult, buffer)) {
-				return true;
+			buffer.markReaderIndex();
+			
+			Invocation invocation = protocal.readRequest(buffer);
+			if(invocation != null) {
+				return invocation;
 			}
-			buffer.resetWriterIndex();
+			buffer.resetReaderIndex();
 		}
-		return false;
+		return null;
 	}
 
 }
