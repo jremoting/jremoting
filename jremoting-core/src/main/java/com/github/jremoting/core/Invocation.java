@@ -7,8 +7,10 @@ public interface Invocation {
 	String getServiceVersion();
 	String getMethodName();
 	String getRemoteAddress();
+	void setRemoteAddress(String address);
 	long getInvocationId();
-	String getProtocalName();
-	String getSerializeName();
+	void setInvocationId(long id);
+	Protocal getProtocal();
+	int getSerializerId();
 	
 }

@@ -1,7 +1,5 @@
 package com.github.jremoting.protocal;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import com.github.jremoting.core.DefaultInvocation;
 import com.github.jremoting.core.InvocationHolder;
@@ -11,6 +9,7 @@ import com.github.jremoting.core.InvocationResult;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.exception.RpcException;
+import com.github.jremoting.serializer.Serializers;
 
 public class JRemotingProtocal implements Protocal {
 	
@@ -31,42 +30,23 @@ public class JRemotingProtocal implements Protocal {
 	
 	public static final byte OK = 88;
 	
+	private final Serializer[] serializers;
 	
-	private final Map<String, Serializer> serializerMap = new HashMap<String, Serializer>();
-	
-	private final  Serializer[] serializerArray;
-	
-	public JRemotingProtocal(Serializer[] serializes) {
-		int maxId = 0;
-		for (Serializer serialize : serializes) {
-			if(serialize.getId() > maxId) {
-				maxId = serialize.getId();
-			}
-		}
-		
-		serializerArray = new Serializer[maxId];
-		
-		for (Serializer serialize : serializes) {
-			serializerArray[serialize.getId()] = serialize;
-			serializerMap.put(serialize.getName(), serialize); 
-		}
+	public JRemotingProtocal(Serializers serializers) {
+		this.serializers = serializers.getSerializers();
 	}
-	
 	
 
 	@Override
 	public boolean writeRequest(Invocation invocation, ChannelBuffer buffer) {
-		if(!NAME.equals(invocation.getProtocalName())) {
-			return false;
-		}
+		
+		Serializer serializer = serializers[invocation.getSerializerId()];
 		
 		buffer.writeShort(MAGIC);
 
 		int flag = 0 | MESSAGE_REQUEST | INVOKE_TWO_WAY ;
 		
 		buffer.writeByte(flag);
-		
-		Serializer serializer = serializerMap.get(invocation.getSerializeName());
 		
 		buffer.writeByte(serializer.getId());
 		
@@ -129,7 +109,7 @@ public class JRemotingProtocal implements Protocal {
 			
 			ChannelBufferInputStream in = new ChannelBufferInputStream(buffer, bodyLength);
 			
-			final Serializer serializer = serializerArray[serializeId];
+		    Serializer serializer = serializers[serializeId];
 
 			String serviceName = (String)serializer.readObject(String.class,in);
 			String serviceVersion = (String)serializer.readObject(String.class,in);
@@ -150,18 +130,10 @@ public class JRemotingProtocal implements Protocal {
 				args[i] = serializer.readObject(parameterTypes[i], in);
 			}
 			
-			return new DefaultInvocation(serviceName, serviceVersion, methodName, args, returnType, invocationId) {
-				@Override
-				public String getProtocalName() {
-					return JRemotingProtocal.NAME;
-				}
-				
-				@Override
-				public String getSerializeName() {
-					return serializer.getName();
-					
-				}
-			};
+			DefaultInvocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName, args, returnType,
+					this, serializeId);
+			invocation.setInvocationId(invocationId);
+			return invocation;
 			
 		} catch (Exception e) {
 			throw new RpcException("decode request body failed!", e);
@@ -171,12 +143,12 @@ public class JRemotingProtocal implements Protocal {
 		}
 	}
 	
+
+	
 	@Override
 	public boolean writeResponse(Invocation invocation, InvocationResult invocationResult,
 			ChannelBuffer buffer) {
-		if(!NAME.equals(invocation.getProtocalName())){
-			return false;
-		}
+
 		buffer.writeShort(MAGIC);
 		byte flag = 0 | MESSAGE_RESPONSE | INVOKE_TWO_WAY;
 		buffer.writeByte(flag);
@@ -193,7 +165,7 @@ public class JRemotingProtocal implements Protocal {
 		
 		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
 
-		Serializer serializer = serializerMap.get(invocation.getSerializeName());
+		Serializer serializer = serializers[invocation.getSerializerId()];
 		
 		serializer.writeObject(invocationResult.getResult(), out);
 		
@@ -240,7 +212,7 @@ public class JRemotingProtocal implements Protocal {
 		ChannelBufferInputStream in = new ChannelBufferInputStream(buffer, bodyLength);
 		
 		try {
-			Serializer serializer = serializerMap.get(invocation.getSerializeName());
+			Serializer serializer = serializers[invocation.getSerializerId()];
 			
 			Object result = serializer.readObject(invocation.getReturnType(),in);
 			

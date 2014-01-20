@@ -4,7 +4,7 @@ public interface Protocal {
 	
 	public static final Ping PING = new Ping();
 	public static final Pong PONG = new Pong();
-	
+
 	boolean writeRequest(Invocation invocation, ChannelBuffer buffer);
 	InvocationResult readResponse(InvocationHolder holder, ChannelBuffer buffer);
 	
@@ -17,9 +17,10 @@ public interface Protocal {
 		}
 	}
 	
-	public static class Ping extends AbstractInvocation {
+	public static class Ping extends DefaultInvocation {
 		private Ping() {
-			super(null, null, null, null, null,0);
+			super(null, null, null, null, null,null,0);
+			
 		}
 	}
 	

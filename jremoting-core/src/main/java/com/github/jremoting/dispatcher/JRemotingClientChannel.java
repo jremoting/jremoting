@@ -20,14 +20,13 @@ import io.netty.handler.codec.ReplayingDecoder;
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
-import com.github.jremoting.core.InvocationWrapper;
 import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.RpcFuture;
 import com.github.jremoting.exception.RpcConnectFailedException;
 import com.github.jremoting.exception.RpcInvokeTimeoutException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
-import com.github.jremoting.util.NetUtils;
+import com.github.jremoting.util.NetUtil;
 
 public class JRemotingClientChannel implements InvocationHolder   {
 	
@@ -45,17 +44,11 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		this.clientDispatcher = clientDispatcher;
 	}
 
-	public RpcFuture write(Invocation targetInvocation) {
+	public RpcFuture write(final Invocation invocation) {
 
-	    final long invocationId = nextInvocationId.getAndIncrement();
+	    long invocationId = nextInvocationId.getAndIncrement();
+	    invocation.setInvocationId(invocationId);
 	    
-	    Invocation invocation =  new InvocationWrapper(targetInvocation) {
-	    	@Override
-	    	public long getInvocationId() {
-	    		return invocationId;
-	    	}
-		}; 
-			
 		connect(invocation.getRemoteAddress());
 		
 		nettyChannel.writeAndFlush(invocation);
@@ -68,7 +61,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	    nettyChannel.eventLoop().scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
-				JRemotingRpcFuture rpcFuture = futures.remove(invocationId);
+				JRemotingRpcFuture rpcFuture = futures.remove(invocation.getInvocationId());
 				if(rpcFuture != null) {
 					rpcFuture.setResult(new RpcInvokeTimeoutException("timout!"));
 				}
@@ -88,7 +81,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 					return;
 				}
 				
-				InetSocketAddress remoteAddress = NetUtils.toInetSocketAddress(address);
+				InetSocketAddress remoteAddress = NetUtil.toInetSocketAddress(address);
 				
 				Bootstrap b = new Bootstrap();
 				b.group(clientDispatcher.getEventLoopGroup()).channel(NioSocketChannel.class)
@@ -118,7 +111,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		@Override
 		protected void decode(ChannelHandlerContext ctx, ByteBuf in,
 				List<Object> out) throws Exception {
-			InvocationResult result = clientDispatcher.getProtocal()
+			InvocationResult result = clientDispatcher.getProtocals()
 					.readResponse(JRemotingClientChannel.this,
 							new JRemotingChannelBuffer(in));
 			if (result != null) {
@@ -132,7 +125,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		@Override
 		protected void encode(ChannelHandlerContext ctx, Invocation msg,
 				ByteBuf out) throws Exception {
-			clientDispatcher.getProtocal().writeRequest(msg, new JRemotingChannelBuffer(out));
+			msg.getProtocal().writeRequest(msg, new JRemotingChannelBuffer(out));
 		}
 		
 	}
@@ -145,7 +138,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 			//maybe server provider is down so remove this channel from client dispatcher
 			InetSocketAddress  socketAddress = (InetSocketAddress) ctx.channel().localAddress();
 			
-			String address =  NetUtils.toStringAddress(socketAddress);
+			String address =  NetUtil.toStringAddress(socketAddress);
 			
 			clientDispatcher.removeChannel(address);
 		}
@@ -155,7 +148,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 				throws Exception {
 			if(msg instanceof Pong) {
 				if(logger.isDebugEnabled()) {
-					logger.debug("PONG  from " + NetUtils.toStringAddress((InetSocketAddress)ctx.channel().remoteAddress()));
+					logger.debug("PONG  from " + NetUtil.toStringAddress((InetSocketAddress)ctx.channel().remoteAddress()));
 				}
 			}
 			

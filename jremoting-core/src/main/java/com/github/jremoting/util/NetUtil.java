@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 
 
 
-public class NetUtils {
+public class NetUtil {
 
     public static String toStringAddress(InetSocketAddress address) {
         return address.getAddress().getHostAddress() + ":" + address.getPort();

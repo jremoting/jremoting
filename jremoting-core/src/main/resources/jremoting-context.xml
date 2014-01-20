@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="jsonSerilizer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
+
+	<bean id="serilizers" class="com.github.jremoting.serializer.Serializers">
+		<constructor-arg>
+			<array>
+				<ref bean="jsonSerilizer"/>
+			</array>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
+		<constructor-arg><ref bean="serilizers"/></constructor-arg>
+	</bean>
+	
+	<bean id="protocals" class="com.github.jremoting.protocal.Protocals">
+		<constructor-arg>
+			<array>
+				<ref bean="jremotingProtocal"/>
+			</array>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="eventLoopGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
+
+	<bean id="clientDispatcher" class="com.github.jremoting.dispatcher.JRemotingClientDispatcher">
+		<constructor-arg>
+			<ref bean="eventLoopGroup" />
+		</constructor-arg>
+		<constructor-arg>
+			<ref bean="protocals" />
+		</constructor-arg>
+	</bean>
+	
+	<bean id="clientPipeline" class="com.github.jremoting.core.DefaultInvokePipeLine">
+		<constructor-arg>
+			<array>
+				<ref bean="clientDispatcher"/>
+			</array>
+		</constructor-arg>
+	</bean>
+</beans>
