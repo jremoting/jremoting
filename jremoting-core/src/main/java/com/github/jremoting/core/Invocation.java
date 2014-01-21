@@ -15,5 +15,6 @@ public interface Invocation {
 	int getSerializerId();
 	Object getTarget();
 	void setTarget(Object target);
+	long getTimeout();
 	
 }

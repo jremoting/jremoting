@@ -17,6 +17,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 
+
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
@@ -34,6 +35,8 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	private static final Logger logger = LoggerFactory.getLogger(JRemotingClientChannel.class);
 	
 	private volatile io.netty.channel.Channel nettyChannel;
+	
+	private long defaultTimeout = 1000 * 60 * 5; // /5 mins
 	
 	private final Protocal protocal;
 	
@@ -60,6 +63,8 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		
 		JRemotingRpcFuture rpcFuture = new JRemotingRpcFuture(invocation);
 		
+		
+	
 		nettyChannel.writeAndFlush(invocation).addListener(new ChannelFutureListener() {
 			
 			@Override
@@ -76,16 +81,20 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	     
 	    futures.put(invocationId, rpcFuture);
 	    
-	 /*   nettyChannel.eventLoop().scheduleWithFixedDelay(new Runnable() {
+	
+	    long timeout = invocation.getTimeout() > 0 ? invocation.getTimeout() : defaultTimeout;
+
+		nettyChannel.eventLoop().schedule(new Runnable() {
 			@Override
 			public void run() {
-				JRemotingRpcFuture rpcFuture = futures.remove(invocation.getInvocationId());
-				if(rpcFuture != null) {
+				JRemotingRpcFuture rpcFuture = futures.remove(invocation
+						.getInvocationId());
+				if (rpcFuture != null) {
 					rpcFuture.setResult(new RpcInvokeTimeoutException("timout!"));
 				}
 			}
-		}, 30, 0, TimeUnit.SECONDS);*/
-	    
+		}, timeout, TimeUnit.MILLISECONDS);
+
 	    return rpcFuture;
 	}
 	
@@ -106,7 +115,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 						.handler(new ChannelInitializer<SocketChannel>() {
 							public void initChannel(SocketChannel ch) throws Exception {
 				
-								ch.pipeline().addLast(new IdleStateHandler(0, 0, 30),
+								ch.pipeline().addLast(new IdleStateHandler(0, 0, 5),
 										new NettyClientCodec(protocal,JRemotingClientChannel.this),
 										new NettyClientHandler());
 							} 
@@ -138,6 +147,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		public void channelRead(ChannelHandlerContext ctx, Object msg)
 				throws Exception {
 			if(msg instanceof Pong) {
+				System.out.println("PONG");
 				if(logger.isDebugEnabled()) {
 					logger.debug("PONG  from " + NetUtil.toStringAddress((InetSocketAddress)ctx.channel().remoteAddress()));
 				}

@@ -86,6 +86,7 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 			
 			if(msg instanceof Ping) {
 				Ping ping = (Ping)msg;
+				System.out.println("PING");
 				ctx.writeAndFlush(ping.getProtocal().getPong());
 				return;
 			}

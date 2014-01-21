@@ -96,4 +96,10 @@ public  class DefaultInvocation implements Invocation {
 	public void setTarget(Object target) {
 		this.target = target;
 	}
+
+	@Override
+	public long getTimeout() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

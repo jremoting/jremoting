@@ -9,7 +9,6 @@ import com.github.jremoting.core.DefaultInvocation;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.InvocationResult;
-import com.github.jremoting.core.InvokePipeline;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.Serializer;
