@@ -12,7 +12,7 @@
 		<property name="protocal"  ref="jremotingProtocal"/>
 		<property name="serializer" ref="jsonSerializer"/>
 		<property name="pipeline" ref="clientPipeline" />
-		<property name="address" value="220.181.111.86:80"></property>
+		<property name="address" value="127.0.0.1:8686"></property>
 	</bean>
 	
 </beans>

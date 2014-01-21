@@ -1,5 +1,6 @@
 package com.github.jremoting.dispatcher;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -7,11 +8,17 @@ import java.util.concurrent.TimeoutException;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.RpcFuture;
 import com.github.jremoting.core.RpcFutureListener;
+import com.github.jremoting.exception.RpcException;
 
 public class JRemotingRpcFuture implements RpcFuture {
 	
 	private final Invocation invocation;
-	private Object result;
+	private volatile Object result;
+	
+	private static final Object CANCEL = new Object();
+	
+	
+	private final CountDownLatch latch = new CountDownLatch(1);
 
 	public JRemotingRpcFuture(Invocation invocation) {
 		this.invocation = invocation;
@@ -19,47 +26,53 @@ public class JRemotingRpcFuture implements RpcFuture {
 
 	@Override
 	public boolean cancel(boolean mayInterruptIfRunning) {
-		// TODO Auto-generated method stub
-		return false;
+		result = CANCEL;
+		latch.countDown();
+		return true;
 	}
 
 	@Override
 	public Object get() throws InterruptedException, ExecutionException {
+		latch.await();
+		if(result instanceof Throwable) {
+			throw new RpcException((Throwable)result);
+		}
 		return result;
 	}
 
 	@Override
 	public Object get(long timeout, TimeUnit unit) throws InterruptedException,
 			ExecutionException, TimeoutException {
-		// TODO Auto-generated method stub
-		return null;
+		latch.await(timeout, unit);
+		if(result instanceof Throwable) {
+			throw new RpcException((Throwable)result);
+		}
+		return result;
 	}
 
 	@Override
 	public boolean isCancelled() {
-		// TODO Auto-generated method stub
-		return false;
+		return result != null && result == CANCEL;
 	}
 
 	@Override
 	public boolean isDone() {
-		// TODO Auto-generated method stub
-		return false;
+		return result != null;
 	}
 
 	@Override
 	public void addListener(RpcFutureListener listener) {
-		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
 	public void removeListener(RpcFutureListener listener) {
-		// TODO Auto-generated method stub
 		
 	}
 	
 	public void setResult(Object result) {
 		this.result = result;
+		latch.countDown();
 	}
 
 	public Invocation getInvocation() {

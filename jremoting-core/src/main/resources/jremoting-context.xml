@@ -32,9 +32,6 @@
 		<constructor-arg>
 			<ref bean="eventLoopGroup" />
 		</constructor-arg>
-		<constructor-arg>
-			<ref bean="protocals" />
-		</constructor-arg>
 	</bean>
 	
 	<bean id="clientPipeline" class="com.github.jremoting.core.DefaultInvokePipeLine">
@@ -44,4 +41,17 @@
 			</array>
 		</constructor-arg>
 	</bean>
+	
+	<bean id="serverInvoker" class="com.github.jremoting.core.ServerInvoker"></bean>
+	
+	<bean id="serverPipeline" class="com.github.jremoting.core.DefaultInvokePipeLine">
+		<constructor-arg>
+			<array>
+				<ref bean="serverInvoker"/>
+			</array>
+		</constructor-arg>
+	</bean>
+
+	
+	
 </beans>

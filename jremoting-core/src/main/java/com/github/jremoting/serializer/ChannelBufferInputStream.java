@@ -1,4 +1,4 @@
-package com.github.jremoting.protocal;
+package com.github.jremoting.serializer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +12,9 @@ public class ChannelBufferInputStream extends InputStream {
     private final int startIndex;
     private final int endIndex;
     
+    public ChannelBufferInputStream(ChannelBuffer buffer) {
+        this(buffer, buffer.readableBytes());
+    }
     
     public ChannelBufferInputStream(ChannelBuffer buffer, int length) {
         if (buffer == null) {
@@ -30,9 +33,6 @@ public class ChannelBufferInputStream extends InputStream {
         buffer.markReaderIndex();
     }
 
-    public int readBytes() {
-        return buffer.readerIndex() - startIndex;
-    }
 
     @Override
     public int available() throws IOException {

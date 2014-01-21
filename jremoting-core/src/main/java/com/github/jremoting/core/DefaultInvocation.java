@@ -12,6 +12,7 @@ public  class DefaultInvocation implements Invocation {
 	
 	private String remoteAddress = "127.0.0.1:6688";
 	private  long invacationId;
+	private Object target;
 	
 	
 	public DefaultInvocation(String serviceName, String serviceVersion,String methodName ,
@@ -84,5 +85,15 @@ public  class DefaultInvocation implements Invocation {
 	@Override
 	public String getService() {
 		return this.serviceName + ":" + this.serviceVersion;
+	}
+
+	@Override
+	public Object getTarget() {
+		return target;
+	}
+
+	@Override
+	public void setTarget(Object target) {
+		this.target = target;
 	}
 }

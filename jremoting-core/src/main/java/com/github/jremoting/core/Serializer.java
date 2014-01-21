@@ -1,7 +1,6 @@
 package com.github.jremoting.core;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.github.jremoting.exception.RpcSerializeException;
 
 public interface Serializer {
 	
@@ -9,7 +8,7 @@ public interface Serializer {
 	
 	public String getName();
 	
-	public void writeObject(Object obj, OutputStream out);
+	public void writeObject(Object obj, ChannelBuffer out) throws RpcSerializeException;
 	
-	public Object readObject(Class<?> clazz, InputStream in);
+	public Object readObject(Class<?> clazz, ChannelBuffer in) throws RpcSerializeException;
 }

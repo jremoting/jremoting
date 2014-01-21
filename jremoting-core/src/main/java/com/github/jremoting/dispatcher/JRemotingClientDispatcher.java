@@ -9,19 +9,16 @@ import com.github.jremoting.core.FinalFilter;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.RpcFuture;
 import com.github.jremoting.exception.RpcException;
-import com.github.jremoting.protocal.Protocals;
 
 public class JRemotingClientDispatcher extends FinalFilter {
 	
+	//key=  remoteIp:port 
 	private ConcurrentHashMap<String, JRemotingClientChannel> channels = new ConcurrentHashMap<String, JRemotingClientChannel>(); 
 	
 	private final EventLoopGroup eventLoopGroup;
-	
-	private final Protocals protocals;
-	
-	public JRemotingClientDispatcher(EventLoopGroup eventLoopGroup , Protocals protocals) {
+
+	public JRemotingClientDispatcher(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup = eventLoopGroup;
-		this.protocals = protocals;
 	}
 	
 	@Override
@@ -31,7 +28,7 @@ public class JRemotingClientDispatcher extends FinalFilter {
 		JRemotingClientChannel channel = channels.get(address);
 
 		if (channel == null) {
-			channel = new JRemotingClientChannel(this, address); 
+			channel = new JRemotingClientChannel(eventLoopGroup, invocation.getProtocal() ,address); 
 			channels.putIfAbsent(address, channel);
 		}
 
@@ -44,21 +41,4 @@ public class JRemotingClientDispatcher extends FinalFilter {
 			throw new RpcException(e);
 		}
 	}
-	
-
-	public EventLoopGroup getEventLoopGroup() {
-		return eventLoopGroup;
-	}
-	
-	public void removeChannel(String address) {
-		channels.remove(address);
-	}
-
-	public Protocals getProtocals() {
-		return protocals;
-	}
-
-	
-
-
 }

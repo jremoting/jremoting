@@ -13,5 +13,7 @@ public interface Invocation {
 	void setInvocationId(long id);
 	Protocal getProtocal();
 	int getSerializerId();
+	Object getTarget();
+	void setTarget(Object target);
 	
 }

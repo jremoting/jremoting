@@ -1,26 +1,28 @@
 package com.github.jremoting.core;
 
+import com.github.jremoting.exception.RpcProtocalException;
+
 public interface Protocal {
 	
-	public static final Ping PING = new Ping();
-	public static final Pong PONG = new Pong();
-
-	boolean writeRequest(Invocation invocation, ChannelBuffer buffer);
-	InvocationResult readResponse(InvocationHolder holder, ChannelBuffer buffer);
+	Ping getPing();
 	
-	Invocation readRequest(ChannelBuffer buffer);
-	boolean writeResponse(Invocation invocation, InvocationResult invocationResult, ChannelBuffer buffer);
+	Pong getPong();
+	
+	void writeRequest(Invocation invocation, ChannelBuffer buffer) throws RpcProtocalException;
+	InvocationResult readResponse(InvocationHolder holder, ChannelBuffer buffer) throws RpcProtocalException;
+	
+	Invocation readRequest(ChannelBuffer buffer) throws RpcProtocalException;
+	void writeResponse(InvocationResult invocationResult, ChannelBuffer buffer) throws RpcProtocalException;
 	
 	public static class Pong extends InvocationResult {
-		private Pong(){
-			super(0, null);
+		public Pong(Ping ping){
+			super(null, ping);
 		}
 	}
 	
 	public static class Ping extends DefaultInvocation {
-		private Ping() {
-			super(null, null, null, null, null,null,0);
-			
+		public Ping(Protocal protocal) {
+			super(null, null, null, null, null,protocal,0);
 		}
 	}
 	

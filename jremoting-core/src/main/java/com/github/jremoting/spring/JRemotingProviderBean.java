@@ -2,8 +2,9 @@ package com.github.jremoting.spring;
 
 import com.github.jremoting.core.InvokePipeline;
 import com.github.jremoting.core.ServerDispatcher;
+import com.github.jremoting.core.ServiceProvider;
 
-public class JRemotingProviderBean  {
+public class JRemotingProviderBean implements ServiceProvider  {
 
 	private String serviceName;
 	private String serviceVersion;
@@ -32,6 +33,7 @@ public class JRemotingProviderBean  {
 		this.target = target;
 	}
 
+	@Override
 	public InvokePipeline getPipeline() {
 		return pipeline;
 	}
@@ -45,7 +47,13 @@ public class JRemotingProviderBean  {
 	}
 	
 	public void setDispatcher(ServerDispatcher dispatcher) {
+		dispatcher.registerProvider(this);
 		this.dispatcher = dispatcher;
+	}
+
+	@Override
+	public String getService() {
+		return this.getServiceName() + ":" + this.getServiceVersion();
 	}
 	
 }

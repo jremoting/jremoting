@@ -9,7 +9,10 @@ public class ClientTest {
 		
 		TestService testService = context.getBean(TestService.class);
 		
-		String result = testService.hello("xhan");
-		System.out.println(result);
+		for (int i = 0; i <100; i++) {
+			String result = testService.hello("xhan" + i);
+			System.out.println(result);
+		}
+		
 	}
 }
