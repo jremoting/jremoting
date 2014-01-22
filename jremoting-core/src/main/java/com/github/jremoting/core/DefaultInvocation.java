@@ -6,6 +6,7 @@ public  class DefaultInvocation implements Invocation {
 	private final String serviceName;
 	private final Object[] args;
 	private final Class<?> returnType;
+	private final Class<?>[] parameterTypes;
 	
 	private final Protocal protocal;
 	private final int serializerId;
@@ -16,12 +17,13 @@ public  class DefaultInvocation implements Invocation {
 	
 	
 	public DefaultInvocation(String serviceName, String serviceVersion,String methodName ,
-			Object[] args, Class<?> returnType, Protocal protocal ,int serializerId) {
+			Object[] args, Class<?>[] parameterTypes ,Class<?> returnType, Protocal protocal ,int serializerId) {
 		this.args = args;
 
 		this.serviceName = serviceName;
 		this.serviceVersion = serviceVersion;
 		this.methodName = methodName;
+		this.parameterTypes = parameterTypes;
 		this.returnType = returnType;
 		this.protocal = protocal;
 		this.serializerId = serializerId;
@@ -101,5 +103,10 @@ public  class DefaultInvocation implements Invocation {
 	public long getTimeout() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public Class<?>[] getParameterTypes() {
+		return parameterTypes;
 	}
 }

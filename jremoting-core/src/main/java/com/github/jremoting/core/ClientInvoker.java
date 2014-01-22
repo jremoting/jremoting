@@ -27,7 +27,7 @@ public class ClientInvoker implements InvocationHandler {
 			throws Throwable {
 		DefaultInvocation invocation = new DefaultInvocation(serviceName, 
 				serviceVersion, method.getName(),
-				args, method.getReturnType(), protocal, serializer.getId());
+				args, method.getParameterTypes() ,method.getReturnType(), protocal, serializer.getId());
 		if(remoteAddress != null) {
 			invocation.setRemoteAddress(remoteAddress);
 		}

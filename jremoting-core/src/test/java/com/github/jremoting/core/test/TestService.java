@@ -1,8 +1,13 @@
 package com.github.jremoting.core.test;
 
+import java.util.Date;
+
+
 public interface TestService {
 	
-	public HelloOutput hello(HelloInput input, Integer id);
+	public void hello3(int i, long l , double d, float f, short sb, byte b, String s, Date date,java.sql.Date dd);
+	
+	public HelloOutput hello(HelloInput input, int id);
 	
 	public void hello1();
 	

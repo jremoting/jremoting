@@ -3,6 +3,7 @@ package com.github.jremoting.dispatcher;
 import java.nio.charset.Charset;
 
 import com.github.jremoting.core.ChannelBuffer;
+import com.github.jremoting.exception.RpcException;
 
 import io.netty.buffer.ByteBuf;
 
@@ -145,15 +146,23 @@ public class NettyChannelBuffer implements ChannelBuffer {
 	@Override
 	public void writeUTF8(String value) {
 		byte[] data = value.getBytes(UTF8);
-		nettyBuffer.writeInt(data.length);
+		if(data.length > 127) {
+			throw new RpcException("String length must less than 128");
+		}
+		nettyBuffer.writeByte(data.length);
 		nettyBuffer.writeBytes(data);
 	}
 
 	@Override
 	public String readUTF8() {
-		int length = nettyBuffer.readInt();
+		int length = nettyBuffer.readByte();
 		byte[] data = new byte[length];
 		nettyBuffer.readBytes(data);
 		return new String(data, UTF8);
+	}
+
+	@Override
+	public byte[] array() {
+		return nettyBuffer.array();
 	}
 }

@@ -8,8 +8,15 @@ package com.github.jremoting.core;
  */
 public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 	
+	/**
+	 * StringLength(byte) + String
+	 * @param value
+	 */
 	void writeUTF8(String value);
-	
+	/**
+	 * StringLength(byte) + String
+	 * @param value
+	 */
 	String readUTF8();
 
 	void writeLong(long value);
@@ -55,5 +62,7 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 	void writerIndex(int writerIndex);
 	
 	ChannelBuffer slice(int index, int length);
+	
+	byte[] array();
 
 }

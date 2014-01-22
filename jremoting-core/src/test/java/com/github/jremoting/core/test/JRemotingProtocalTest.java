@@ -2,6 +2,7 @@ package com.github.jremoting.core.test;
 
 import junit.framework.Assert;
 import io.netty.channel.embedded.EmbeddedChannel;
+
 import org.junit.Test;
 
 import com.github.jremoting.core.DefaultInvocation;
@@ -53,6 +54,7 @@ public class JRemotingProtocalTest {
 				"1.0", 
 				"hello", 
 				new Object[]{"xhan"},
+				new Class<?>[]{String.class},
 				String.class, 
 				protocal, 
 				serializer.getId());
@@ -81,6 +83,7 @@ public class JRemotingProtocalTest {
 				"1.0", 
 				"hello", 
 				new Object[]{new HelloInput(),1,"4"},
+				new Class<?>[]{HelloInput.class,Integer.class, String.class},
 				String.class, 
 				protocal, 
 				serializer.getId());
@@ -105,7 +108,7 @@ public class JRemotingProtocalTest {
 	
 	@Test
 	public void testServerToClient() {
-		final Invocation invocation = new DefaultInvocation(null, null, null, null,
+		final Invocation invocation = new DefaultInvocation(null, null, null, null,null,
 				String.class, protocal, serializer.getId());
 		InvocationResult result = new InvocationResult("hello,world", invocation);
 		
@@ -126,7 +129,7 @@ public class JRemotingProtocalTest {
 	
 	@Test
 	public void testServerError() {
-		final Invocation invocation = new DefaultInvocation(null, null, null, null,
+		final Invocation invocation = new DefaultInvocation(null, null, null, null, null,
 				String.class, protocal, serializer.getId());
 		InvocationResult result = new InvocationResult(new RpcServerErrorException("servererror"), invocation);
 		

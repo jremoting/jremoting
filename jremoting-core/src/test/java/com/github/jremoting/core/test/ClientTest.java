@@ -1,6 +1,7 @@
 package com.github.jremoting.core.test;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -18,23 +19,20 @@ public class ClientTest {
 		
 		TestService testService = context.getBean(TestService.class);
 		
-		for (int i = 0; i <10; i++) {
+	
 			HelloInput input = new HelloInput();
-			input.setId(i);
-			HelloOutput result = testService.hello(input,i);
+			input.setId(1212);
+			
+			HelloOutput result = testService.hello(input,111);
+			
 			System.out.println(JSON.toJSON(result));
-		}
 		
-		for (int i = 0; i < 10; i++) {
 			testService.hello1();
-		}
+			
+			testService.hello3(1, 2L, 3D, 4f, (short)5, (byte)6, "7", new Date(), new java.sql.Date(12121212));
+
 		
-		for (int i = 0; i <10; i++) {
-			HelloInput input = new HelloInput();
-			input.setId(i);
-			HelloOutput result = testService.hello(input,i);
-			System.out.println(JSON.toJSON(result));
-		}
+	
 		
 		System.in.read();
 		

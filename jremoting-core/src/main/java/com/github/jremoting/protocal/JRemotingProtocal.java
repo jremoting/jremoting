@@ -10,6 +10,7 @@ import com.github.jremoting.core.Serializer;
 import com.github.jremoting.exception.RpcProtocalException;
 import com.github.jremoting.exception.RpcServerErrorException;
 import com.github.jremoting.serializer.Serializers;
+import com.github.jremoting.util.ReflectionUtil;
 
 public class JRemotingProtocal implements Protocal {
 	
@@ -81,30 +82,24 @@ public class JRemotingProtocal implements Protocal {
 
 	private void encodeRequestBody(Invocation invocation, ChannelBuffer buffer,
 			Serializer serializer) {
+		
+		int argLength = invocation.getArgs() == null ? 0 : invocation.getArgs().length;
+		
 		buffer.writeUTF8(invocation.getServiceName());
 		buffer.writeUTF8(invocation.getServiceVersion());
 		buffer.writeUTF8(invocation.getMethodName());
-		int argLength = invocation.getArgs() == null ? 0 : invocation.getArgs().length;
 		buffer.writeByte(argLength);
 		
 		if(argLength == 0) {
 			return;
 		}
 		
-		for (Object arg : invocation.getArgs()) {
-			buffer.writeUTF8(arg.getClass().getName());
-		}
-		
-		ChannelBuffer lengthBuffer = buffer.slice(buffer.writerIndex(), argLength*4);
-		lengthBuffer.writerIndex(0);
-		buffer.writerIndex(buffer.writerIndex() + argLength*4);
-		
 		for (int i= 0; i <  argLength; i++) {
-			int begin = buffer.writerIndex();
-			serializer.writeObject(invocation.getArgs()[i], buffer);
-			int end = buffer.writerIndex();
-			lengthBuffer.writeInt(end - begin);
+			buffer.writeUTF8(invocation.getParameterTypes()[i].getName());
 		}
+
+		serializer.writeObjects(invocation.getArgs(), buffer);
+		
 	}
 
 	
@@ -140,9 +135,9 @@ public class JRemotingProtocal implements Protocal {
 		int bodyEndOffset = buffer.readerIndex() + bodyLength;
 
 		try {
+			ChannelBuffer bodyBuffer = buffer.slice(buffer.readerIndex(), bodyLength);
 		    Serializer serializer = serializers[serializeId];
-			return  decodeRequestBody(invocationId, buffer, serializer);
-			
+			return  decodeRequestBody(invocationId,bodyBuffer, serializer);
 		} catch (Exception e) {
 			throw new RpcProtocalException("decode request body failed!", e);
 		}
@@ -162,30 +157,22 @@ public class JRemotingProtocal implements Protocal {
 		
 		
 		if(argsLength == 0) {
-			Invocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName, null, null, this, serializer.getId());
+			Invocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName,null, null, null, this, serializer.getId());
 			invocation.setInvocationId(invocationId);
 			return invocation;
 		}
 		
 		Class<?>[] parameterTypes = new Class[argsLength];
-		Object[] args = new Object[argsLength];
-		int[] argLength = new int[argsLength];
 		
 		for (int i = 0; i < argsLength; i++) {
 			String parameterClassName = buffer.readUTF8();
-			parameterTypes[i] = this.getClass().getClassLoader().loadClass(parameterClassName);
-		}
-		
-		for (int i = 0; i < argsLength; i++) {
-			argLength[i] = buffer.readInt();
+			parameterTypes[i] = ReflectionUtil.findClass(parameterClassName);
 		}
 
-		for (int i = 0; i < argsLength; i++) {
-			args[i] = serializer.readObject(parameterTypes[i], buffer.slice(buffer.readerIndex(), argLength[i]));
-			buffer.skipBytes(argLength[i]);
-		}
 		
-		DefaultInvocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName, args, null,
+		Object[]  args = serializer.readObjects(parameterTypes, buffer);
+
+		DefaultInvocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName, args,parameterTypes ,null,
 				this, serializer.getId());
 		invocation.setInvocationId(invocationId);
 		return invocation;
@@ -220,12 +207,13 @@ public class JRemotingProtocal implements Protocal {
 		}
 		
 		//encode body
+		Serializer serializer = serializers[invocationResult.getInvocation().getSerializerId()];
 		if(isServerError) {
 			RpcServerErrorException exception = (RpcServerErrorException)invocationResult.getResult();
-			buffer.writeUTF8(exception.getMessage());
+			serializer.writeObject(exception.getMessage(), buffer);
 		}
 		else {
-			Serializer serializer = serializers[invocationResult.getInvocation().getSerializerId()];
+			
 			serializer.writeObject(invocationResult.getResult(), buffer);
 		}
 		
@@ -289,14 +277,14 @@ public class JRemotingProtocal implements Protocal {
 		
 		try {
 			Object result = null;
+			Serializer serializer = serializers[invocation.getSerializerId()];
+			ChannelBuffer bodyBuffer = buffer.slice(buffer.readerIndex(), bodyLength);
 			if(isServerError) {
-				String errorMsg = buffer.readUTF8();
+				String errorMsg = (String) serializer.readObject(String.class, bodyBuffer);
 				result = new RpcServerErrorException(errorMsg);
 			}
 			else if (invocation.getReturnType() != null) {
-				Serializer serializer = serializers[invocation.getSerializerId()];
-				result = serializer.readObject(invocation.getReturnType(), 
-						buffer.slice(buffer.readerIndex(), bodyLength));
+				result = serializer.readObject(invocation.getReturnType(),bodyBuffer);
 			}
 			
 			return new InvocationResult(result, invocation);

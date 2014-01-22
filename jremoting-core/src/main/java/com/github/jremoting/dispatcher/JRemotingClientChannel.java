@@ -170,16 +170,16 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	    @Override
 	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	            throws Exception {
-	    	releaseWaitingRpcFutrue(cause);
+	    	wakeupWaitingCaller(cause);
 	    	ctx.channel().close();
+	    	ctx.fireExceptionCaught(cause);
 	    }
 	}
 	
 	/**
-	 * release all wait future when current connection lost
-	 * @param cause
+	 * wakeup all wait caller when current connection lost
 	 */
-	private void releaseWaitingRpcFutrue(Throwable cause) {
+	private void wakeupWaitingCaller(Throwable cause) {
 		synchronized (this){
 			for (JRemotingRpcFuture future : futures.values()) {
 				future.setResult(cause);

@@ -123,7 +123,7 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	            throws Exception {
 	    	 ctx.channel().close();
-	    	 //ctx.fireExceptionCaught(cause);
+	    	 ctx.fireExceptionCaught(cause);
 	    }
 	}
 

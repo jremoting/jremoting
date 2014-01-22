@@ -3,6 +3,7 @@ package com.github.jremoting.core;
 public interface Invocation {
 	Object[] getArgs();
 	Class<?> getReturnType();
+	Class<?>[] getParameterTypes();
 	String getServiceName();
 	String getServiceVersion();
 	String getService();

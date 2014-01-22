@@ -22,7 +22,7 @@ public interface Protocal {
 	
 	public static class Ping extends DefaultInvocation {
 		public Ping(Protocal protocal) {
-			super(null, null, null, null, null,protocal,0);
+			super(null, null, null, null,null, null,protocal,0);
 		}
 	}
 	
