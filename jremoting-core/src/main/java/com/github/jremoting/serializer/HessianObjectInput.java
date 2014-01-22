@@ -44,11 +44,4 @@ public class HessianObjectInput implements ObjectInput {
 			throw new RpcSerializeException("hessian read int failed", e);
 		}
 	}
-
-	@Override
-	public void end() {
-		// TODO Auto-generated method stub
-		
-	}
-
 }
