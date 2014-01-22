@@ -1,5 +1,6 @@
 package com.github.jremoting.core;
 
+
 public  class DefaultInvocation implements Invocation {
 	private final String serviceVersion;
 	private final String methodName;

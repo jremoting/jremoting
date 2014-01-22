@@ -5,11 +5,13 @@
 	http://www.springframework.org/schema/beans/spring-beans.xsd">
 	
 	<bean id="jsonSerializer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
+	<bean id="hessianSerializer" class="com.github.jremoting.serializer.HessianSerializer" ></bean>
 
 	<bean id="serilizers" class="com.github.jremoting.serializer.Serializers">
 		<constructor-arg>
 			<array>
 				<ref bean="jsonSerializer"/>
+				<ref bean="hessianSerializer"/>
 			</array>
 		</constructor-arg>
 	</bean>

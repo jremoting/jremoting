@@ -10,10 +10,11 @@ import com.github.jremoting.core.test.TestService.HelloInput;
 import com.github.jremoting.dispatcher.NettyChannelBuffer;
 import com.github.jremoting.protocal.ChannelBufferInputStream;
 import com.github.jremoting.protocal.ChannelBufferOutputStream;
+import com.github.jremoting.serializer.HessianSerializer;
 import com.github.jremoting.serializer.JsonSerializer;
 
-public class FastJsonTest {
-	public static void main(String[] rgs) {
+public class HessianTest {
+	public static void main(String[] args) {
 		ByteBuf buf =  Unpooled.buffer();
 		ChannelBuffer buffer = new NettyChannelBuffer(buf);
 		
@@ -21,30 +22,28 @@ public class FastJsonTest {
 		
 		
 		
-		JsonSerializer jsonSerializer = new JsonSerializer();
+		HessianSerializer hessianSerializer = new HessianSerializer();
 		
-		ObjectOutput output = jsonSerializer.createObjectOutput(out);
+		ObjectOutput output = hessianSerializer.createObjectOutput(out);
 		
 		
 	
 		output.writeInt(4);
 		output.writeObject(new HelloInput());
 		output.writeString("hehe");
-		output.writeObject(false);
 		output.flush();
 		
 		
 		ChannelBufferInputStream in = new ChannelBufferInputStream(buffer);
-		ObjectInput input = jsonSerializer.createObjectInput(in);
+		ObjectInput input = hessianSerializer.createObjectInput(in);
 		
-	
+		
 		int i = input.readInt();
 		HelloInput helloInput = (HelloInput) input.readObject(HelloInput.class);
 		String s = input.readString();
-		boolean b = (Boolean) input.readObject(boolean.class);
+
 		
 		System.out.println(s);
 		
-	
 	}
 }

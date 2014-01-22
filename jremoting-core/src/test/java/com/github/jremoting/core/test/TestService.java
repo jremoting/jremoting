@@ -1,5 +1,6 @@
 package com.github.jremoting.core.test;
 
+import java.io.Serializable;
 import java.util.Date;
 
 
@@ -11,7 +12,9 @@ public interface TestService {
 	
 	public void hello1();
 	
-	public static class HelloInput {
+	public static class HelloInput implements Serializable {
+		private static final long serialVersionUID = 3488382324166701321L;
+
 		public long getId() {
 			return id;
 		}
@@ -34,7 +37,8 @@ public interface TestService {
 		}
 	}
 	
-	public static class HelloOutput {
+	public static class HelloOutput  implements Serializable {
+		private static final long serialVersionUID = 7524212744956037687L;
 		public long getId() {
 			return id;
 		}

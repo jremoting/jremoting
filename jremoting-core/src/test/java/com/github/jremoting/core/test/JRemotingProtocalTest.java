@@ -10,9 +10,7 @@ import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.InvocationResult;
 import com.github.jremoting.core.Protocal;
-import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.core.Protocal.Ping;
 import com.github.jremoting.dispatcher.NettyClientCodec;
 import com.github.jremoting.dispatcher.NettyServerCodec;
 import com.github.jremoting.exception.RpcServerErrorException;
@@ -20,6 +18,8 @@ import com.github.jremoting.protocal.JRemotingProtocal;
 import com.github.jremoting.protocal.Protocals;
 import com.github.jremoting.serializer.JsonSerializer;
 import com.github.jremoting.serializer.Serializers;
+import com.github.jremoting.core.Protocal.Ping;
+import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.test.TestService.HelloInput;
 
 public class JRemotingProtocalTest {

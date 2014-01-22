@@ -5,6 +5,8 @@ import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.ChannelBuffer;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
+import com.github.jremoting.core.ObjectInput;
+import com.github.jremoting.core.ObjectOutput;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.exception.RpcProtocalException;
@@ -53,7 +55,7 @@ public class JRemotingProtocal implements Protocal {
 
 		buffer.writeShort(MAGIC);
 
-		byte flag = (byte) (0 |( isPingRequest ? MESSAGE_PING : MESSAGE_REQUEST) | INVOKE_TWO_WAY) ;
+		byte flag = (byte) (( isPingRequest ? MESSAGE_PING : MESSAGE_REQUEST) | INVOKE_TWO_WAY) ;
 		
 	
 		buffer.writeByte(flag);
@@ -83,23 +85,27 @@ public class JRemotingProtocal implements Protocal {
 	private void encodeRequestBody(Invocation invocation, ChannelBuffer buffer,
 			Serializer serializer) {
 		
-		int argLength = invocation.getArgs() == null ? 0 : invocation.getArgs().length;
+		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
 		
-		buffer.writeUTF8(invocation.getServiceName());
-		buffer.writeUTF8(invocation.getServiceVersion());
-		buffer.writeUTF8(invocation.getMethodName());
-		buffer.writeByte(argLength);
+		ObjectOutput output = serializer.createObjectOutput(out);
+		
+		int argLength = invocation.getArgs() == null ? 0 : invocation.getArgs().length;
+		output.writeString(invocation.getServiceName());
+		output.writeString(invocation.getServiceVersion());
+		output.writeString(invocation.getMethodName());
+		output.writeInt(argLength);
+
 		
 		if(argLength == 0) {
+			output.flush();
 			return;
 		}
 		
 		for (int i= 0; i <  argLength; i++) {
-			buffer.writeUTF8(invocation.getParameterTypes()[i].getName());
+			output.writeString(invocation.getParameterTypes()[i].getName());
+			output.writeObject(invocation.getArgs()[i]);
 		}
-
-		serializer.writeObjects(invocation.getArgs(), buffer);
-		
+		output.flush();
 	}
 
 	
@@ -154,10 +160,14 @@ public class JRemotingProtocal implements Protocal {
 	private Invocation decodeRequestBody(long invocationId,
 			ChannelBuffer buffer, Serializer serializer)
 			throws ClassNotFoundException {
-		String serviceName = buffer.readUTF8();
-		String serviceVersion =  buffer.readUTF8();
-		String methodName =  buffer.readUTF8();
-		int argsLength = buffer.readByte();
+		
+		ChannelBufferInputStream in  = new ChannelBufferInputStream(buffer);
+		ObjectInput input = serializer.createObjectInput(in);
+		
+		String serviceName = input.readString();
+		String serviceVersion =  input.readString();
+		String methodName =  input.readString();
+		int argsLength = input.readInt();
 		
 		
 		if(argsLength == 0) {
@@ -167,14 +177,13 @@ public class JRemotingProtocal implements Protocal {
 		}
 		
 		Class<?>[] parameterTypes = new Class[argsLength];
+		Object[]  args = new Object[argsLength];
 		
 		for (int i = 0; i < argsLength; i++) {
-			String parameterClassName = buffer.readUTF8();
+			String parameterClassName = input.readString();
 			parameterTypes[i] = ReflectionUtil.findClass(parameterClassName);
+			args[i] = input.readObject(parameterTypes[i]);
 		}
-
-		
-		Object[]  args = serializer.readObjects(parameterTypes, buffer);
 
 		DefaultInvocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName, args,parameterTypes ,null,
 				this, serializer.getId());
@@ -212,14 +221,17 @@ public class JRemotingProtocal implements Protocal {
 		
 		//encode body
 		Serializer serializer = serializers[invocationResult.getInvocation().getSerializerId()];
+		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
+		ObjectOutput output = serializer.createObjectOutput(out);
 		if(isServerError) {
 			RpcServerErrorException exception = (RpcServerErrorException)invocationResult.getResult();
-			serializer.writeObject(exception.getMessage(), buffer);
+			output.writeString(exception.getMessage());
 		}
 		else {
-			
-			serializer.writeObject(invocationResult.getResult(), buffer);
+			output.writeObject(invocationResult.getResult());
 		}
+		
+		output.flush();
 		
 		int bodyLength = buffer.writerIndex() - bodyLengthOffset - 4;
 		
@@ -280,15 +292,18 @@ public class JRemotingProtocal implements Protocal {
 		int bodyEndOffset = buffer.readerIndex() + bodyLength;
 		
 		try {
+		
 			Object result = null;
 			Serializer serializer = serializers[invocation.getSerializerId()];
-			ChannelBuffer bodyBuffer = buffer.slice(buffer.readerIndex(), bodyLength);
+			ChannelBufferInputStream in = new ChannelBufferInputStream(buffer);
+			ObjectInput input = serializer.createObjectInput(in);
+	
 			if(isServerError) {
-				String errorMsg = (String) serializer.readObject(String.class, bodyBuffer);
+				String errorMsg = input.readString();
 				result = new RpcServerErrorException(errorMsg);
 			}
 			else if (invocation.getReturnType() != Void.class) {
-				result = serializer.readObject(invocation.getReturnType(),bodyBuffer);
+				result = input.readObject(invocation.getReturnType());
 			}
 			
 			return new InvocationResult(result, invocation);

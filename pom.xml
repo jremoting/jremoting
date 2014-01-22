@@ -15,6 +15,7 @@
 	</properties>
 	<modules>
 		<module>jremoting-core</module>
+		<module>jremoting-dubbo</module>
 	</modules>
 	<dependencyManagement>
 		<dependencies>
