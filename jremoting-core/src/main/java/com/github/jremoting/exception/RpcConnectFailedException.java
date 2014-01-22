@@ -7,5 +7,8 @@ public class RpcConnectFailedException extends RpcException {
 	public RpcConnectFailedException(String msg, Throwable th) {
 		super(msg, th);
 	}
+	public RpcConnectFailedException(String msg) {
+		super(msg);
+	}
 
 }

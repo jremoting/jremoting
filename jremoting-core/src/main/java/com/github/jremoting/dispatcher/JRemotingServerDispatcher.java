@@ -30,6 +30,7 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 	private final Protocals protocals;
 	private final Executor executor;
 	private int port = 8686;
+	//key = serviceName:serviceVersion 
 	private Map<String, ServiceProvider> providers = new ConcurrentHashMap<String, ServiceProvider>();
 	
 
@@ -88,7 +89,7 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 			if(msg instanceof Ping) {
 				Ping ping = (Ping)msg;
 				System.out.println("PING");
-				ctx.writeAndFlush(ping.getProtocal().getPong());
+				ctx.writeAndFlush(ping.getProtocal().getPong()).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 				return;
 			}
 			
@@ -121,7 +122,8 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 	    @Override
 	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	            throws Exception {
-	    	 ctx.fireExceptionCaught(cause);
+	    	 ctx.channel().close();
+	    	 //ctx.fireExceptionCaught(cause);
 	    }
 	}
 

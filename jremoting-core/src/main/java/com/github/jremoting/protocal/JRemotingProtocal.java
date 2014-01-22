@@ -7,7 +7,7 @@ import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.exception.RpcException;
+import com.github.jremoting.exception.RpcProtocalException;
 import com.github.jremoting.exception.RpcServerErrorException;
 import com.github.jremoting.serializer.Serializers;
 
@@ -138,18 +138,13 @@ public class JRemotingProtocal implements Protocal {
 		}
 		
 		int bodyEndOffset = buffer.readerIndex() + bodyLength;
-		
-	
-		try {
-			
-			//ChannelBuffer bodyBuffer = buffer.slice(buffer.readerIndex(), bodyLength);
-			
-		    Serializer serializer = serializers[serializeId];
 
+		try {
+		    Serializer serializer = serializers[serializeId];
 			return  decodeRequestBody(invocationId, buffer, serializer);
 			
 		} catch (Exception e) {
-			throw new RpcException("decode request body failed!", e);
+			throw new RpcProtocalException("decode request body failed!", e);
 		}
 		finally{
 			buffer.readerIndex(bodyEndOffset);;
@@ -306,7 +301,7 @@ public class JRemotingProtocal implements Protocal {
 			
 			return new InvocationResult(result, invocation);
 		} catch (Exception e) {
-			throw new RpcException("decode response body failed!", e);
+			throw new RpcProtocalException("decode response body failed!", e);
 		}
 		finally {
 			buffer.readerIndex(bodyEndOffset);

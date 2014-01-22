@@ -16,7 +16,10 @@ public class JRemotingClientDispatcher extends FinalFilter {
 	private ConcurrentHashMap<String, JRemotingClientChannel> channels = new ConcurrentHashMap<String, JRemotingClientChannel>(); 
 	
 	private final EventLoopGroup eventLoopGroup;
+	
 
+	private  int heartbeatSeconds = 300;
+	
 	public JRemotingClientDispatcher(EventLoopGroup eventLoopGroup) {
 		this.eventLoopGroup = eventLoopGroup;
 	}
@@ -28,7 +31,7 @@ public class JRemotingClientDispatcher extends FinalFilter {
 		JRemotingClientChannel channel = channels.get(address);
 
 		if (channel == null) {
-			channel = new JRemotingClientChannel(eventLoopGroup, invocation.getProtocal() ,address); 
+			channel = new JRemotingClientChannel(eventLoopGroup, invocation.getProtocal() ,address, heartbeatSeconds); 
 			channels.putIfAbsent(address, channel);
 		}
 
@@ -40,5 +43,13 @@ public class JRemotingClientDispatcher extends FinalFilter {
 		} catch (ExecutionException e) {
 			throw new RpcException(e);
 		}
+	}
+
+	public int getHeartbeatSeconds() {
+		return heartbeatSeconds;
+	}
+
+	public void setHeartbeatSeconds(int heartbeatSeconds) {
+		this.heartbeatSeconds = heartbeatSeconds;
 	}
 }

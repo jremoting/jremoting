@@ -16,9 +16,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
-
-
-
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
@@ -49,10 +46,13 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	
 	private final ConcurrentHashMap<Long, JRemotingRpcFuture> futures = new ConcurrentHashMap<Long, JRemotingRpcFuture>();
 	
-	public JRemotingClientChannel(EventLoopGroup eventLoopGroup,  Protocal protocal ,String remoteAddress) {
+	private final int heartbeatSeconds;
+	
+	public JRemotingClientChannel(EventLoopGroup eventLoopGroup,  Protocal protocal ,String remoteAddress, int heartbeatSeconds) {
 		this.remoteAddress = remoteAddress;
 		this.protocal = protocal;
 		this.eventLoopGroup = eventLoopGroup;
+		this.heartbeatSeconds = heartbeatSeconds;
 	}
 
 	public RpcFuture write(final Invocation invocation) {
@@ -63,9 +63,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		connect();
 		
 		JRemotingRpcFuture rpcFuture = new JRemotingRpcFuture(invocation);
-		
-		
-	
+
 		nettyChannel.writeAndFlush(invocation).addListener(new ChannelFutureListener() {
 			
 			@Override
@@ -116,8 +114,10 @@ public class JRemotingClientChannel implements InvocationHolder   {
 						.handler(new ChannelInitializer<SocketChannel>() {
 							public void initChannel(SocketChannel ch) throws Exception {
 				
-								ch.pipeline().addLast(new IdleStateHandler(0, 0, 300),
-										new NettyClientCodec(protocal,JRemotingClientChannel.this),
+								if(heartbeatSeconds > 0) {
+									ch.pipeline().addLast(new IdleStateHandler(0, 0, heartbeatSeconds));
+								}
+								ch.pipeline().addLast(new NettyClientCodec(protocal,JRemotingClientChannel.this),
 										new NettyClientHandler());
 							} 
 						});
@@ -136,6 +136,11 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	private class NettyClientHandler extends ChannelInboundHandlerAdapter {
 		
 		@Override
+		public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+			System.out.println("channelInactive");
+		}
+		
+		@Override
 		public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 			if (evt instanceof IdleStateEvent) {
 				ctx.writeAndFlush(protocal.getPing()).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
@@ -143,7 +148,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 				super.userEventTriggered(ctx, evt);
 			}
 		}
-
+		
 		@Override
 		public void channelRead(ChannelHandlerContext ctx, Object msg)
 				throws Exception {
@@ -165,8 +170,22 @@ public class JRemotingClientChannel implements InvocationHolder   {
 	    @Override
 	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	            throws Exception {
-	        ctx.fireExceptionCaught(cause);
+	    	releaseWaitingRpcFutrue(cause);
+	    	ctx.channel().close();
 	    }
+	}
+	
+	/**
+	 * release all wait future when current connection lost
+	 * @param cause
+	 */
+	private void releaseWaitingRpcFutrue(Throwable cause) {
+		synchronized (this){
+			for (JRemotingRpcFuture future : futures.values()) {
+				future.setResult(cause);
+			}
+			futures.clear();
+		}
 	}
 
 
