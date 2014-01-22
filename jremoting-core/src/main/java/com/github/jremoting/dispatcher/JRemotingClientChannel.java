@@ -155,7 +155,6 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		public void channelRead(ChannelHandlerContext ctx, Object msg)
 				throws Exception {
 			if(msg instanceof Pong) {
-				System.out.println("PONG");
 				if(logger.isDebugEnabled()) {
 					logger.debug("PONG  from " + NetUtil.toStringAddress((InetSocketAddress)ctx.channel().remoteAddress()));
 				}

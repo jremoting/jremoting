@@ -9,11 +9,14 @@ public class ReflectionUtil {
 		if("int".equals(className)){
 			return int.class;
 		}
-		else if ("short".equals(className)) {
-			return short.class;
+		if("boolean".equals(className)){
+			return boolean.class;
 		}
 		else if ("long".equals(className)) {
 			return long.class;
+		}
+		else if ("short".equals(className)) {
+			return short.class;
 		}
 		else if ("float".equals(className)) {
 			return float.class;
@@ -23,6 +26,9 @@ public class ReflectionUtil {
 		}
 		else if("byte".equals(className)){
 			return byte.class;
+		}
+		else if ("char".equals(className)) {
+			return char.class;
 		}
 
 		return ReflectionUtil.class.getClassLoader().loadClass(className);

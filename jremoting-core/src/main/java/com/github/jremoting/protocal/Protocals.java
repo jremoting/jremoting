@@ -5,6 +5,7 @@ import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.InvocationResult;
 import com.github.jremoting.core.Protocal;
+import com.github.jremoting.exception.RpcProtocalException;
 
 public class Protocals  {
 	private final Protocal[]  protocals;
@@ -20,7 +21,7 @@ public class Protocals  {
 				return result;
 			}
 		}
-		return null;
+		throw new RpcProtocalException("unknown response", null, null);
 	}
 
 	public Invocation readRequest(ChannelBuffer buffer) {
@@ -30,7 +31,7 @@ public class Protocals  {
 				return invocation;
 			}
 		}
-		return null;
+	    throw new RpcProtocalException("unknown request",null,null);
 	}
 
 }

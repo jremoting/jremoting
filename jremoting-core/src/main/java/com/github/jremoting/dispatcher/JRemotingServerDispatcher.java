@@ -90,7 +90,6 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 			
 			if(msg instanceof Ping) {
 				Ping ping = (Ping)msg;
-				System.out.println("PING");
 				ctx.writeAndFlush(ping.getProtocal().getPong()).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 				return;
 			}
@@ -124,15 +123,21 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 	    @Override
 	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	            throws Exception {
-	    	System.out.println(ctx.channel().isActive());
+
 	    	if(cause instanceof DecoderException && cause.getCause() instanceof RpcProtocalException) {
 	    		RpcProtocalException protocalException = (RpcProtocalException)cause.getCause();
-				InvocationResult errorResult = new InvocationResult(protocalException, protocalException.getBadInvocation());
-				ctx.channel().writeAndFlush(errorResult);
+	    		if(protocalException.getBadInvocation() != null) {
+	    			InvocationResult errorResult = new InvocationResult(protocalException, protocalException.getBadInvocation());
+					ctx.channel().writeAndFlush(errorResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);;
+	    		}
+	    		else {
+	    			ctx.channel().writeAndFlush(protocalException.getMessage())
+	    			.addListener(ChannelFutureListener.CLOSE);;
+				}
+			
 	    	}
 	    	else {
 	    	 	ctx.channel().close();
-		    	 //TODO send error to client
 		    	ctx.fireExceptionCaught(cause);
 			}
 	    }
