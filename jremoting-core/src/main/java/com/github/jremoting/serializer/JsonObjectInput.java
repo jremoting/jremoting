@@ -11,6 +11,7 @@ public class JsonObjectInput implements ObjectInput  {
 	private final JSONReader reader;
 	public JsonObjectInput(InputStream in) {
 		this.reader = new JSONReader(new InputStreamReader(in));
+		this.reader.startArray();
 	}
 	
 	@Override
@@ -20,11 +21,23 @@ public class JsonObjectInput implements ObjectInput  {
 
 	@Override
 	public Object readObject(Class<?> clazz) {
+		if(clazz == int.class) {
+			return readInt();
+		}
+		if(clazz == long.class) {
+			return reader.readLong();
+		}
 		return reader.readObject(clazz);
 	}
 
 	@Override
 	public int readInt() {
 		return reader.readInteger();
+	}
+
+	@Override
+	public void end() {
+		this.reader.endArray();
+		
 	}
 }

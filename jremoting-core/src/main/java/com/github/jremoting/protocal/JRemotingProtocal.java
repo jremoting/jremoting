@@ -141,9 +141,9 @@ public class JRemotingProtocal implements Protocal {
 		int bodyEndOffset = buffer.readerIndex() + bodyLength;
 
 		try {
-			ChannelBuffer bodyBuffer = buffer.slice(buffer.readerIndex(), bodyLength);
+			
 		    Serializer serializer = serializers[serializeId];
-			return  decodeRequestBody(invocationId,bodyBuffer, serializer);
+			return  decodeRequestBody(invocationId,buffer, serializer);
 		} catch (Exception e) {
 			Invocation badInvocation = new DefaultInvocation(null, null, null, null,
 					null, null, this, serializeId);

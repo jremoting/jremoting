@@ -45,4 +45,10 @@ public class HessianObjectInput implements ObjectInput {
 		}
 	}
 
+	@Override
+	public void end() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -18,20 +18,19 @@ public class FastJsonTest {
 		ChannelBuffer buffer = new NettyChannelBuffer(buf);
 		
 		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
-		
-		
-		
+
 		JsonSerializer jsonSerializer = new JsonSerializer();
 		
 		ObjectOutput output = jsonSerializer.createObjectOutput(out);
-		
-		
-	
+
+		output.writeInt(4);
 		output.writeInt(4);
 		output.writeObject(new HelloInput());
 		output.writeString("hehe");
 		output.writeObject(false);
 		output.flush();
+		
+		System.out.println(new String(buf.array()));
 		
 		
 		ChannelBufferInputStream in = new ChannelBufferInputStream(buffer);
@@ -39,6 +38,7 @@ public class FastJsonTest {
 		
 	
 		int i = input.readInt();
+		int j = input.readInt();
 		HelloInput helloInput = (HelloInput) input.readObject(HelloInput.class);
 		String s = input.readString();
 		boolean b = (Boolean) input.readObject(boolean.class);

@@ -12,6 +12,7 @@ public class JsonObjectOutput implements ObjectOutput {
 	private final JSONWriter writer;
 	public JsonObjectOutput(OutputStream out) {
 		this.writer = new JSONWriter(new PrintWriter(out));
+		this.writer.startArray();
 	}
 	@Override
 	public void writeString(String value) {
@@ -30,6 +31,7 @@ public class JsonObjectOutput implements ObjectOutput {
 	@Override
 	public void flush() {
 		try {
+			writer.endArray();
 			writer.flush();
 		} catch (IOException e) {
 			throw new RpcSerializeException("json end failed!", e);
