@@ -18,6 +18,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 
 
+
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
@@ -115,7 +116,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 						.handler(new ChannelInitializer<SocketChannel>() {
 							public void initChannel(SocketChannel ch) throws Exception {
 				
-								ch.pipeline().addLast(new IdleStateHandler(0, 0, 5),
+								ch.pipeline().addLast(new IdleStateHandler(0, 0, 300),
 										new NettyClientCodec(protocal,JRemotingClientChannel.this),
 										new NettyClientHandler());
 							} 
@@ -161,6 +162,11 @@ public class JRemotingClientChannel implements InvocationHolder   {
 				}
 			}
 		}
+	    @Override
+	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+	            throws Exception {
+	        ctx.fireExceptionCaught(cause);
+	    }
 	}
 
 

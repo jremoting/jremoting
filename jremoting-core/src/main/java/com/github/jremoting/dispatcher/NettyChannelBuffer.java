@@ -145,7 +145,7 @@ public class NettyChannelBuffer implements ChannelBuffer {
 	@Override
 	public void writeUTF8(String value) {
 		byte[] data = value.getBytes(UTF8);
-		nettyBuffer.writeInt(value.length());
+		nettyBuffer.writeInt(data.length);
 		nettyBuffer.writeBytes(data);
 	}
 

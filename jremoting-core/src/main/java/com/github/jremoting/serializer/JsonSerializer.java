@@ -26,7 +26,19 @@ public class JsonSerializer implements Serializer {
 
 	@Override
 	public void writeObject(Object obj, ChannelBuffer out)   {
-		JSONWriter writer= null;
+
+		if(obj instanceof Integer){
+			out.writeInt((Integer)obj);
+			return;
+		}
+		
+		if(obj instanceof String){
+			out.writeUTF8((String)obj);
+			return;
+		}
+		
+		
+		JSONWriter writer = null;
 		try {
 			writer = new JSONWriter(new PrintWriter(new ChannelBufferOutputStream(out)));
 			writer.writeObject(obj);
@@ -44,6 +56,14 @@ public class JsonSerializer implements Serializer {
 
 	@Override
 	public Object readObject(Class<?> clazz, ChannelBuffer in) {
+	
+		if(clazz == Integer.class){
+			return in.readInt();
+		}
+		if(clazz == String.class){
+			return in.readUTF8();
+		}
+		
 		JSONReader reader = null;
 		try {
 			 reader = new JSONReader(new InputStreamReader(new ChannelBufferInputStream(in)));

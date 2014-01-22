@@ -19,6 +19,7 @@ import com.github.jremoting.core.Protocal.Ping;
 import com.github.jremoting.core.ServerDispatcher;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.RpcException;
+import com.github.jremoting.exception.RpcServerErrorException;
 import com.github.jremoting.protocal.Protocals;
 
 public class JRemotingServerDispatcher implements ServerDispatcher {
@@ -108,13 +109,20 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 						    InvocationResult invocationResult = new InvocationResult(result, invocation);
 							ctx.channel().writeAndFlush(invocationResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 						} catch (Exception e) {
-							InvocationResult errorResult = new InvocationResult(e, invocation);
+							RpcServerErrorException serverErrorException = new RpcServerErrorException(e);
+							InvocationResult errorResult = new InvocationResult(serverErrorException, invocation);
 							ctx.channel().writeAndFlush(errorResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 						}
 					}
 				});
 			}
 		}
+		
+	    @Override
+	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+	            throws Exception {
+	    	 ctx.fireExceptionCaught(cause);
+	    }
 	}
 
 	public int getPort() {

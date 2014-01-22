@@ -16,6 +16,7 @@ public class JRemotingRpcFuture implements RpcFuture {
 	private volatile Object result;
 	
 	private static final Object CANCEL = new Object();
+	private static final Object VOID = new Object();
 	
 	
 	private final CountDownLatch latch = new CountDownLatch(1);
@@ -71,7 +72,7 @@ public class JRemotingRpcFuture implements RpcFuture {
 	}
 	
 	public void setResult(Object result) {
-		this.result = result;
+		this.result = (result == null? VOID : result);
 		latch.countDown();
 	}
 
