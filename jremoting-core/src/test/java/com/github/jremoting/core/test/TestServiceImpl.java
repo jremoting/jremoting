@@ -18,8 +18,10 @@ public class TestServiceImpl implements TestService {
 	}
 
 	@Override
-	public void hello3(int i, long l, double d, float f, short sb, byte b,
+	public void hello3(char c, boolean bb,int i, long l, double d, float f, short sb, byte b,
 			String s, Date date, java.sql.Date dd) {
+		System.out.println(c);
+		System.out.println(bb);
 		System.out.println(i);
 		System.out.println(l);
 		System.out.println(d);

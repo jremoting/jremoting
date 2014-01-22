@@ -12,6 +12,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DecoderException;
 
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
@@ -19,6 +20,7 @@ import com.github.jremoting.core.Protocal.Ping;
 import com.github.jremoting.core.ServerDispatcher;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.RpcException;
+import com.github.jremoting.exception.RpcProtocalException;
 import com.github.jremoting.exception.RpcServerErrorException;
 import com.github.jremoting.protocal.Protocals;
 
@@ -122,8 +124,17 @@ public class JRemotingServerDispatcher implements ServerDispatcher {
 	    @Override
 	    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	            throws Exception {
-	    	 ctx.channel().close();
-	    	 ctx.fireExceptionCaught(cause);
+	    	System.out.println(ctx.channel().isActive());
+	    	if(cause instanceof DecoderException && cause.getCause() instanceof RpcProtocalException) {
+	    		RpcProtocalException protocalException = (RpcProtocalException)cause.getCause();
+				InvocationResult errorResult = new InvocationResult(protocalException, protocalException.getBadInvocation());
+				ctx.channel().writeAndFlush(errorResult);
+	    	}
+	    	else {
+	    	 	ctx.channel().close();
+		    	 //TODO send error to client
+		    	ctx.fireExceptionCaught(cause);
+			}
 	    }
 	}
 

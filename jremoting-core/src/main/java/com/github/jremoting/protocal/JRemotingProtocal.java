@@ -139,7 +139,11 @@ public class JRemotingProtocal implements Protocal {
 		    Serializer serializer = serializers[serializeId];
 			return  decodeRequestBody(invocationId,bodyBuffer, serializer);
 		} catch (Exception e) {
-			throw new RpcProtocalException("decode request body failed!", e);
+			Invocation badInvocation = new DefaultInvocation(null, null, null, null,
+					null, null, this, serializeId);
+			badInvocation.setInvocationId(invocationId);
+			
+			throw new RpcProtocalException("invalid request body !", badInvocation ,e);
 		}
 		finally{
 			buffer.readerIndex(bodyEndOffset);;
@@ -289,7 +293,7 @@ public class JRemotingProtocal implements Protocal {
 			
 			return new InvocationResult(result, invocation);
 		} catch (Exception e) {
-			throw new RpcProtocalException("decode response body failed!", e);
+			throw new RpcProtocalException("decode response body failed!", null ,e);
 		}
 		finally {
 			buffer.readerIndex(bodyEndOffset);

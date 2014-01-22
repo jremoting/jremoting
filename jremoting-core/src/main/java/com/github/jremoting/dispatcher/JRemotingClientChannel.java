@@ -16,6 +16,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+
 import com.github.jremoting.core.InvocationHolder;
 import com.github.jremoting.core.Invocation;
 import com.github.jremoting.core.InvocationResult;
@@ -23,6 +24,7 @@ import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.RpcFuture;
 import com.github.jremoting.exception.RpcConnectFailedException;
+import com.github.jremoting.exception.RpcException;
 import com.github.jremoting.exception.RpcInvokeTimeoutException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
@@ -137,7 +139,7 @@ public class JRemotingClientChannel implements InvocationHolder   {
 		
 		@Override
 		public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-			System.out.println("channelInactive");
+			wakeupWaitingCaller(new RpcException("connection lost"));
 		}
 		
 		@Override

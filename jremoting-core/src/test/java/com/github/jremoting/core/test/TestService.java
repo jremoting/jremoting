@@ -5,7 +5,7 @@ import java.util.Date;
 
 public interface TestService {
 	
-	public void hello3(int i, long l , double d, float f, short sb, byte b, String s, Date date,java.sql.Date dd);
+	public void hello3(char c, boolean bb,int i, long l , double d, float f, short sb, byte b, String s, Date date,java.sql.Date dd);
 	
 	public HelloOutput hello(HelloInput input, int id);
 	
