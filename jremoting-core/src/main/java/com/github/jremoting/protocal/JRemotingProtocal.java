@@ -287,7 +287,7 @@ public class JRemotingProtocal implements Protocal {
 				String errorMsg = (String) serializer.readObject(String.class, bodyBuffer);
 				result = new RpcServerErrorException(errorMsg);
 			}
-			else if (invocation.getReturnType() != null) {
+			else if (invocation.getReturnType() != Void.class) {
 				result = serializer.readObject(invocation.getReturnType(),bodyBuffer);
 			}
 			
