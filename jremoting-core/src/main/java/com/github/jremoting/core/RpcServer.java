@@ -1,5 +1,7 @@
 package com.github.jremoting.core;
 
 public interface RpcServer {
-	public void start();
+	 void start();
+	 void stop();
+	 void register(ServiceProvider provider);
 }

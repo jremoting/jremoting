@@ -3,9 +3,9 @@ package com.github.jremoting.core;
 
 
 public class Invoke extends Message {
-	private final String serviceVersion;
+	private final String version;
 	private final String methodName;
-	private final String serviceName;
+	private final String interfaceName;
 	private final Object[] args;
 	private final Class<?> returnType;
 	private final Class<?>[] parameterTypes;
@@ -13,14 +13,14 @@ public class Invoke extends Message {
 	private Object target;
 	
 	
-	public Invoke(String serviceName, String serviceVersion,String methodName ,
+	public Invoke(String interfaceName, String version,String methodName ,
 			Object[] args, Class<?>[] parameterTypes,
 			Class<?> returnType,
-			Protocal protocal ,int serializerId) {
-		super(true, protocal, serializerId);
+			Protocal protocal ,Serializer serializer) {
+		super(true, protocal, serializer);
 		this.args = args;
-		this.serviceName = serviceName;
-		this.serviceVersion = serviceVersion;
+		this.interfaceName = interfaceName;
+		this.version = version;
 		this.methodName = methodName;
 		this.parameterTypes = parameterTypes;
 		this.returnType = returnType;
@@ -32,13 +32,13 @@ public class Invoke extends Message {
 	}
 
 
-	public String getServiceName() {
-		return serviceName;
+	public String getInterfaceName() {
+		return interfaceName;
 	}
 
 	
-	public String getServiceVersion() {
-		return serviceVersion;
+	public String getVersion() {
+		return version;
 	}
 
 	
@@ -51,8 +51,8 @@ public class Invoke extends Message {
 		return returnType;
 	}
 	
-	public String getServiceId() {
-		return this.serviceName + ":" + this.serviceVersion;
+	public String getServiceName() {
+		return this.interfaceName + ":" + this.version;
 	}
 
 	public Object getTarget() {

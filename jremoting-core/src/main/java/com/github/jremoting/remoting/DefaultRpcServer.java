@@ -11,30 +11,46 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcServer;
+import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.RemotingException;
-import com.github.jremoting.invoker.ServerRpcInvoker;
+import com.github.jremoting.invoke.ServerInvokeFilterChain;
+import com.github.jremoting.util.NetUtil;
 
 public class DefaultRpcServer implements RpcServer {
 	
 	private volatile boolean started = false;
 	private final EventLoopGroup parentGroup;
 	private final EventLoopGroup childGroup;
-	private int port = 8686;
-	private String ip = "127.0.0.1"; //TODO get local ip
+	private final int port;
+	private final String ip;
 	private final Protocal protocal;
 	private final Executor executor;
-	private final ServerRpcInvoker serverRpcInvoker;
+	private final ServerInvokeFilterChain invokeFilterChain;
 
 	public DefaultRpcServer(EventLoopGroup parentGroup, 
 			EventLoopGroup childGroup,
 			Executor executor,
 			Protocal protocal, 
-			ServerRpcInvoker serverRpcInvoker) {
+			int port,
+			String ip,
+			ServerInvokeFilterChain invokeFilterChain) {
 		this.executor = executor;
 		this.parentGroup = parentGroup;
 		this.childGroup = childGroup;
 		this.protocal = protocal;
-		this.serverRpcInvoker = serverRpcInvoker;
+		this.port = port;
+		this.ip = ip;
+		this.invokeFilterChain = invokeFilterChain;
+	}
+	
+	public DefaultRpcServer(EventLoopGroup parentGroup, 
+			EventLoopGroup childGroup,
+			Executor executor,
+			Protocal protocal, 
+			int port,
+			ServerInvokeFilterChain invokeFilterChain) {
+		this(parentGroup, childGroup, executor, protocal, port, null, invokeFilterChain);
+
 	}
 
 	@Override
@@ -52,33 +68,38 @@ public class DefaultRpcServer implements RpcServer {
 			.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
 				public void initChannel(SocketChannel ch) throws Exception {
 					ch.pipeline().addLast(new NettyMessageCodec(protocal),
-							new NettyServerHandler(executor,serverRpcInvoker));
+							new NettyServerHandler(executor,invokeFilterChain));
 				}
 			});
 			
+			
+			String host = this.ip;
+			if(host == null) {
+				host = NetUtil.getLocalHost();
+			}
+			
 			try {
-				bootstrap.bind(ip ,port).sync();
+				bootstrap.bind(host ,port).sync();
 			} catch (InterruptedException e) {
-				throw new RemotingException("jremmoting can not bind to local address:" + ip + ":"+ port);
+				throw new RemotingException("jremmoting can not bind to local address:" + host + ":"+ port);
 			}
 			started = true;
 		}
-	}
-
-	public String getIp() {
-		return ip;
-	}
-
-	public void setIp(String ip) {
-		this.ip = ip;
 	}
 	
 	public int getPort() {
 		return port;
 	}
 
-	public void setPort(int port) {
-		this.port = port;
+	@Override
+	public void stop() {
+		parentGroup.shutdownGracefully();
+		childGroup.shutdownGracefully();
+	}
+
+	@Override
+	public void register(ServiceProvider provider) {
+		this.invokeFilterChain.register(provider);
 	}
 
 }

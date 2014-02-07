@@ -24,29 +24,40 @@
 		<property name="maxPoolSize" value="100" />
 		<property name="queueCapacity" value="25" />
 	</bean>
-	
+
+
+
 	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
-		<constructor-arg name="eventLoopGroup" ref="childGroup" />
-	</bean>
-	
-	<bean id="clientRpcInvoker" class="com.github.jremoting.invoker.ClientRpcInvoker">
-		<constructor-arg name="rpcClient" ref="rpcClient" />
-		<constructor-arg name="invokeFilters">
-			<list></list>
+		<constructor-arg name="protocal" ref="jremotingProtocal" />
+		<constructor-arg name="serializer" ref="jsonSerializer" />
+		<constructor-arg name="address" value="127.0.0.1:8686" />
+		<constructor-arg name="invokeFilterChain">
+			<bean class="com.github.jremoting.invoke.ClientInvokeFilterChain">
+				<constructor-arg name="messageChannel">
+					<bean id="messageChannel" class="com.github.jremoting.remoting.DefaultMessageChannel">
+						<constructor-arg name="eventLoopGroup" ref="childGroup" />
+					</bean>
+				</constructor-arg>
+				<constructor-arg name="invokeFilters">
+					<list></list>
+				</constructor-arg>
+			</bean>
 		</constructor-arg>
 	</bean>
 
-	<bean id="serverRpcInvoker" class="com.github.jremoting.invoker.ServerRpcInvoker">
-		<constructor-arg name="invokeFilters">
-			<list></list>
-		</constructor-arg>
-	</bean>
-			
 	<bean id="rpcServer" class="com.github.jremoting.remoting.DefaultRpcServer">
-		<constructor-arg name="parentGroup" ref="parentGroup"/>
-		<constructor-arg name="childGroup" ref="childGroup"/>
-		<constructor-arg name="executor" ref="executor"/>
+		<constructor-arg name="parentGroup" ref="parentGroup" />
+		<constructor-arg name="childGroup" ref="childGroup" />
+		<constructor-arg name="executor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
-		<constructor-arg name="serverRpcInvoker" ref="serverRpcInvoker"/>
+		<constructor-arg name="port" value="8686"/>
+		<constructor-arg name="ip" value="127.0.0.1"/>
+		<constructor-arg name="invokeFilterChain">
+			<bean class="com.github.jremoting.invoke.ServerInvokeFilterChain">
+				<constructor-arg name="invokeFilters">
+					<list></list>
+				</constructor-arg>
+			</bean>
+		</constructor-arg>
 	</bean>
 </beans>

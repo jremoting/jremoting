@@ -1,4 +1,4 @@
-package com.github.jremoting.invoker;
+package com.github.jremoting.invoke;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -7,16 +7,16 @@ import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.core.InvokeFilterUtil;
 import com.github.jremoting.core.MessageFuture;
-import com.github.jremoting.core.RpcClient;
+import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.exception.RemotingException;
 
-public class ClientRpcInvoker {
+public class ClientInvokeFilterChain {
 
-	private final RpcClient rpcClient;
+	private final MessageChannel messageChannel;
 	private final InvokeFilter head;
 	
-	public ClientRpcInvoker(RpcClient rpcClient, List<InvokeFilter> invokeFilters) {
-		this.rpcClient = rpcClient;
+	public ClientInvokeFilterChain(MessageChannel messageChannel, List<InvokeFilter> invokeFilters) {
+		this.messageChannel = messageChannel;
 		
 		invokeFilters.add(new ClientTailInvokeFilter());
 		this.head = InvokeFilterUtil.link(invokeFilters);
@@ -30,7 +30,7 @@ public class ClientRpcInvoker {
 		
 		@Override
 		public Object invoke(Invoke invoke) {
-			MessageFuture future = rpcClient.send(invoke);
+			MessageFuture future = messageChannel.send(invoke);
 			try {
 				return future.get();
 			} catch (InterruptedException e) {

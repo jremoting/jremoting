@@ -30,7 +30,7 @@ public class JRemotingProtocalTest {
 				new Class<?>[]{String.class},
 				String.class, 
 				protocal, 
-				serializer.getId());
+				serializer);
 		invocation.setId(1);		
 		
 		Object obj = clientToServer(invocation);
@@ -39,13 +39,13 @@ public class JRemotingProtocalTest {
 		
 		Invoke decodedInvocation = (Invoke)obj;
 		
-		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getServiceName());
-		Assert.assertEquals("1.0", decodedInvocation.getServiceVersion());
+		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getInterfaceName());
+		Assert.assertEquals("1.0", decodedInvocation.getVersion());
 		Assert.assertEquals("hello", decodedInvocation.getMethodName());
 		Assert.assertEquals(1, decodedInvocation.getArgs().length);
 		Assert.assertEquals("xhan", decodedInvocation.getArgs()[0]);
 		Assert.assertEquals(protocal, decodedInvocation.getProtocal());
-		Assert.assertEquals(serializer.getId(), decodedInvocation.getSerializerId());
+		Assert.assertEquals(serializer.getId(), decodedInvocation.getSerializer());
 	}
 	
 	@Test
@@ -59,7 +59,7 @@ public class JRemotingProtocalTest {
 				new Class<?>[]{HelloInput.class,Integer.class, String.class},
 				String.class, 
 				protocal, 
-				serializer.getId());
+				serializer);
 		invocation.setId(1);		
 		
 		Object obj = clientToServer(invocation);
@@ -68,21 +68,21 @@ public class JRemotingProtocalTest {
 		
 		Invoke decodedInvocation = (Invoke)obj;
 		
-		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getServiceName());
-		Assert.assertEquals("1.0", decodedInvocation.getServiceVersion());
+		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getInterfaceName());
+		Assert.assertEquals("1.0", decodedInvocation.getVersion());
 		Assert.assertEquals("hello", decodedInvocation.getMethodName());
 		Assert.assertEquals(3, decodedInvocation.getArgs().length);
 		Assert.assertEquals(new HelloInput(), decodedInvocation.getArgs()[0]);
 		Assert.assertEquals(1, decodedInvocation.getArgs()[1]);
 		Assert.assertEquals("4", decodedInvocation.getArgs()[2]);
 		Assert.assertEquals(protocal, decodedInvocation.getProtocal());
-		Assert.assertEquals(serializer.getId(), decodedInvocation.getSerializerId());
+		Assert.assertEquals(serializer.getId(), decodedInvocation.getSerializer());
 	}
 	
 	@Test
 	public void testServerToClient() {
 
-		InvokeResult result = new InvokeResult("hello,world", 0 ,protocal,serializer.getId());
+		InvokeResult result = new InvokeResult("hello,world", 0 ,protocal,serializer);
 		
 
 

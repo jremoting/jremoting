@@ -58,7 +58,7 @@ public class JRemotingProtocal implements Protocal {
 		int flag = (isRequest ? FLAG_REQUEST : 0)
 				| (isTwoWay ? FLAG_TWOWAY : 0) 
 				| (isHeartbeatMessage ? FLAG_EVENT : 0)
-				| msg.getSerializerId();
+				| msg.getSerializer().getId();
 		
 		int status = isErrorMsg ? STATUS_ERROR : STATUS_OK;
 		
@@ -75,7 +75,9 @@ public class JRemotingProtocal implements Protocal {
 			return;
 		}
 		
-		ObjectOutput output =  serializers[msg.getSerializerId()].createObjectOutput(new ByteBufferOutputStream(buffer));
+		Serializer serializer = serializers[msg.getSerializer().getId()];
+		
+		ObjectOutput output = serializer.createObjectOutput(new ByteBufferOutputStream(buffer));
 		
 		if(isErrorMsg) {
 			ErrorMessage errorMessage = (ErrorMessage)msg;
@@ -110,8 +112,8 @@ public class JRemotingProtocal implements Protocal {
 	private void encodeRequestBody(Invoke invoke, ObjectOutput output) {
 		
 		int argLength = invoke.getArgs() == null ? 0 : invoke.getArgs().length;
-		output.writeString(invoke.getServiceName());
-		output.writeString(invoke.getServiceVersion());
+		output.writeString(invoke.getInterfaceName());
+		output.writeString(invoke.getVersion());
 		output.writeString(invoke.getMethodName());
 		output.writeInt(argLength);
 
@@ -155,8 +157,10 @@ public class JRemotingProtocal implements Protocal {
 		int serializerId = (flag & SERIALIZATION_MASK);
 		boolean isErrorMsg = (status != STATUS_OK);
 		
+		Serializer serializer = serializers[serializerId];
+		
 		if(isHeartbeat) {
-			return new HeartbeatMessage(isTwoWay, this, serializerId);
+			return new HeartbeatMessage(isTwoWay, this, serializer);
 		}
 		
 		//decode body
@@ -164,14 +168,14 @@ public class JRemotingProtocal implements Protocal {
 		
 		try {
 			
-			ObjectInput input = serializers[serializerId].createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
+			ObjectInput input = serializer.createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
 			Message msg = null;
 			if(isErrorMsg) {
 				String errorMsg = input.readString();
-			    msg =  new ErrorMessage(errorMsg, msgId ,this, serializerId);
+			    msg =  new ErrorMessage(errorMsg, msgId ,this, serializer);
 			}
 			else if(isRequest) {
-				msg =  decodeRequestBody(msgId,serializerId ,input);
+				msg =  decodeRequestBody(msgId,serializer ,input);
 			}
 			else {
 				Object result = null;
@@ -181,7 +185,7 @@ public class JRemotingProtocal implements Protocal {
 				    result = input.readObject(resultClass);
 				}
 				
-				msg= new InvokeResult(result, msgId,this, serializerId);
+				msg= new InvokeResult(result, msgId,this, serializer);
 			}
 			input.close();
 			return msg;
@@ -198,16 +202,16 @@ public class JRemotingProtocal implements Protocal {
 	
 
 
-	private Invoke decodeRequestBody(long msgId, int serializerId,ObjectInput input) throws ClassNotFoundException {
+	private Invoke decodeRequestBody(long msgId, Serializer serializer,ObjectInput input) throws ClassNotFoundException {
 		
-		String serviceName = input.readString();
-		String serviceVersion =  input.readString();
+		String interfaceName = input.readString();
+		String version =  input.readString();
 		String methodName =  input.readString();
 		int argsLength = input.readInt();
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(serviceName, serviceVersion, methodName,null, null, null, this, serializerId);
+			Invoke invoke = new Invoke(interfaceName, version, methodName,null, null, null, this, serializer);
 			invoke.setId(msgId);
 			return invoke;
 		}
@@ -221,8 +225,8 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		Invoke invoke = new Invoke(serviceName, serviceVersion, methodName, args,parameterTypes ,null,
-				this, serializerId);
+		Invoke invoke = new Invoke(interfaceName, version, methodName, args,parameterTypes ,null,
+				this, serializer);
 		invoke.setId(msgId);
 		return invoke;
 	}

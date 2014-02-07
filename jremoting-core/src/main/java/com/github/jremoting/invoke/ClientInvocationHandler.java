@@ -1,15 +1,16 @@
-package com.github.jremoting.invoker;
+package com.github.jremoting.invoke;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Protocal;
+import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.Serializer;
 
 public class ClientInvocationHandler implements InvocationHandler {
 
-	private final ClientRpcInvoker clientRpcInvoker;
+	private final RpcClient rpcClient;
 	private final Protocal protocal;
 	private final Serializer serializer;
 	private final String serviceName;
@@ -18,14 +19,14 @@ public class ClientInvocationHandler implements InvocationHandler {
 	
 	
 	
-	public ClientInvocationHandler(ClientRpcInvoker clientRpcInvoker, 
+	public ClientInvocationHandler(RpcClient rpcClient, 
 			Protocal protocal, 
 			Serializer serializer,
 			String serviceName, 
 			String serviceVersion,
 			String remoteAddress) {
 		
-		this.clientRpcInvoker = clientRpcInvoker;
+		this.rpcClient = rpcClient;
 		this.protocal = protocal;
 		this.serializer = serializer;
 		this.serviceVersion =serviceVersion;
@@ -43,11 +44,11 @@ public class ClientInvocationHandler implements InvocationHandler {
 				method.getParameterTypes() ,
 				method.getReturnType(), 
 				protocal, 
-				serializer.getId());
+				serializer);
 		
 		if(remoteAddress != null) {
 			invoke.setRemoteAddress(remoteAddress);
 		}
-		return clientRpcInvoker.invoke(invoke);
+		return rpcClient.invoke(invoke);
 	}
 }

@@ -1,4 +1,4 @@
-package com.github.jremoting.invoker;
+package com.github.jremoting.invoke;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -13,27 +13,26 @@ import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.ReflectionUtil;
 
 
-public class ServerRpcInvoker    {
+public class ServerInvokeFilterChain    {
 	
 	private final InvokeFilter head;
 	
-	//key = serviceName:serviceVersion 
 	private Map<String, ServiceProvider> providers = new HashMap<String, ServiceProvider>();
 	
-	public ServerRpcInvoker(List<InvokeFilter> invokeFilters) {
+	public ServerInvokeFilterChain(List<InvokeFilter> invokeFilters) {
 		invokeFilters.add(new ServerTailInvokeFilter());
 		this.head = InvokeFilterUtil.link(invokeFilters);
 	}
 	
 	public  Object invoke(Invoke invoke) {
-		ServiceProvider provider = providers.get(invoke.getServiceId());
+		ServiceProvider provider = providers.get(invoke.getServiceName());
 		invoke.setTarget(provider.getTarget());
 		
 		return this.head.invoke(invoke);
 	}
 	
 	public void register(ServiceProvider provider) {
-		providers.put(provider.getServiceId(), provider);
+		providers.put(provider.getServiceName(), provider);
 	}
 
 	private  class ServerTailInvokeFilter implements InvokeFilter {

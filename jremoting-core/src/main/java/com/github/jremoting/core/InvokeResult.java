@@ -2,8 +2,8 @@ package com.github.jremoting.core;
 
 public class InvokeResult extends Message {
 
-	public InvokeResult(Object result,long msgId ,Protocal protocal, int serializerId) {
-		super(false, protocal, serializerId);
+	public InvokeResult(Object result,long msgId ,Protocal protocal, Serializer serializer) {
+		super(false, protocal, serializer);
 		this.result = result;
 		this.setId(msgId);
 	}

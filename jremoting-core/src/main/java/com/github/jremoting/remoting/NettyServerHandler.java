@@ -6,7 +6,7 @@ import java.util.concurrent.Executor;
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
-import com.github.jremoting.invoker.ServerRpcInvoker;
+import com.github.jremoting.invoke.ServerInvokeFilterChain;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,12 +14,12 @@ import io.netty.channel.ChannelHandlerContext;
 
 
 public class NettyServerHandler extends ChannelDuplexHandler {
-	private final ServerRpcInvoker serverRpcInvoker;
+	private final ServerInvokeFilterChain invokeFilterChain;
 	private final Executor executor;
 	
-	public NettyServerHandler(Executor executor, ServerRpcInvoker serverRpcInvoker) {
+	public NettyServerHandler(Executor executor, ServerInvokeFilterChain invokeFilterChain) {
 		this.executor = executor;
-		this.serverRpcInvoker = serverRpcInvoker;
+		this.invokeFilterChain = invokeFilterChain;
 	}
 	
 	@Override
@@ -29,7 +29,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			HeartbeatMessage heartbeatMessage = (HeartbeatMessage)msg;
 			if(heartbeatMessage.isTwoWay()) {
 				ctx.writeAndFlush(new HeartbeatMessage(false, heartbeatMessage.getProtocal(), 
-						heartbeatMessage.getSerializerId()));
+						heartbeatMessage.getSerializer()));
 			}
 		}
 		else if(msg instanceof Invoke) {
@@ -38,8 +38,8 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			executor.execute(new Runnable() {
 				@Override
 				public void run() {
-					Object result = serverRpcInvoker.invoke(invoke);
-					InvokeResult invokeResult = new InvokeResult(result, invoke.getId(),invoke.getProtocal(), invoke.getSerializerId());
+					Object result = invokeFilterChain.invoke(invoke);
+					InvokeResult invokeResult = new InvokeResult(result, invoke.getId(),invoke.getProtocal(), invoke.getSerializer());
 					ctx.writeAndFlush(invokeResult);
 				}
 			});

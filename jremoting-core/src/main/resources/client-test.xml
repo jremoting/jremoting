@@ -7,13 +7,9 @@
 	<import resource="classpath:jremoting-context.xml"/>
 	
 	<bean id="testService" class="com.github.jremoting.spring.JRemotingConsumerBean">
-		<property name="serviceName" value="com.github.jremoting.core.test.TestService" />
-		<property name="serviceVersion" value="1.0" />
-		<property name="protocal"  ref="jremotingProtocal"/>
-		<property name="serializer" ref="jsonSerializer"/>
-		<!-- <property name="serializer" ref="hessianSerializer"/> -->
-		<property name="clientRpcInvoker" ref="clientRpcInvoker" />
-		<property name="address" value="127.0.0.1:8686"></property>
+		<property name="interfaceName" value="com.github.jremoting.core.test.TestService" />
+		<property name="version" value="1.0" />
+		<property name="rpcClient" ref="rpcClient" />
 	</bean>
 	
 </beans>
