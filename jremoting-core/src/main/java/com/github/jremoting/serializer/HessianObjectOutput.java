@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import com.caucho.hessian.io.Hessian2Output;
-import com.github.jremoting.core.ObjectOutput;
-import com.github.jremoting.exception.RpcSerializeException;
+import com.github.jremoting.exception.SerializeException;
+import com.github.jremoting.io.ObjectOutput;
 
 public class HessianObjectOutput implements ObjectOutput{
 
@@ -18,7 +18,7 @@ public class HessianObjectOutput implements ObjectOutput{
 		try {
 			output.writeString(value);
 		} catch (IOException e) {
-			throw new RpcSerializeException("hessian write string failed", e);
+			throw new SerializeException("hessian write string failed", e);
 		}
 	}
 
@@ -27,7 +27,7 @@ public class HessianObjectOutput implements ObjectOutput{
 		try {
 			output.writeObject(obj);
 		} catch (IOException e) {
-			throw new RpcSerializeException("hessian write obj failed", e);
+			throw new SerializeException("hessian write obj failed", e);
 		}
 	}
 	@Override
@@ -35,7 +35,7 @@ public class HessianObjectOutput implements ObjectOutput{
 		try {
 			output.writeInt(value);
 		} catch (IOException e) {
-			throw new RpcSerializeException("hessian write int failed", e);
+			throw new SerializeException("hessian write int failed", e);
 		}
 	}
 
@@ -44,7 +44,7 @@ public class HessianObjectOutput implements ObjectOutput{
 		try {
 			output.flushBuffer();
 		} catch (IOException e) {
-			throw new RpcSerializeException("hessian write end failed", e);
+			throw new SerializeException("hessian write end failed", e);
 		}
 	}
 

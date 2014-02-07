@@ -5,51 +5,24 @@ import io.netty.channel.embedded.EmbeddedChannel;
 
 import org.junit.Test;
 
-import com.github.jremoting.core.DefaultInvocation;
-import com.github.jremoting.core.Invocation;
-import com.github.jremoting.core.InvocationHolder;
-import com.github.jremoting.core.InvocationResult;
+import com.github.jremoting.protocal.JRemotingProtocal;
+import com.github.jremoting.remoting.NettyMessageCodec;
+import com.github.jremoting.serializer.JsonSerializer;
+import com.github.jremoting.core.Invoke;
+import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.dispatcher.NettyClientCodec;
-import com.github.jremoting.dispatcher.NettyServerCodec;
-import com.github.jremoting.exception.RpcServerErrorException;
-import com.github.jremoting.protocal.JRemotingProtocal;
-import com.github.jremoting.protocal.Protocals;
-import com.github.jremoting.serializer.JsonSerializer;
-import com.github.jremoting.serializer.Serializers;
-import com.github.jremoting.core.Protocal.Ping;
-import com.github.jremoting.core.Protocal.Pong;
 import com.github.jremoting.core.test.TestService.HelloInput;
 
 public class JRemotingProtocalTest {
 
 	private Serializer serializer = new JsonSerializer();
-	private Serializers serializers  = new Serializers(new Serializer[]{ serializer});
-	private JRemotingProtocal protocal = new JRemotingProtocal(serializers);
-	private Protocals protocals = new Protocals(new Protocal[]{protocal});
-	
-	private NettyClientCodec clientCodec = new NettyClientCodec(protocal, null);
-	private NettyServerCodec serverCodec = new NettyServerCodec(protocals);
-
-
-
-	@Test
-	public void testPing() {
-		Object obj= clientToServer(protocal.getPing());
-		Assert.assertTrue(obj instanceof Ping);
-	}
-	
-	@Test
-	public void testPong() {
-		Object obj = serverToClient(protocal.getPong());
-		Assert.assertTrue(obj instanceof Pong);
-	}
+	private JRemotingProtocal protocal = new JRemotingProtocal(new Serializer[]{ serializer});
 	
 	@Test
 	public void testClientToServer() {
 		
-		final Invocation  invocation = new DefaultInvocation(
+		final Invoke  invocation = new Invoke(
 				"com.github.jremoting.core.test.TestService",
 				"1.0", 
 				"hello", 
@@ -58,13 +31,13 @@ public class JRemotingProtocalTest {
 				String.class, 
 				protocal, 
 				serializer.getId());
-		invocation.setInvocationId(1);		
+		invocation.setId(1);		
 		
 		Object obj = clientToServer(invocation);
 		
-		Assert.assertTrue(obj instanceof Invocation);
+		Assert.assertTrue(obj instanceof Invoke);
 		
-		Invocation decodedInvocation = (Invocation)obj;
+		Invoke decodedInvocation = (Invoke)obj;
 		
 		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getServiceName());
 		Assert.assertEquals("1.0", decodedInvocation.getServiceVersion());
@@ -78,7 +51,7 @@ public class JRemotingProtocalTest {
 	@Test
 	public void testClientToServer2() {
 		
-		final Invocation  invocation = new DefaultInvocation(
+		final Invoke  invocation = new Invoke(
 				"com.github.jremoting.core.test.TestService",
 				"1.0", 
 				"hello", 
@@ -87,13 +60,13 @@ public class JRemotingProtocalTest {
 				String.class, 
 				protocal, 
 				serializer.getId());
-		invocation.setInvocationId(1);		
+		invocation.setId(1);		
 		
 		Object obj = clientToServer(invocation);
 		
-		Assert.assertTrue(obj instanceof Invocation);
+		Assert.assertTrue(obj instanceof Invoke);
 		
-		Invocation decodedInvocation = (Invocation)obj;
+		Invoke decodedInvocation = (Invoke)obj;
 		
 		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getServiceName());
 		Assert.assertEquals("1.0", decodedInvocation.getServiceVersion());
@@ -108,50 +81,24 @@ public class JRemotingProtocalTest {
 	
 	@Test
 	public void testServerToClient() {
-		final Invocation invocation = new DefaultInvocation(null, null, null, null,null,
-				String.class, protocal, serializer.getId());
-		InvocationResult result = new InvocationResult("hello,world", invocation);
+
+		InvokeResult result = new InvokeResult("hello,world", 0 ,protocal,serializer.getId());
 		
-		clientCodec = new NettyClientCodec(protocal, new InvocationHolder() {
-			@Override
-			public Invocation getInvocation(long invocationId) {
-				return invocation;
-			}
-		});
-		
+
+
 		Object obj = serverToClient(result);
 		
-		Assert.assertTrue(obj instanceof InvocationResult);
-		InvocationResult returnResult = (InvocationResult)obj;
+		Assert.assertTrue(obj instanceof InvokeResult);
+		InvokeResult returnResult = (InvokeResult)obj;
 		Assert.assertEquals("hello,world",returnResult.getResult());
 		
 	}
 	
-	@Test
-	public void testServerError() {
-		final Invocation invocation = new DefaultInvocation(null, null, null, null, null,
-				String.class, protocal, serializer.getId());
-		InvocationResult result = new InvocationResult(new RpcServerErrorException("servererror"), invocation);
-		
-		clientCodec = new NettyClientCodec(protocal, new InvocationHolder() {
-			@Override
-			public Invocation getInvocation(long invocationId) {
-				return invocation;
-			}
-		});
-		
-		Object obj = serverToClient(result);
-		
-		Assert.assertTrue(obj instanceof InvocationResult);
-		InvocationResult returnResult = (InvocationResult)obj;
-		Assert.assertTrue(returnResult.getResult() instanceof RpcServerErrorException);
-		
-		Assert.assertEquals("servererror",((RpcServerErrorException)returnResult.getResult()).getMessage());
-	}
 	
-	public Object serverToClient(InvocationResult result) {
-		EmbeddedChannel clientChannel = new EmbeddedChannel(clientCodec);	
-		EmbeddedChannel serverChannel = new EmbeddedChannel(serverCodec);
+	
+	public Object serverToClient(InvokeResult result) {
+		EmbeddedChannel clientChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));	
+		EmbeddedChannel serverChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));
 		
 		serverChannel.writeOutbound(result);
 		
@@ -163,9 +110,9 @@ public class JRemotingProtocalTest {
 		return obj;
 	}
 	
-	public Object clientToServer(Invocation invocation) {
-		EmbeddedChannel clientChannel = new EmbeddedChannel(clientCodec);	
-		EmbeddedChannel serverChannel = new EmbeddedChannel(serverCodec);
+	public Object clientToServer(Invoke invocation) {
+		EmbeddedChannel clientChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));	
+		EmbeddedChannel serverChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));
 		
 		clientChannel.writeOutbound(invocation);
 		

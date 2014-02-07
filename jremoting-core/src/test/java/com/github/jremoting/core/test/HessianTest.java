@@ -3,22 +3,22 @@ package com.github.jremoting.core.test;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import com.github.jremoting.core.ChannelBuffer;
-import com.github.jremoting.core.ObjectInput;
-import com.github.jremoting.core.ObjectOutput;
 import com.github.jremoting.core.test.TestService.HelloInput;
-import com.github.jremoting.dispatcher.NettyChannelBuffer;
-import com.github.jremoting.protocal.ChannelBufferInputStream;
-import com.github.jremoting.protocal.ChannelBufferOutputStream;
+import com.github.jremoting.io.ByteBuffer;
+import com.github.jremoting.io.ByteBufferInputStream;
+import com.github.jremoting.io.ByteBufferOutputStream;
+import com.github.jremoting.io.ObjectInput;
+import com.github.jremoting.io.ObjectOutput;
+import com.github.jremoting.remoting.DefaultByteBuffer;
 import com.github.jremoting.serializer.HessianSerializer;
 import com.github.jremoting.serializer.JsonSerializer;
 
 public class HessianTest {
 	public static void main(String[] args) {
 		ByteBuf buf =  Unpooled.buffer();
-		ChannelBuffer buffer = new NettyChannelBuffer(buf);
+		ByteBuffer buffer = new DefaultByteBuffer(buf);
 		
-		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
+		ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
 		
 		
 		
@@ -34,7 +34,7 @@ public class HessianTest {
 		output.flush();
 		
 		
-		ChannelBufferInputStream in = new ChannelBufferInputStream(buffer);
+		ByteBufferInputStream in = new ByteBufferInputStream(buffer);
 		ObjectInput input = hessianSerializer.createObjectInput(in);
 		
 		

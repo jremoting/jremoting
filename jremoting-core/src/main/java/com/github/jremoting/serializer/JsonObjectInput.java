@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import com.alibaba.fastjson.JSONReader;
-import com.github.jremoting.core.ObjectInput;
+import com.github.jremoting.io.ObjectInput;
 
 public class JsonObjectInput implements ObjectInput  {
 

@@ -7,8 +7,8 @@
 	<bean id="jsonSerializer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
 	<bean id="hessianSerializer" class="com.github.jremoting.serializer.HessianSerializer" ></bean>
 
-	<bean id="serilizers" class="com.github.jremoting.serializer.Serializers">
-		<constructor-arg>
+	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
+		<constructor-arg name="serializers">
 			<array>
 				<ref bean="jsonSerializer"/>
 				<ref bean="hessianSerializer"/>
@@ -16,44 +16,42 @@
 		</constructor-arg>
 	</bean>
 	
-	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
-		<constructor-arg><ref bean="serilizers"/></constructor-arg>
+		
+	<bean id="parentGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
+	<bean id="childGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
+	<bean id="executor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<property name="corePoolSize" value="5" />
+		<property name="maxPoolSize" value="100" />
+		<property name="queueCapacity" value="25" />
 	</bean>
 	
-	<bean id="protocals" class="com.github.jremoting.protocal.Protocals">
-		<constructor-arg>
+	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
+		<constructor-arg name="eventLoopGroup" ref="childGroup" />
+	</bean>
+	
+	<bean id="clientRpcInvoker" class="com.github.jremoting.invoker.ClientRpcInvoker">
+		<constructor-arg name="rpcClient" ref="rpcClient" />
+		<constructor-arg name="invokeFilters">
+			<list></list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="serverRpcInvoker" class="com.github.jremoting.invoker.ServerRpcInvoker">
+		<constructor-arg name="invokeFilters">
+			<list></list>
+		</constructor-arg>
+	</bean>
+			
+	<bean id="rpcServer" class="com.github.jremoting.remoting.DefaultRpcServer">
+		<constructor-arg name="parentGroup" ref="parentGroup"/>
+		<constructor-arg name="childGroup" ref="childGroup"/>
+		<constructor-arg name="executor" ref="executor"/>
+		<constructor-arg name="protocals">
 			<array>
 				<ref bean="jremotingProtocal"/>
 			</array>
 		</constructor-arg>
+		
+		<constructor-arg name="serverRpcInvoker" ref="serverRpcInvoker"/>
 	</bean>
-	
-	<bean id="eventLoopGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
-
-	<bean id="clientDispatcher" class="com.github.jremoting.dispatcher.JRemotingClientDispatcher">
-		<constructor-arg>
-			<ref bean="eventLoopGroup" />
-		</constructor-arg>
-	</bean>
-	
-	<bean id="clientPipeline" class="com.github.jremoting.core.DefaultInvokePipeLine">
-		<constructor-arg>
-			<array>
-				<ref bean="clientDispatcher"/>
-			</array>
-		</constructor-arg>
-	</bean>
-	
-	<bean id="serverInvoker" class="com.github.jremoting.core.ServerInvoker"></bean>
-	
-	<bean id="serverPipeline" class="com.github.jremoting.core.DefaultInvokePipeLine">
-		<constructor-arg>
-			<array>
-				<ref bean="serverInvoker"/>
-			</array>
-		</constructor-arg>
-	</bean>
-
-	
-	
 </beans>

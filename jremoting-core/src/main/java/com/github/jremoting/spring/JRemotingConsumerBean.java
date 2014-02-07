@@ -4,11 +4,11 @@ import java.lang.reflect.Proxy;
 
 import org.springframework.beans.factory.FactoryBean;
 
-import com.github.jremoting.core.ClientInvoker;
-import com.github.jremoting.core.InvokePipeline;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.exception.RpcException;
+import com.github.jremoting.exception.RemotingException;
+import com.github.jremoting.invoker.ClientInvocationHandler;
+import com.github.jremoting.invoker.ClientRpcInvoker;
 
 @SuppressWarnings("rawtypes")
 public class JRemotingConsumerBean implements FactoryBean {
@@ -17,7 +17,14 @@ public class JRemotingConsumerBean implements FactoryBean {
 	private String serviceVersion;
 	private Protocal protocal;
 	private Serializer serializer;
-	private InvokePipeline pipeline;
+	private ClientRpcInvoker clientRpcInvoker;
+	public ClientRpcInvoker getClientRpcInvoker() {
+		return clientRpcInvoker;
+	}
+
+	public void setClientRpcInvoker(ClientRpcInvoker clientRpcInvoker) {
+		this.clientRpcInvoker = clientRpcInvoker;
+	}
 	private String address;
 	private int invokeTimeout;
 	 
@@ -25,7 +32,7 @@ public class JRemotingConsumerBean implements FactoryBean {
 	@Override
 	public Object getObject() throws Exception {
 		return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{getObjectType()}, 
-				new ClientInvoker(pipeline, protocal, serializer, serviceName, serviceVersion, address));
+				new ClientInvocationHandler(clientRpcInvoker, protocal, serializer, serviceName, serviceVersion, address));
 	}
 	
 	@Override
@@ -33,7 +40,7 @@ public class JRemotingConsumerBean implements FactoryBean {
 		try {
 			return this.getClass().getClassLoader().loadClass(this.serviceName);
 		} catch (ClassNotFoundException e) {
-			throw new RpcException(e);
+			throw new RemotingException(e);
 		}
 	}
 	@Override
@@ -71,17 +78,9 @@ public class JRemotingConsumerBean implements FactoryBean {
 	public void setInvokeTimeout(int invokeTimeout) {
 		this.invokeTimeout = invokeTimeout;
 	}
-	public InvokePipeline getPipeline() {
-		return pipeline;
-	}
-	public void setPipeline(InvokePipeline pipeline) {
-		this.pipeline = pipeline;
-	}
-
 	public String getAddress() {
 		return address;
 	}
-
 	public void setAddress(String address) {
 		this.address = address;
 	}

@@ -2,14 +2,19 @@ package com.github.jremoting.util;
 
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 
 
 public class NetUtil {
 
-    public static String toStringAddress(InetSocketAddress address) {
-        return address.getAddress().getHostAddress() + ":" + address.getPort();
-    }
+	public static String toStringAddress(SocketAddress address) {
+		return toStringAddress((InetSocketAddress) address);
+	}
+
+	public static String toStringAddress(InetSocketAddress address) {
+		return address.getAddress().getHostAddress() + ":" + address.getPort();
+	}
     
     public static InetSocketAddress toInetSocketAddress(String address) {
         int i = address.indexOf(':');

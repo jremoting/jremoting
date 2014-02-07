@@ -1,7 +1,6 @@
 package com.github.jremoting.core;
 
-public interface ServiceProvider {
-	InvokePipeline getPipeline();
-	Object getTarget();
-	String getService();
+public interface  ServiceProvider   {
+	 Object getTarget();
+	 String getServiceId();
 }

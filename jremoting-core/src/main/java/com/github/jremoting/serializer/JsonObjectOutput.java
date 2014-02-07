@@ -5,8 +5,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import com.alibaba.fastjson.JSONWriter;
-import com.github.jremoting.core.ObjectOutput;
-import com.github.jremoting.exception.RpcSerializeException;
+import com.github.jremoting.exception.SerializeException;
+import com.github.jremoting.io.ObjectOutput;
 
 public class JsonObjectOutput implements ObjectOutput {
 	private final JSONWriter writer;
@@ -34,7 +34,7 @@ public class JsonObjectOutput implements ObjectOutput {
 			writer.endArray();
 			writer.flush();
 		} catch (IOException e) {
-			throw new RpcSerializeException("json end failed!", e);
+			throw new SerializeException("json end failed!", e);
 		}
 	}
 

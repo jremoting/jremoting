@@ -3,21 +3,21 @@ package com.github.jremoting.core.test;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import com.github.jremoting.core.ChannelBuffer;
-import com.github.jremoting.core.ObjectInput;
-import com.github.jremoting.core.ObjectOutput;
 import com.github.jremoting.core.test.TestService.HelloInput;
-import com.github.jremoting.dispatcher.NettyChannelBuffer;
-import com.github.jremoting.protocal.ChannelBufferInputStream;
-import com.github.jremoting.protocal.ChannelBufferOutputStream;
+import com.github.jremoting.io.ByteBuffer;
+import com.github.jremoting.io.ByteBufferInputStream;
+import com.github.jremoting.io.ByteBufferOutputStream;
+import com.github.jremoting.io.ObjectInput;
+import com.github.jremoting.io.ObjectOutput;
+import com.github.jremoting.remoting.DefaultByteBuffer;
 import com.github.jremoting.serializer.JsonSerializer;
 
 public class FastJsonTest {
 	public static void main(String[] rgs) {
 		ByteBuf buf =  Unpooled.buffer();
-		ChannelBuffer buffer = new NettyChannelBuffer(buf);
+		ByteBuffer buffer = new DefaultByteBuffer(buf);
 		
-		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
+		ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
 
 		JsonSerializer jsonSerializer = new JsonSerializer();
 		
@@ -33,7 +33,7 @@ public class FastJsonTest {
 		System.out.println(new String(buf.array()));
 		
 		
-		ChannelBufferInputStream in = new ChannelBufferInputStream(buffer);
+		ByteBufferInputStream in = new ByteBufferInputStream(buffer);
 		ObjectInput input = jsonSerializer.createObjectInput(in);
 		
 	

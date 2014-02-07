@@ -1,17 +1,19 @@
 package com.github.jremoting.protocal;
 
-import com.github.jremoting.core.DefaultInvocation;
-import com.github.jremoting.core.InvocationHolder;
-import com.github.jremoting.core.ChannelBuffer;
-import com.github.jremoting.core.Invocation;
-import com.github.jremoting.core.InvocationResult;
-import com.github.jremoting.core.ObjectInput;
-import com.github.jremoting.core.ObjectOutput;
+import com.github.jremoting.core.ErrorMessage;
+import com.github.jremoting.core.HeartbeatMessage;
+import com.github.jremoting.core.Invoke;
+import com.github.jremoting.core.InvokeResult;
+import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.exception.RpcProtocalException;
-import com.github.jremoting.exception.RpcServerErrorException;
-import com.github.jremoting.serializer.Serializers;
+import com.github.jremoting.core.SerializerUtil;
+import com.github.jremoting.exception.ProtocalException;
+import com.github.jremoting.io.ByteBuffer;
+import com.github.jremoting.io.ByteBufferInputStream;
+import com.github.jremoting.io.ByteBufferOutputStream;
+import com.github.jremoting.io.ObjectInput;
+import com.github.jremoting.io.ObjectOutput;
 import com.github.jremoting.util.ReflectionUtil;
 
 public class JRemotingProtocal implements Protocal {
@@ -20,97 +22,106 @@ public class JRemotingProtocal implements Protocal {
 	
 	public static final short MAGIC = (short) 0xBABE; //1011101010111110
 	
-	public static final byte MESSAGE_TYPE_MASK = (byte) 0x1F;  //00011111
-	public static final byte MESSAGE_REQUEST = 0;
-	public static final byte MESSAGE_RESPONSE = 1;
-	public static final byte MESSAGE_PING = 2;
-	public static final byte MESSAGE_PONG = 3;
-	
-	
-	public static final byte INVOKE_TYPE_MASK = (byte) 0xE0;   //11100000
-	public static final byte INVOKE_TWO_WAY = (byte) (0 << 5);
-	public static final byte INVOKE_ONE_WAY = (byte) (1 << 5);
-	
-	public static final int HEAD_LENGTH = 16;
-	
-	
-	public static final byte STATUS_OK = 86;
-	public static final byte STATUS_SERVER_ERROR = 50;
-	
-	private final Ping ping = new Ping(this);
-	private final Pong pong = new Pong(ping);
+	 // header length.
+    protected static final int      HEAD_LENGTH      = 16;
+    // message flag.
+    protected static final int     FLAG_REQUEST       =  0x80; //10000000
 
-	
+    protected static final int     FLAG_TWOWAY        =  0x40; //01000000
+
+    protected static final int     FLAG_EVENT     =  0x20;	  //00100000
+
+    protected static final int      SERIALIZATION_MASK = 0x1f;		  //00011111
+    
+    
+    protected static final int      STATUS_ERROR = 50;
+    protected static final int      STATUS_OK = 20;
+    
+
 	private final Serializer[] serializers;
 	
-	public JRemotingProtocal(Serializers serializers) {
-		this.serializers = serializers.getSerializers();
+	public JRemotingProtocal(Serializer[] serializers) {
+		this.serializers = SerializerUtil.reindex(serializers);
 	}
 	
-
 	@Override
-	public void writeRequest(Invocation invocation, ChannelBuffer buffer) {
+	public void encode(Message msg, ByteBuffer buffer) throws ProtocalException {
 		
-		boolean isPingRequest = invocation instanceof Ping;
-
+		boolean isHeartbeatMessage = msg instanceof HeartbeatMessage;
+		boolean isTwoWay = msg.isTwoWay();
+		boolean isRequest = msg instanceof Invoke;
+		boolean isErrorMsg = msg instanceof ErrorMessage;
+		
+		
+		int flag = (isRequest ? FLAG_REQUEST : 0)
+				| (isTwoWay ? FLAG_TWOWAY : 0) 
+				| (isHeartbeatMessage ? FLAG_EVENT : 0)
+				| msg.getSerializerId();
+		
+		int status = isErrorMsg ? STATUS_ERROR : STATUS_OK;
+		
+		//encode head
 		buffer.writeShort(MAGIC);
-
-		byte flag = (byte) (( isPingRequest ? MESSAGE_PING : MESSAGE_REQUEST) | INVOKE_TWO_WAY) ;
-		
-	
 		buffer.writeByte(flag);
-		buffer.writeByte(invocation.getSerializerId());
-		buffer.writeLong(invocation.getInvocationId());
+		buffer.writeByte(status);
+		buffer.writeLong(msg.getId());
 		
 		int bodyLengthOffset = buffer.writerIndex();
 		buffer.writeInt(0);
 		
-		if(isPingRequest) {
+		if(isHeartbeatMessage) {
 			return;
 		}
 		
-		Serializer serializer = serializers[invocation.getSerializerId()];
-		encodeRequestBody(invocation, buffer, serializer);
-
+		ObjectOutput output =  serializers[msg.getSerializerId()].createObjectOutput(new ByteBufferOutputStream(buffer));
+		
+		if(isErrorMsg) {
+			ErrorMessage errorMessage = (ErrorMessage)msg;
+			output.writeString(errorMessage.getErrorMsg());
+		}
+		
+		if(isRequest) {
+			Invoke invoke = (Invoke)msg;
+			encodeRequestBody(invoke, output);
+		}
+		else {
+			InvokeResult invokeResult = (InvokeResult)msg;
+			output.writeString(invokeResult.getResult().getClass().getName());
+			output.writeObject(invokeResult.getResult());
+		}
+		
+		output.flush();
+		
+		//write body length
 		int bodyLength = buffer.writerIndex() - bodyLengthOffset - 4;
-		
 		int savedWriterIndex = buffer.writerIndex();
-		
 		buffer.writerIndex(bodyLengthOffset);
 		buffer.writeInt(bodyLength);
 		buffer.writerIndex(savedWriterIndex);
+		
 	}
-
-
-	private void encodeRequestBody(Invocation invocation, ChannelBuffer buffer,
-			Serializer serializer) {
+	
+	private void encodeRequestBody(Invoke invoke, ObjectOutput output) {
 		
-		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
-		
-		ObjectOutput output = serializer.createObjectOutput(out);
-		
-		int argLength = invocation.getArgs() == null ? 0 : invocation.getArgs().length;
-		output.writeString(invocation.getServiceName());
-		output.writeString(invocation.getServiceVersion());
-		output.writeString(invocation.getMethodName());
+		int argLength = invoke.getArgs() == null ? 0 : invoke.getArgs().length;
+		output.writeString(invoke.getServiceName());
+		output.writeString(invoke.getServiceVersion());
+		output.writeString(invoke.getMethodName());
 		output.writeInt(argLength);
 
-		
 		if(argLength == 0) {
-			output.flush();
 			return;
 		}
 		
 		for (int i= 0; i <  argLength; i++) {
-			output.writeString(invocation.getParameterTypes()[i].getName());
-			output.writeObject(invocation.getArgs()[i]);
+			output.writeString(invoke.getParameterTypes()[i].getName());
+			output.writeObject(invoke.getArgs()[i]);
 		}
-		output.flush();
 	}
 
-	
+
 	@Override
-	public Invocation readRequest(ChannelBuffer buffer) {
+	public Message decode(ByteBuffer buffer) throws ProtocalException {
 		if(buffer.readableBytes() < HEAD_LENGTH) {
 			return null;
 		}
@@ -122,47 +133,59 @@ public class JRemotingProtocal implements Protocal {
 			return null;
 		}
 		
-		byte flag = buffer.readByte();
-		
-		boolean isPingRequest = (flag & MESSAGE_TYPE_MASK) == MESSAGE_PING;
-		byte serializeId = buffer.readByte();
-		long invocationId = buffer.readLong();
+		int flag = buffer.readByte();
+		int status = buffer.readByte();
+		long msgId = buffer.readLong();
 		int bodyLength = buffer.readInt();
 		
-		if(isPingRequest) {
-			return ping;
+		boolean isHeartbeat = (flag & FLAG_EVENT) > 0;
+		boolean isRequest = (flag & FLAG_REQUEST) > 0;
+		boolean isTwoWay = (flag & FLAG_TWOWAY) > 0 ;
+		int serializerId = (flag & SERIALIZATION_MASK);
+		boolean isErrorMsg = (status != STATUS_OK);
+		
+		if(isHeartbeat) {
+			return new HeartbeatMessage(isTwoWay, this, serializerId);
 		}
 		
-		if(buffer.readableBytes() < bodyLength) {
-			buffer.resetReaderIndex();
-			return null;
-		}
-		
+		//decode body
 		int bodyEndOffset = buffer.readerIndex() + bodyLength;
-
+		
 		try {
 			
-		    Serializer serializer = serializers[serializeId];
-			return  decodeRequestBody(invocationId,buffer, serializer);
-		} catch (Exception e) {
-			Invocation badInvocation = new DefaultInvocation(null, null, null, null,
-					null, null, this, serializeId);
-			badInvocation.setInvocationId(invocationId);
+			ObjectInput input = serializers[serializerId].createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
 			
-			throw new RpcProtocalException("invalid request body !", badInvocation ,e);
+			if(isErrorMsg) {
+				String errorMsg = input.readString();
+				ErrorMessage msg =  new ErrorMessage(errorMsg, msgId ,this, serializerId);
+				return msg;
+			}
+			
+			if(isRequest) {
+				return decodeRequestBody(msgId,serializerId ,input);
+			}
+			else {
+				String resultClassName = input.readString();
+				Class<?> resultClass = ReflectionUtil.findClass(resultClassName);
+				Object result = input.readObject(resultClass);
+				
+				InvokeResult invokeResult = new InvokeResult(result, msgId,this, serializerId);
+	
+				return invokeResult;
+			}
+			
+		} catch (Exception e) {
+			throw new ProtocalException("decode msg  failed!", null ,e);
 		}
-		finally{
-			buffer.readerIndex(bodyEndOffset);;
+		finally {
+			buffer.readerIndex(bodyEndOffset);
 		}
+	
 	}
+	
 
 
-	private Invocation decodeRequestBody(long invocationId,
-			ChannelBuffer buffer, Serializer serializer)
-			throws ClassNotFoundException {
-		
-		ChannelBufferInputStream in  = new ChannelBufferInputStream(buffer);
-		ObjectInput input = serializer.createObjectInput(in);
+	private Invoke decodeRequestBody(long msgId, int serializerId,ObjectInput input) throws ClassNotFoundException {
 		
 		String serviceName = input.readString();
 		String serviceVersion =  input.readString();
@@ -171,9 +194,9 @@ public class JRemotingProtocal implements Protocal {
 		
 		
 		if(argsLength == 0) {
-			Invocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName,null, null, null, this, serializer.getId());
-			invocation.setInvocationId(invocationId);
-			return invocation;
+			Invoke invoke = new Invoke(serviceName, serviceVersion, methodName,null, null, null, this, serializerId);
+			invoke.setId(msgId);
+			return invoke;
 		}
 		
 		Class<?>[] parameterTypes = new Class[argsLength];
@@ -185,146 +208,10 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		DefaultInvocation invocation = new DefaultInvocation(serviceName, serviceVersion, methodName, args,parameterTypes ,null,
-				this, serializer.getId());
-		invocation.setInvocationId(invocationId);
-		return invocation;
+		Invoke invoke = new Invoke(serviceName, serviceVersion, methodName, args,parameterTypes ,null,
+				this, serializerId);
+		invoke.setId(msgId);
+		return invoke;
 	}
 	
-
-	
-	@Override
-	public void writeResponse(InvocationResult invocationResult,
-			ChannelBuffer buffer) {
-		
-		boolean isPongResponse =(invocationResult instanceof Pong);
-		boolean isServerError = invocationResult.getResult() instanceof RpcServerErrorException;
-
-		buffer.writeShort(MAGIC);
-		
-		byte flag = (byte) (0 |   (isPongResponse ? MESSAGE_PONG :MESSAGE_RESPONSE) | INVOKE_TWO_WAY);
-		
-		buffer.writeByte(flag);
-		byte status = isServerError ? STATUS_SERVER_ERROR : STATUS_OK;
-
-		buffer.writeByte(status);
-		buffer.writeLong(invocationResult.getInvocation().getInvocationId());
-		
-		
-		int bodyLengthOffset = buffer.writerIndex();
-		buffer.writeInt(0);
-	
-		//pong or void response 
-		if(isPongResponse || invocationResult.getResult() == null) {
-			return;
-		}
-		
-		//encode body
-		Serializer serializer = serializers[invocationResult.getInvocation().getSerializerId()];
-		ChannelBufferOutputStream out = new ChannelBufferOutputStream(buffer);
-		ObjectOutput output = serializer.createObjectOutput(out);
-		if(isServerError) {
-			RpcServerErrorException exception = (RpcServerErrorException)invocationResult.getResult();
-			output.writeString(exception.getMessage());
-		}
-		else {
-			output.writeObject(invocationResult.getResult());
-		}
-		
-		output.flush();
-		
-		int bodyLength = buffer.writerIndex() - bodyLengthOffset - 4;
-		
-		int savedWriterIndex = buffer.writerIndex();
-		buffer.writerIndex(bodyLengthOffset);
-		buffer.writeInt(bodyLength);
-		buffer.writerIndex(savedWriterIndex);
-	}
-	
-
-	@Override
-	public InvocationResult readResponse(InvocationHolder holder, ChannelBuffer buffer) {
-		
-		if(buffer.readableBytes() < HEAD_LENGTH) {
-			return null;
-		}
-		
-		buffer.markReaderIndex();
-		
-		short magic = buffer.readShort();
-		if(magic != MAGIC) {
-			buffer.resetReaderIndex();
-			return null;
-		}
-		
-		byte flag = buffer.readByte();
-		byte status = buffer.readByte();
-		
-		boolean isPongResponse = (flag & MESSAGE_TYPE_MASK) == MESSAGE_PONG;
-		boolean isServerError = status == STATUS_SERVER_ERROR;
-		
-		long  invocationId = buffer.readLong();
-		int bodyLength = buffer.readInt();
-		
-		if(isPongResponse) {
-			return pong;
-		}
-		
-		if(buffer.readableBytes() < bodyLength) {
-			buffer.resetReaderIndex();
-			return null;
-		}
-		
-
-		Invocation invocation = holder.getInvocation(invocationId);
-		//invocation may be null because of client timeout
-		if(invocation == null) {
-			buffer.skipBytes(bodyLength);
-			return null;
-		}
-		
-		//void response
-		if(bodyLength == 0) {
-			return new InvocationResult(null, invocation);
-		}
-		
-		//decode body
-		int bodyEndOffset = buffer.readerIndex() + bodyLength;
-		
-		try {
-		
-			Object result = null;
-			Serializer serializer = serializers[invocation.getSerializerId()];
-			ChannelBufferInputStream in = new ChannelBufferInputStream(buffer);
-			ObjectInput input = serializer.createObjectInput(in);
-	
-			if(isServerError) {
-				String errorMsg = input.readString();
-				result = new RpcServerErrorException(errorMsg);
-			}
-			else if (invocation.getReturnType() != Void.class) {
-				result = input.readObject(invocation.getReturnType());
-			}
-			
-			return new InvocationResult(result, invocation);
-		} catch (Exception e) {
-			throw new RpcProtocalException("decode response body failed!", null ,e);
-		}
-		finally {
-			buffer.readerIndex(bodyEndOffset);
-		}
-	}
-
-
-	@Override
-	public Ping getPing() {
-		return ping;
-	}
-
-
-	@Override
-	public Pong getPong() {
-		return pong;
-	}
-
 }

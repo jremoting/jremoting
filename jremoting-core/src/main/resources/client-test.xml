@@ -10,9 +10,9 @@
 		<property name="serviceName" value="com.github.jremoting.core.test.TestService" />
 		<property name="serviceVersion" value="1.0" />
 		<property name="protocal"  ref="jremotingProtocal"/>
-		 <property name="serializer" ref="jsonSerializer"/>
+		<property name="serializer" ref="jsonSerializer"/>
 		<!-- <property name="serializer" ref="hessianSerializer"/> -->
-		<property name="pipeline" ref="clientPipeline" />
+		<property name="clientRpcInvoker" ref="clientRpcInvoker" />
 		<property name="address" value="127.0.0.1:8686"></property>
 	</bean>
 	

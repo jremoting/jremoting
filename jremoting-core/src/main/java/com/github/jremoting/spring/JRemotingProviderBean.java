@@ -1,17 +1,16 @@
 package com.github.jremoting.spring;
 
-import com.github.jremoting.core.InvokePipeline;
-import com.github.jremoting.core.ServerDispatcher;
+import com.github.jremoting.core.RpcServer;
 import com.github.jremoting.core.ServiceProvider;
+import com.github.jremoting.invoker.ServerRpcInvoker;
 
-public class JRemotingProviderBean implements ServiceProvider  {
+public class JRemotingProviderBean implements ServiceProvider    {
 
 	private String serviceName;
 	private String serviceVersion;
 	private Object target;
-	
-	private ServerDispatcher dispatcher;
-	private InvokePipeline pipeline;
+	private ServerRpcInvoker serverRpcInvoker;
+	private RpcServer rpcServer;
 	
 	public String getServiceName() {
 		return serviceName;
@@ -26,34 +25,37 @@ public class JRemotingProviderBean implements ServiceProvider  {
 	public void setServiceVersion(String serviceVersion) {
 		this.serviceVersion = serviceVersion;
 	}
+	
+	@Override
+	public String getServiceId() {
+		return this.getServiceName() + ":" + this.getServiceVersion();
+	}
+
+	@Override
 	public Object getTarget() {
 		return target;
 	}
+
 	public void setTarget(Object target) {
 		this.target = target;
 	}
 
-	@Override
-	public InvokePipeline getPipeline() {
-		return pipeline;
+	public ServerRpcInvoker getServerRpcInvoker() {
+		return serverRpcInvoker;
 	}
 
-	public void setPipeline(InvokePipeline pipeline) {
-		this.pipeline = pipeline;
+	public void setServerRpcInvoker(ServerRpcInvoker serverRpcInvoker) {
+		this.serverRpcInvoker = serverRpcInvoker;
+		this.serverRpcInvoker.register(this);
 	}
 
-	public ServerDispatcher getDispatcher() {
-		return dispatcher;
-	}
-	
-	public void setDispatcher(ServerDispatcher dispatcher) {
-		dispatcher.registerProvider(this);
-		this.dispatcher = dispatcher;
+	public RpcServer getRpcServer() {
+		return rpcServer;
 	}
 
-	@Override
-	public String getService() {
-		return this.getServiceName() + ":" + this.getServiceVersion();
+	public void setRpcServer(RpcServer rpcServer) {
+		this.rpcServer = rpcServer;
+		this.rpcServer.start();
 	}
 	
 }
