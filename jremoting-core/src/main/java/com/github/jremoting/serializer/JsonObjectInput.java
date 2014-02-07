@@ -12,7 +12,6 @@ public class JsonObjectInput implements ObjectInput  {
 	public JsonObjectInput(InputStream in) {
 		this.reader = new JSONReader(new InputStreamReader(in));
 		this.startArray();
-		//endArray 不需要调用 ，reader会一次性读周整个body长度解析。不影响ChannelBuffer数据的一致性
 	}
 	
 	protected void startArray() {
@@ -32,5 +31,10 @@ public class JsonObjectInput implements ObjectInput  {
 	@Override
 	public int readInt() {
 		return reader.readInteger();
+	}
+
+	@Override
+	public void close() {
+		this.reader.endArray();
 	}
 }

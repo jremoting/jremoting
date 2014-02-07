@@ -29,7 +29,7 @@ public class JsonObjectOutput implements ObjectOutput {
 	}
 	
 	@Override
-	public void flush() {
+	public void close() {
 		try {
 			writer.endArray();
 			writer.flush();

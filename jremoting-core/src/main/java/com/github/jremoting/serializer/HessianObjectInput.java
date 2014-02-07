@@ -44,4 +44,9 @@ public class HessianObjectInput implements ObjectInput {
 			throw new SerializeException("hessian read int failed", e);
 		}
 	}
+
+	@Override
+	public void close() {
+		
+	}
 }

@@ -81,8 +81,7 @@ public class JRemotingProtocal implements Protocal {
 			ErrorMessage errorMessage = (ErrorMessage)msg;
 			output.writeString(errorMessage.getErrorMsg());
 		}
-		
-		if(isRequest) {
+		else if(isRequest) {
 			Invoke invoke = (Invoke)msg;
 			encodeRequestBody(invoke, output);
 		}
@@ -97,7 +96,7 @@ public class JRemotingProtocal implements Protocal {
 			}
 		}
 		
-		output.flush();
+		output.close();
 		
 		//write body length
 		int bodyLength = buffer.writerIndex() - bodyLengthOffset - 4;
@@ -166,15 +165,13 @@ public class JRemotingProtocal implements Protocal {
 		try {
 			
 			ObjectInput input = serializers[serializerId].createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
-			
+			Message msg = null;
 			if(isErrorMsg) {
 				String errorMsg = input.readString();
-				ErrorMessage msg =  new ErrorMessage(errorMsg, msgId ,this, serializerId);
-				return msg;
+			    msg =  new ErrorMessage(errorMsg, msgId ,this, serializerId);
 			}
-			
-			if(isRequest) {
-				return decodeRequestBody(msgId,serializerId ,input);
+			else if(isRequest) {
+				msg =  decodeRequestBody(msgId,serializerId ,input);
 			}
 			else {
 				Object result = null;
@@ -184,10 +181,11 @@ public class JRemotingProtocal implements Protocal {
 				    result = input.readObject(resultClass);
 				}
 				
-				InvokeResult invokeResult = new InvokeResult(result, msgId,this, serializerId);
-	
-				return invokeResult;
+				msg= new InvokeResult(result, msgId,this, serializerId);
 			}
+			input.close();
+			return msg;
+			
 			
 		} catch (Exception e) {
 			throw new ProtocalException("decode msg  failed!", null ,e);

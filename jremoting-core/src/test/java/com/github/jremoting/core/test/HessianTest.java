@@ -31,7 +31,7 @@ public class HessianTest {
 		output.writeInt(4);
 		output.writeObject(new HelloInput());
 		output.writeString("hehe");
-		output.flush();
+		output.close();
 		
 		
 		ByteBufferInputStream in = new ByteBufferInputStream(buffer);

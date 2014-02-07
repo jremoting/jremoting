@@ -28,7 +28,7 @@ public class FastJsonTest {
 		output.writeObject(new HelloInput());
 		output.writeString("hehe");
 		output.writeObject(false);
-		output.flush();
+		output.close();
 		
 		System.out.println(new String(buf.array()));
 		

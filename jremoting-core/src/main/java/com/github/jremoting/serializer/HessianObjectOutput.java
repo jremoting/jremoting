@@ -40,7 +40,7 @@ public class HessianObjectOutput implements ObjectOutput{
 	}
 
 	@Override
-	public void flush() {
+	public void close() {
 		try {
 			output.flushBuffer();
 		} catch (IOException e) {
