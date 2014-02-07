@@ -130,7 +130,7 @@ public class JRemotingProtocal implements Protocal {
 	@Override
 	public Message decode(ByteBuffer buffer) throws ProtocalException {
 		if(buffer.readableBytes() < HEAD_LENGTH) {
-			return null;
+			return ErrorMessage.NEED_MORE_INPUT_MESSAGE;
 		}
 		buffer.markReaderIndex();
 		
@@ -144,6 +144,11 @@ public class JRemotingProtocal implements Protocal {
 		int status = buffer.readByte();
 		long msgId = buffer.readLong();
 		int bodyLength = buffer.readInt();
+		
+		if(buffer.readableBytes() < bodyLength) {
+			buffer.resetReaderIndex();
+			return ErrorMessage.NEED_MORE_INPUT_MESSAGE;
+		}
 		
 		boolean isHeartbeat = (flag & FLAG_EVENT) > 0;
 		boolean isRequest = (flag & FLAG_REQUEST) > 0;

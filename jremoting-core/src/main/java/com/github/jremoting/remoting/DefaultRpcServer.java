@@ -21,19 +21,19 @@ public class DefaultRpcServer implements RpcServer {
 	private final EventLoopGroup childGroup;
 	private int port = 8686;
 	private String ip = "127.0.0.1"; //TODO get local ip
-	private final Protocal[] protocals;
+	private final Protocal protocal;
 	private final Executor executor;
 	private final ServerRpcInvoker serverRpcInvoker;
 
 	public DefaultRpcServer(EventLoopGroup parentGroup, 
 			EventLoopGroup childGroup,
 			Executor executor,
-			Protocal[] protocals, 
+			Protocal protocal, 
 			ServerRpcInvoker serverRpcInvoker) {
 		this.executor = executor;
 		this.parentGroup = parentGroup;
 		this.childGroup = childGroup;
-		this.protocals = protocals;
+		this.protocal = protocal;
 		this.serverRpcInvoker = serverRpcInvoker;
 	}
 
@@ -51,7 +51,7 @@ public class DefaultRpcServer implements RpcServer {
 			bootstrap.group(parentGroup, childGroup)
 			.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
 				public void initChannel(SocketChannel ch) throws Exception {
-					ch.pipeline().addLast(new NettyMessageCodec(protocals),
+					ch.pipeline().addLast(new NettyMessageCodec(protocal),
 							new NettyServerHandler(executor,serverRpcInvoker));
 				}
 			});

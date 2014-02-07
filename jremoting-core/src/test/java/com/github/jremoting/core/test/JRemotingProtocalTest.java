@@ -97,8 +97,8 @@ public class JRemotingProtocalTest {
 	
 	
 	public Object serverToClient(InvokeResult result) {
-		EmbeddedChannel clientChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));	
-		EmbeddedChannel serverChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));
+		EmbeddedChannel clientChannel = new EmbeddedChannel(new NettyMessageCodec(protocal));	
+		EmbeddedChannel serverChannel = new EmbeddedChannel(new NettyMessageCodec(protocal));
 		
 		serverChannel.writeOutbound(result);
 		
@@ -111,8 +111,8 @@ public class JRemotingProtocalTest {
 	}
 	
 	public Object clientToServer(Invoke invocation) {
-		EmbeddedChannel clientChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));	
-		EmbeddedChannel serverChannel = new EmbeddedChannel(new NettyMessageCodec(new Protocal[]{protocal}));
+		EmbeddedChannel clientChannel = new EmbeddedChannel(new NettyMessageCodec(protocal));	
+		EmbeddedChannel serverChannel = new EmbeddedChannel(new NettyMessageCodec(protocal));
 		
 		clientChannel.writeOutbound(invocation);
 		

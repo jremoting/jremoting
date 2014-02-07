@@ -46,12 +46,7 @@
 		<constructor-arg name="parentGroup" ref="parentGroup"/>
 		<constructor-arg name="childGroup" ref="childGroup"/>
 		<constructor-arg name="executor" ref="executor"/>
-		<constructor-arg name="protocals">
-			<array>
-				<ref bean="jremotingProtocal"/>
-			</array>
-		</constructor-arg>
-		
+		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="serverRpcInvoker" ref="serverRpcInvoker"/>
 	</bean>
 </beans>

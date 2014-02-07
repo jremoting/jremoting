@@ -9,4 +9,6 @@ public class ErrorMessage extends InvokeResult {
 	public String getErrorMsg() {
 		return (String) this.getResult();
 	}
+	
+	public static final ErrorMessage NEED_MORE_INPUT_MESSAGE = new ErrorMessage(null, 0, null, 0);
 }

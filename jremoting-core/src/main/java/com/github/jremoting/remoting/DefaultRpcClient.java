@@ -73,7 +73,7 @@ public class DefaultRpcClient implements RpcClient  {
 						public void initChannel(SocketChannel ch)
 								throws Exception {
 							ch.pipeline().addLast(
-									new NettyMessageCodec(new Protocal[]{protocal}),
+									new NettyMessageCodec(protocal),
 									new NettyClientHandler(protocal));
 						}
 					});
