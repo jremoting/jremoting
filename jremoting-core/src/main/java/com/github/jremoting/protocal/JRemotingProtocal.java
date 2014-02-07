@@ -37,6 +37,8 @@ public class JRemotingProtocal implements Protocal {
     protected static final int      STATUS_ERROR = 50;
     protected static final int      STATUS_OK = 20;
     
+    private static final String NULL = "NULL";
+    
 
 	private final Serializer[] serializers;
 	
@@ -86,8 +88,13 @@ public class JRemotingProtocal implements Protocal {
 		}
 		else {
 			InvokeResult invokeResult = (InvokeResult)msg;
-			output.writeString(invokeResult.getResult().getClass().getName());
-			output.writeObject(invokeResult.getResult());
+			if(invokeResult.getResult() == null) {
+				output.writeString(NULL);
+			}
+			else {
+				output.writeString(invokeResult.getResult().getClass().getName());
+				output.writeObject(invokeResult.getResult());
+			}
 		}
 		
 		output.flush();
@@ -165,9 +172,12 @@ public class JRemotingProtocal implements Protocal {
 				return decodeRequestBody(msgId,serializerId ,input);
 			}
 			else {
+				Object result = null;
 				String resultClassName = input.readString();
-				Class<?> resultClass = ReflectionUtil.findClass(resultClassName);
-				Object result = input.readObject(resultClass);
+				if(!NULL.equals(resultClassName)) {
+					Class<?> resultClass = ReflectionUtil.findClass(resultClassName);
+				    result = input.readObject(resultClass);
+				}
 				
 				InvokeResult invokeResult = new InvokeResult(result, msgId,this, serializerId);
 	

@@ -14,29 +14,25 @@ public class JRemotingClientTest {
 		
 		TestService testService = context.getBean(TestService.class);
 		
-	
-	
-		for (int i = 0; i < 5; i++) {
-			 try {
-
-					testService.hello3('0', false, 1, 2L, 3D, 4f, (short)5, (byte)6, "7", new Date(), new java.sql.Date(12121212));
-
-				
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-					
+		
+		for (int i = 0; i < 100; i++) {
 			
-					HelloInput input = new HelloInput();
-					input.setId(1212);
-					
-					HelloOutput result = testService.hello(input,324);
-					
-					System.out.println(JSON.toJSON(result));
-				
-					testService.hello1();
+			testService.hello3('0', false, 1, 2L, 3D, 4f, (short) 5, (byte) 6, "7",
+					new Date(), new java.sql.Date(12121212));
+
+			HelloInput input = new HelloInput();
+			input.setId(1212);
+
+			HelloOutput result = testService.hello(input, 324);
+
+			System.out.println(JSON.toJSON(result));
+
+			testService.hello1();
+		  
 		}
-	  
+	
+	
+		
 		
 		//System.in.read();
 		

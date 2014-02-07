@@ -35,7 +35,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         		futures.put(message.getId(), future);
         	}
         	
-        	ctx.write(message, promise);
+        	ctx.writeAndFlush(message, promise);
         }
         else {
         	ctx.write(msg, promise);
