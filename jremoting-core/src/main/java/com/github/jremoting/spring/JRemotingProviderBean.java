@@ -6,29 +6,29 @@ import com.github.jremoting.invoker.ServerRpcInvoker;
 
 public class JRemotingProviderBean implements ServiceProvider    {
 
-	private String serviceName;
-	private String serviceVersion;
+	private String interfaceName;
+	private String version;
 	private Object target;
 	private ServerRpcInvoker serverRpcInvoker;
 	private RpcServer rpcServer;
 	
-	public String getServiceName() {
-		return serviceName;
+	public String getInterfaceName() {
+		return interfaceName;
 	}
 	
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
+	public void setInterfaceName(String interfaceName) {
+		this.interfaceName = interfaceName;
 	}
-	public String getServiceVersion() {
-		return serviceVersion;
+	public String getVersion() {
+		return version;
 	}
-	public void setServiceVersion(String serviceVersion) {
-		this.serviceVersion = serviceVersion;
+	public void setVersion(String version) {
+		this.version = version;
 	}
 	
 	@Override
-	public String getServiceId() {
-		return this.getServiceName() + ":" + this.getServiceVersion();
+	public String getServiceName() {
+		return this.interfaceName + ":" + this.version;
 	}
 
 	@Override

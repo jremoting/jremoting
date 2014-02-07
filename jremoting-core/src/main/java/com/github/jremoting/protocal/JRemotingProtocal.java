@@ -110,8 +110,8 @@ public class JRemotingProtocal implements Protocal {
 	private void encodeRequestBody(Invoke invoke, ObjectOutput output) {
 		
 		int argLength = invoke.getArgs() == null ? 0 : invoke.getArgs().length;
-		output.writeString(invoke.getServiceName());
-		output.writeString(invoke.getServiceVersion());
+		output.writeString(invoke.getInterfaceName());
+		output.writeString(invoke.getVersion());
 		output.writeString(invoke.getMethodName());
 		output.writeInt(argLength);
 
@@ -200,14 +200,14 @@ public class JRemotingProtocal implements Protocal {
 
 	private Invoke decodeRequestBody(long msgId, int serializerId,ObjectInput input) throws ClassNotFoundException {
 		
-		String serviceName = input.readString();
-		String serviceVersion =  input.readString();
+		String interfaceName = input.readString();
+		String version =  input.readString();
 		String methodName =  input.readString();
 		int argsLength = input.readInt();
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(serviceName, serviceVersion, methodName,null, null, null, this, serializerId);
+			Invoke invoke = new Invoke(interfaceName, version, methodName,null, null, null, this, serializerId);
 			invoke.setId(msgId);
 			return invoke;
 		}
@@ -221,7 +221,7 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		Invoke invoke = new Invoke(serviceName, serviceVersion, methodName, args,parameterTypes ,null,
+		Invoke invoke = new Invoke(interfaceName, version, methodName, args,parameterTypes ,null,
 				this, serializerId);
 		invoke.setId(msgId);
 		return invoke;

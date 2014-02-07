@@ -39,8 +39,8 @@ public class JRemotingProtocalTest {
 		
 		Invoke decodedInvocation = (Invoke)obj;
 		
-		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getServiceName());
-		Assert.assertEquals("1.0", decodedInvocation.getServiceVersion());
+		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getInterfaceName());
+		Assert.assertEquals("1.0", decodedInvocation.getVersion());
 		Assert.assertEquals("hello", decodedInvocation.getMethodName());
 		Assert.assertEquals(1, decodedInvocation.getArgs().length);
 		Assert.assertEquals("xhan", decodedInvocation.getArgs()[0]);
@@ -68,8 +68,8 @@ public class JRemotingProtocalTest {
 		
 		Invoke decodedInvocation = (Invoke)obj;
 		
-		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getServiceName());
-		Assert.assertEquals("1.0", decodedInvocation.getServiceVersion());
+		Assert.assertEquals("com.github.jremoting.core.test.TestService", decodedInvocation.getInterfaceName());
+		Assert.assertEquals("1.0", decodedInvocation.getVersion());
 		Assert.assertEquals("hello", decodedInvocation.getMethodName());
 		Assert.assertEquals(3, decodedInvocation.getArgs().length);
 		Assert.assertEquals(new HelloInput(), decodedInvocation.getArgs()[0]);

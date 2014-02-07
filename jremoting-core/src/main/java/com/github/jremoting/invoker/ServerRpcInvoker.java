@@ -17,7 +17,6 @@ public class ServerRpcInvoker    {
 	
 	private final InvokeFilter head;
 	
-	//key = serviceName:serviceVersion 
 	private Map<String, ServiceProvider> providers = new HashMap<String, ServiceProvider>();
 	
 	public ServerRpcInvoker(List<InvokeFilter> invokeFilters) {
@@ -26,14 +25,14 @@ public class ServerRpcInvoker    {
 	}
 	
 	public  Object invoke(Invoke invoke) {
-		ServiceProvider provider = providers.get(invoke.getServiceId());
+		ServiceProvider provider = providers.get(invoke.getServiceName());
 		invoke.setTarget(provider.getTarget());
 		
 		return this.head.invoke(invoke);
 	}
 	
 	public void register(ServiceProvider provider) {
-		providers.put(provider.getServiceId(), provider);
+		providers.put(provider.getServiceName(), provider);
 	}
 
 	private  class ServerTailInvokeFilter implements InvokeFilter {
