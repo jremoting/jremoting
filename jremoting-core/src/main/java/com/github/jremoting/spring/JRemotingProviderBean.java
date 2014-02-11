@@ -45,7 +45,6 @@ public class JRemotingProviderBean implements ServiceProvider    {
 	public void setRpcServer(RpcServer rpcServer) {
 		this.rpcServer = rpcServer;
 		this.rpcServer.register(this);
-		this.rpcServer.start();
 	}
 	
 }

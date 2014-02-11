@@ -19,18 +19,19 @@
 		
 	<bean id="parentGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
 	<bean id="childGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
-	<bean id="executor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
-		<property name="corePoolSize" value="5" />
-		<property name="maxPoolSize" value="100" />
-		<property name="queueCapacity" value="25" />
+	<bean id="executor" class="java.util.concurrent.Executors" factory-method="newFixedThreadPool">
+		<constructor-arg value="100"></constructor-arg>
 	</bean>
 
 
+	<bean id="registry" class="com.github.jremoting.registry.DefaultServiceRegistry">
+		<constructor-arg name="zookeeperConnectionString" value="127.0.0.1:2181" />
+	</bean>
 
 	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="serializer" ref="jsonSerializer" />
-		<constructor-arg name="address" value="127.0.0.1:8686" />
+		<constructor-arg name="registry" ref="registry" />
 		<constructor-arg name="invokeFilterChain">
 			<bean class="com.github.jremoting.invoke.ClientInvokeFilterChain">
 				<constructor-arg name="messageChannel">
@@ -39,7 +40,11 @@
 					</bean>
 				</constructor-arg>
 				<constructor-arg name="invokeFilters">
-					<list></list>
+					<list>
+					 <bean class="com.github.jremoting.invoke.ClusterInvokeFilter">
+					 	<constructor-arg name="registry" ref="registry"></constructor-arg>
+					 </bean>
+					</list>
 				</constructor-arg>
 			</bean>
 		</constructor-arg>
@@ -51,7 +56,7 @@
 		<constructor-arg name="executor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="port" value="8686"/>
-		<constructor-arg name="ip" value="127.0.0.1"/>
+		<constructor-arg name="registry" ref="registry" />
 		<constructor-arg name="invokeFilterChain">
 			<bean class="com.github.jremoting.invoke.ServerInvokeFilterChain">
 				<constructor-arg name="invokeFilters">

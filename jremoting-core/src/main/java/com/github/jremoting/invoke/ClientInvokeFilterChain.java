@@ -13,6 +13,10 @@ import com.github.jremoting.exception.RemotingException;
 public class ClientInvokeFilterChain {
 
 	private final MessageChannel messageChannel;
+	public MessageChannel getMessageChannel() {
+		return messageChannel;
+	}
+
 	private final InvokeFilter head;
 	
 	public ClientInvokeFilterChain(MessageChannel messageChannel, List<InvokeFilter> invokeFilters) {

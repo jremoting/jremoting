@@ -7,8 +7,11 @@ import org.springframework.beans.factory.FactoryBean;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.Serializer;
+import com.github.jremoting.core.ServiceParticipantInfo;
+import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ClientInvocationHandler;
+import com.github.jremoting.util.NetUtil;
 
 @SuppressWarnings("rawtypes")
 public class JRemotingConsumerBean implements FactoryBean {
@@ -85,5 +88,8 @@ public class JRemotingConsumerBean implements FactoryBean {
 
 	public void setRpcClient(RpcClient rpcClient) {
 		this.rpcClient = rpcClient;
+		this.rpcClient.register(new ServiceParticipantInfo(this.interfaceName + ":" + this.version
+				, NetUtil.getLocalHost(), ParticipantType.CONSUMER));
+		
 	}
 }

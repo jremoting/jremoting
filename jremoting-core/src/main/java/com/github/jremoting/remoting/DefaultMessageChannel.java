@@ -94,10 +94,9 @@ public class DefaultMessageChannel implements MessageChannel  {
 
 	@Override
 	public void close() {
+		for (Channel channel : channels.values()) {
+			channel.close();
+		}
 		eventLoopGroup.shutdownGracefully();
 	}
-
-
-
-	
 }
