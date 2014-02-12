@@ -6,6 +6,7 @@ public abstract class Message {
 	private  Serializer serializer;
 	private String remoteAddress;
 	private long id;
+	private long timeout;
 	
 	public Message(boolean isTwoWay , Protocal protocal, Serializer serializer) {
 		this.isTwoWay = isTwoWay;
@@ -45,6 +46,14 @@ public abstract class Message {
 
 	public void setSerializer(Serializer serializer) {
 		this.serializer = serializer;
+	}
+
+	public long getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
 	}
 
 

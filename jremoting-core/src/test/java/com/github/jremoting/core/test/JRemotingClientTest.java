@@ -1,5 +1,6 @@
 package com.github.jremoting.core.test;
 
+import java.io.IOException;
 import java.util.Date;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -9,7 +10,7 @@ import com.github.jremoting.core.test.TestService.HelloInput;
 import com.github.jremoting.core.test.TestService.HelloOutput;
 
 public class JRemotingClientTest {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("client-test.xml");
 		
 		TestService testService = context.getBean(TestService.class);
@@ -34,7 +35,7 @@ public class JRemotingClientTest {
 	
 		
 		
-		//System.in.read();
+		System.in.read();
 		
 		context.close();
 	}

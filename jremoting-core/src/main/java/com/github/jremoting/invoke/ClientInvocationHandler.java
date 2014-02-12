@@ -16,6 +16,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 	private final String serviceName;
 	private final String serviceVersion;
 	private final String remoteAddress;
+	private final long timeout;
 	
 	
 	
@@ -24,7 +25,8 @@ public class ClientInvocationHandler implements InvocationHandler {
 			Serializer serializer,
 			String serviceName, 
 			String serviceVersion,
-			String remoteAddress) {
+			String remoteAddress,
+			long timeout) {
 		
 		this.rpcClient = rpcClient;
 		this.protocal = protocal;
@@ -32,6 +34,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 		this.serviceVersion =serviceVersion;
 		this.serviceName = serviceName;
 		this.remoteAddress = remoteAddress;
+		this.timeout = timeout;
 	}
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
@@ -49,6 +52,10 @@ public class ClientInvocationHandler implements InvocationHandler {
 		if(remoteAddress != null) {
 			invoke.setRemoteAddress(remoteAddress);
 		}
+		invoke.setTimeout(this.timeout);
 		return rpcClient.invoke(invoke);
+	}
+	public long getTimeout() {
+		return timeout;
 	}
 }

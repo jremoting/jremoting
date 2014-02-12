@@ -2,6 +2,8 @@ package com.github.jremoting.invoke;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
@@ -13,6 +15,7 @@ import com.github.jremoting.exception.RemotingException;
 public class ClientInvokeFilterChain {
 
 	private final MessageChannel messageChannel;
+	private final long DEFAULT_TIMEOUT = 60*1000*5; //default timeout 5 mins
 	public MessageChannel getMessageChannel() {
 		return messageChannel;
 	}
@@ -36,11 +39,17 @@ public class ClientInvokeFilterChain {
 		public Object invoke(Invoke invoke) {
 			MessageFuture future = messageChannel.send(invoke);
 			try {
-				return future.get();
+				if(invoke.getTimeout() <= 0) {
+					invoke.setTimeout(DEFAULT_TIMEOUT);
+				}
+				return future.get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
+				
 			} catch (InterruptedException e) {
 				throw new RemotingException(e);
 			} catch (ExecutionException e) {
 				throw new RemotingException(e);
+			} catch (TimeoutException e) {
+				throw new com.github.jremoting.exception.TimeoutException("invoke time out timeout:" + invoke.getTimeout());
 			}
 		}
 		

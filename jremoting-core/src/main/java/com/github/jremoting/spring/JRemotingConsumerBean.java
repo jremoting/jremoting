@@ -23,13 +23,13 @@ public class JRemotingConsumerBean implements FactoryBean {
 	private RpcClient rpcClient;
 
 	private String address;
-	private int invokeTimeout;
+	private long timeout;
 	 
 	
 	@Override
 	public Object getObject() throws Exception {
 		return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{getObjectType()}, 
-				new ClientInvocationHandler(rpcClient, protocal, serializer, interfaceName, version, address));
+				new ClientInvocationHandler(rpcClient, protocal, serializer, interfaceName, version, address, timeout));
 	}
 	
 	@Override
@@ -69,12 +69,6 @@ public class JRemotingConsumerBean implements FactoryBean {
 	public void setSerializer(Serializer serializer) {
 		this.serializer = serializer;
 	}
-	public int getInvokeTimeout() {
-		return invokeTimeout;
-	}
-	public void setInvokeTimeout(int invokeTimeout) {
-		this.invokeTimeout = invokeTimeout;
-	}
 	public String getAddress() {
 		return address;
 	}
@@ -91,5 +85,13 @@ public class JRemotingConsumerBean implements FactoryBean {
 		this.rpcClient.register(new ServiceParticipantInfo(this.interfaceName + ":" + this.version
 				, NetUtil.getLocalHost(), ParticipantType.CONSUMER));
 		
+	}
+
+	public long getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
 	}
 }
