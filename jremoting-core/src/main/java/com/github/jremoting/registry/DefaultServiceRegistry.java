@@ -31,12 +31,11 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 												ConnectionStateListener,
 												UnhandledErrorListener {
 
-	private  Map<String, List<ServiceParticipantInfo>> cachedProviderInfos = new ConcurrentHashMap<String, List<ServiceParticipantInfo>>();
-	private Map<String, CountDownLatch> providerSubscribeLatch = new ConcurrentHashMap<String, CountDownLatch>();
+	private final Map<String, List<ServiceParticipantInfo>> cachedProviderInfos = new ConcurrentHashMap<String, List<ServiceParticipantInfo>>();
+	private final Map<String, CountDownLatch> providerSubscribeLatch = new ConcurrentHashMap<String, CountDownLatch>();
 	
-	private List<ServiceParticipantInfo> localParticipantInfos = new ArrayList<ServiceParticipantInfo>();
+	private final List<ServiceParticipantInfo> localParticipantInfos = new ArrayList<ServiceParticipantInfo>();
 	private final CuratorFramework client; 
-	private final CountDownLatch startLatch = new CountDownLatch(1);
 	private volatile boolean started = false;
 	private volatile boolean closed = false;
 	private final Logger logger = LoggerFactory.getLogger(DefaultServiceRegistry.class);
@@ -45,7 +44,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
 		this.client = CuratorFrameworkFactory.builder()
 				.connectString(zookeeperConnectionString)
-				.sessionTimeoutMs(10 * 1000).connectionTimeoutMs(15 * 1000)
+				.sessionTimeoutMs(10 * 1000).connectionTimeoutMs(5 * 1000)
 				.namespace("jremoting").retryPolicy(retryPolicy).build();
 	}
 	
@@ -58,7 +57,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			return providers;
 		}
 		
-		//if no provider then wait for first subscribe action to complete and query again
+		//if no provider then wait for first async subscribe action to complete and query again
 		CountDownLatch subscribeLatch = providerSubscribeLatch.get(serviceName);
 		if (subscribeLatch != null) {
 			try {
@@ -94,7 +93,6 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 				@Override
 				public void run() {
 					DefaultServiceRegistry.this.close();
-					logger.info("register closed before process exit!");
 				}
 			}));
 			
@@ -113,7 +111,6 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			}
 			
 			this.started = true;
-			this.startLatch.countDown();
 		}
 		
 	}
@@ -187,6 +184,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			
 			this.client.close();
 			closed = true;
+			logger.info("register closed before process exit!");
 		}
 	}
 
@@ -212,6 +210,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	}
 	
 	private String parseServiveName(String path) {
+		// path = /serviceName/providers
 		return path.substring(1, path.indexOf("/providers"));
 	}
 
