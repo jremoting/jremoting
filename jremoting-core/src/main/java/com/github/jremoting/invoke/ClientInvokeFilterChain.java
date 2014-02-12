@@ -37,6 +37,12 @@ public class ClientInvokeFilterChain {
 		
 		@Override
 		public Object invoke(Invoke invoke) {
+			if(!invoke.isTwoWay()) {
+				messageChannel.send(invoke);
+				return null;
+			}
+			
+			
 			MessageFuture future = messageChannel.send(invoke);
 			try {
 				if(invoke.getTimeout() <= 0) {

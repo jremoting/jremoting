@@ -41,11 +41,16 @@ public class DefaultMessageChannel implements MessageChannel  {
 			channel = connect(address, msg.getProtocal());
 		}
 		
-		DefaultMessageFuture future = new DefaultMessageFuture(msg);
-	
-	    channel.writeAndFlush(future);
-	    
-	    return future;
+		if(msg.isTwoWay()) {
+			DefaultMessageFuture future = new DefaultMessageFuture(msg);
+		    channel.writeAndFlush(future);
+		    return future;
+		}
+		else {
+			channel.writeAndFlush(msg);
+			return null;
+		}
+		
 	}
 	
 	private Channel connect(String remoteAddress,final Protocal protocal) {
