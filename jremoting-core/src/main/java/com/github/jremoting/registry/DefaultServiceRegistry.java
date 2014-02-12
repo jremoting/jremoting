@@ -16,7 +16,6 @@ import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.Watcher.Event.EventType;
 
 import com.alibaba.fastjson.JSON;
@@ -33,34 +32,50 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 												UnhandledErrorListener {
 
 	private  Map<String, List<ServiceParticipantInfo>> cachedProviderInfos = new ConcurrentHashMap<String, List<ServiceParticipantInfo>>();
-	private List<ServiceParticipantInfo> localParticipantInfos = new ArrayList<ServiceParticipantInfo>();
+	private Map<String, CountDownLatch> providerSubscribeLatch = new ConcurrentHashMap<String, CountDownLatch>();
 	
-	private  final String zookeeperConnectionString;
-	private CuratorFramework client; 
-	private CountDownLatch startLatch = new CountDownLatch(1);
+	private List<ServiceParticipantInfo> localParticipantInfos = new ArrayList<ServiceParticipantInfo>();
+	private final CuratorFramework client; 
+	private final CountDownLatch startLatch = new CountDownLatch(1);
 	private volatile boolean started = false;
 	private volatile boolean closed = false;
 	private final Logger logger = LoggerFactory.getLogger(DefaultServiceRegistry.class);
 	
 	public DefaultServiceRegistry(String zookeeperConnectionString) {
-		this.zookeeperConnectionString = zookeeperConnectionString;
+		RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
+		this.client = CuratorFrameworkFactory.builder()
+				.connectString(zookeeperConnectionString)
+				.sessionTimeoutMs(10 * 1000).connectionTimeoutMs(15 * 1000)
+				.namespace("jremoting").retryPolicy(retryPolicy).build();
 	}
 	
 	
 	@Override
 	public List<ServiceParticipantInfo> getProviders(String serviceName) {
-		if (!started) {
+		
+		List<ServiceParticipantInfo> providers = cachedProviderInfos.get(serviceName);
+		if(providers != null) {
+			return providers;
+		}
+		
+		//if no provider then wait for first subscribe action to complete and query again
+		CountDownLatch subscribeLatch = providerSubscribeLatch.get(serviceName);
+		if (subscribeLatch != null) {
 			try {
-				startLatch.await();
+				subscribeLatch.await();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e.getMessage(), e);
+				throw new RegistryExcpetion(e.getMessage(), e);
 			}
 		}
+
 		return cachedProviderInfos.get(serviceName);
 	}
 	
 	@Override
 	public void registerParticipant(ServiceParticipantInfo participantInfo) {
+		if(participantInfo.getType() == ParticipantType.CONSUMER) {
+			providerSubscribeLatch.put(participantInfo.getServiceName(), new CountDownLatch(1));
+		}
 		this.localParticipantInfos.add(participantInfo);
 	}
 
@@ -73,12 +88,6 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			if(started) {
 				return;
 			}
-			
-			RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
-			this.client = CuratorFrameworkFactory.builder()
-					.connectString(zookeeperConnectionString)
-					.sessionTimeoutMs(10 * 1000).connectionTimeoutMs(15 * 1000)
-					.namespace("jremoting").retryPolicy(retryPolicy).build();
 			
 			//close connection when process exit , let other consumers see this process die immediately
 			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -96,8 +105,8 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 			
 			try {
-				this.initLocalParticipantsServicePath();
-				this.subscribeProviderInfos();
+				this.initLocalParticipantsServicePathInBackground();
+				this.subscribeProviderInfosInBackground();
 				this.publishParticipantInfosInBackground();
 			} catch (Exception e) {
 				throw new RegistryExcpetion(e.getMessage(), e);
@@ -107,16 +116,6 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			this.startLatch.countDown();
 		}
 		
-	}
-	
-	private void subscribeProviderInfos() throws Exception   {
-		for (ServiceParticipantInfo participantInfo : localParticipantInfos) {
-			if(participantInfo.getType() == ParticipantType.CONSUMER) {
-				String providersPath = String.format("/%s/providers", participantInfo.getServiceName());
-				List<String> providerJsons = this.client.getChildren().watched().forPath(providersPath);
-				refreshProviders(participantInfo.getServiceName(), providerJsons);
-			}
-		}
 	}
 	
 	private void subscribeProviderInfosInBackground() throws Exception   {
@@ -140,18 +139,20 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			providers.add(JSON.parseObject(json, ServiceParticipantInfo.class));
 		}
 		this.cachedProviderInfos.put(serviceName, providers);
+		//if there are consumer threads blocked at get providers then wake up them
+		if(this.providerSubscribeLatch.size() > 0) {
+			CountDownLatch subscribeLatch = this.providerSubscribeLatch.remove(serviceName);
+			if(subscribeLatch != null) {
+				subscribeLatch.countDown();
+			}
+		}
 	}
 	
-	private void initLocalParticipantsServicePath() throws Exception {
+	private void initLocalParticipantsServicePathInBackground() throws Exception {
 		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
-			try {
-				this.client.inTransaction()
-				.create().forPath("/" + participantInfo.getServiceName()).and()
-				.create().forPath("/" + participantInfo.getServiceName() + "/providers").and()
-				.create().forPath("/" + participantInfo.getServiceName() + "/consumers").and().commit();
-			} catch (NodeExistsException e) {
-				logger.info("service "+ participantInfo.getServiceName() +" path already exits!");
-			}
+			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName());
+			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/providers");
+			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/consumers");
 		}
 	}
 	
@@ -183,12 +184,10 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			if (closed) {
 				return;
 			}
-			if(this.client != null) {
-				this.client.close();
-			}
+			
+			this.client.close();
 			closed = true;
 		}
-
 	}
 
 
@@ -212,8 +211,8 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 	}
 	
-	private String parseServiveName(String changedProvidersPath) {
-		return changedProvidersPath.replace("/providers", "").replace("/", "");
+	private String parseServiveName(String path) {
+		return path.substring(1, path.indexOf("/providers"));
 	}
 
 
@@ -230,8 +229,8 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		case RECONNECTED:
 			if (currentState == ConnectionState.LOST) {
 				try {
-					this.publishParticipantInfosInBackground();
 					this.subscribeProviderInfosInBackground();
+					this.publishParticipantInfosInBackground();
 				} catch (Exception e) {
 					logger.error("republish local providers failed!", e);
 				}
