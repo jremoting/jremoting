@@ -11,6 +11,7 @@ import com.github.jremoting.core.InvokeFilterUtil;
 import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.exception.RemotingException;
+import com.github.jremoting.exception.ServerErrorException;
 
 public class ClientInvokeFilterChain {
 
@@ -46,8 +47,11 @@ public class ClientInvokeFilterChain {
 				if(invoke.getTimeout() <= 0) {
 					invoke.setTimeout(DEFAULT_TIMEOUT);
 				}
-				return future.get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
-				
+				Object result =  future.get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
+				if(result instanceof ServerErrorException) {
+					throw (ServerErrorException)result;
+				}
+				return result;
 			} catch (InterruptedException e) {
 				throw new RemotingException(e);
 			} catch (ExecutionException e) {

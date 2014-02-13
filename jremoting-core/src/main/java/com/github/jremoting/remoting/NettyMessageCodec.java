@@ -2,7 +2,6 @@ package com.github.jremoting.remoting;
 
 import java.util.List;
 
-import com.github.jremoting.core.ErrorMessage;
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
 
@@ -35,7 +34,7 @@ public class NettyMessageCodec extends  ByteToMessageCodec<Message>{
 	
 		try {
 			Message msg = protocal.decode(new DefaultByteBuffer(in));
-			if(msg == ErrorMessage.NEED_MORE_INPUT_MESSAGE) {
+			if(msg == Message.NEED_MORE) {
 				return;
 			}
 			

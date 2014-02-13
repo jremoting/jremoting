@@ -1,6 +1,5 @@
 package com.github.jremoting.protocal;
 
-import com.github.jremoting.core.ErrorMessage;
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
@@ -10,6 +9,7 @@ import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.SerializerUtil;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.ProtocalException;
+import com.github.jremoting.exception.ServerErrorException;
 import com.github.jremoting.io.ByteBuffer;
 import com.github.jremoting.io.ByteBufferInputStream;
 import com.github.jremoting.io.ByteBufferOutputStream;
@@ -59,7 +59,7 @@ public class JRemotingProtocal implements Protocal {
 			boolean isHeartbeatMessage = msg instanceof HeartbeatMessage;
 			boolean isTwoWay = msg.isTwoWay();
 			boolean isRequest = msg instanceof Invoke;
-			boolean isErrorMsg = msg instanceof ErrorMessage;
+			boolean isErrorMsg = (msg instanceof InvokeResult) && ((InvokeResult)msg).getResult() instanceof Throwable;
 			int serializeId = isHeartbeatMessage ? 0 : msg.getSerializer().getId();
 			
 			int flag = (isRequest ? FLAG_REQUEST : 0)
@@ -87,8 +87,9 @@ public class JRemotingProtocal implements Protocal {
 			ObjectOutput output = serializer.createObjectOutput(new ByteBufferOutputStream(buffer));
 			
 			if(isErrorMsg) {
-				ErrorMessage errorMessage = (ErrorMessage)msg;
-				output.writeString(errorMessage.getErrorMsg());
+				InvokeResult errorResult = (InvokeResult)msg;
+				Throwable error = (Throwable)errorResult.getResult();
+				output.writeString(error.getMessage());
 			}
 			else if(isRequest) {
 				Invoke invoke = (Invoke)msg;
@@ -143,7 +144,7 @@ public class JRemotingProtocal implements Protocal {
 	@Override
 	public Message decode(ByteBuffer buffer) throws ProtocalException {
 		if(buffer.readableBytes() < HEAD_LENGTH) {
-			return ErrorMessage.NEED_MORE_INPUT_MESSAGE;
+			return Message.NEED_MORE;
 		}
 		buffer.markReaderIndex();
 		
@@ -160,7 +161,7 @@ public class JRemotingProtocal implements Protocal {
 		
 		if(buffer.readableBytes() < bodyLength) {
 			buffer.resetReaderIndex();
-			return ErrorMessage.NEED_MORE_INPUT_MESSAGE;
+			return Message.NEED_MORE;
 		}
 		
 		boolean isHeartbeat = (flag & FLAG_EVENT) > 0;	
@@ -184,7 +185,7 @@ public class JRemotingProtocal implements Protocal {
 			Message msg = null;
 			if(isErrorMsg) {
 				String errorMsg = input.readString();
-			    msg =  new ErrorMessage(errorMsg, msgId ,this, serializer);
+				msg =   new InvokeResult(new ServerErrorException(errorMsg), msgId, null);
 			}
 			else if(isRequest) {
 				msg =  decodeRequestBody(msgId,serializer ,input);
