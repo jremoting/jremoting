@@ -20,7 +20,7 @@ public class ClientInvokeFilterChain {
 		invokeFilters.add(new ClientTailInvokeFilter(messageChannel));
 		this.head = InvokeFilterUtil.link(invokeFilters);
 	}
-
+    
 	public Object invoke(Invoke invoke) {
 		return this.head.invoke(invoke);
 	}
