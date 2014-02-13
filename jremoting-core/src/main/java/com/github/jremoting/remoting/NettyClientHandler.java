@@ -6,18 +6,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Message;
-
-
-import com.github.jremoting.core.Protocal;
+import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.exception.TimeoutException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.concurrent.ScheduledFuture;
 
 
@@ -26,7 +27,6 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 	private final Map<Long, DefaultMessageFuture> futures = new HashMap<Long, DefaultMessageFuture>();
 	private long nextMsgId = 0;
 	private ScheduledFuture<?> removeTimoutFutrueTask;
-	private final Protocal protocal;
 	private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
 	
 	
@@ -56,13 +56,6 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 		}
 	};
 	
-	
-	
-	
-	
-	public NettyClientHandler(Protocal protocal) {
-		this.protocal = protocal;
-	}
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
@@ -85,7 +78,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
             	}
         	}
         	
-        	ctx.writeAndFlush(message, promise);
+        	ctx.writeAndFlush(message, promise).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         }
         else {
         	ctx.write(msg, promise);
@@ -100,8 +93,34 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 				future.setResult(invokeResult.getResult());
 			}
 		}
+    	else if(msg instanceof HeartbeatMessage) {
+    		LOGGER.info("PONG");
+    	}
 		else {
 			ctx.fireChannelRead(msg);
+		}
+    }
+    
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+            throws Exception {
+     
+        if(cause instanceof ProtocalException) {
+        	ProtocalException protocalException = (ProtocalException)cause;
+        	DefaultMessageFuture future = futures.remove(protocalException.getMsgId());
+        	if(future != null) {
+        		future.setResult(protocalException);
+        	}
+        }   
+        LOGGER.error(cause.getMessage(), cause);
+        ctx.close();
+    }
+    
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (evt instanceof IdleStateEvent) {
+			ctx.writeAndFlush(HeartbeatMessage.PING).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+			LOGGER.info("PING");
 		}
     }
 }

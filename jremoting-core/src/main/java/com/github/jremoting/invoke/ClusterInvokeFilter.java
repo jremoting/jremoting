@@ -16,9 +16,10 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 
 	@Override
 	public Object invoke(Invoke invoke) {
-		if(invoke.getRegistry() == null) {
+		if(invoke.getRemoteAddress() != null) {
 			return getNext().invoke(invoke);
 		}
+		
 		List<ServiceParticipantInfo> providers = invoke.getRegistry().getProviders(invoke.getServiceName());
 		
 		if(providers == null || providers.isEmpty()) {

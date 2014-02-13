@@ -1,18 +1,14 @@
 package com.github.jremoting.exception;
 
-import com.github.jremoting.core.Invoke;
-
 public class ProtocalException extends ServerErrorException {
 	private static final long serialVersionUID = -3818545760960210866L;
-	private  Invoke badInvoke = null;
 
-	public ProtocalException(String msg,Invoke badInvoke ,Throwable throwable) {
+	private final long msgId;
+	public ProtocalException(String msg,Throwable throwable, long msgId) {
 		super(msg);
-		this.badInvoke= badInvoke;
+		this.msgId = msgId;
 	}
-
-	public Invoke getBadInvoke() {
-		return badInvoke;
+	public long getMsgId() {
+		return msgId;
 	}
-	
 }

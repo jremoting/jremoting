@@ -57,10 +57,16 @@ public class DefaultRpcClient implements RpcClient,  ApplicationListener<Applica
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		if(event instanceof ContextRefreshedEvent) {
-			this.registry.start();
+			if(this.registry != null) {
+				this.registry.start();
+			}
+			
 		}
 		else if (event instanceof ContextClosedEvent) {
-			this.registry.close();
+			if(this.registry != null) {
+				this.registry.close();
+			}
+			
 			this.messageChannel.close();
 		}
 	}

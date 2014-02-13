@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.curator.RetryPolicy;
@@ -32,9 +33,9 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 												UnhandledErrorListener {
 
 	private final Map<String, List<ServiceParticipantInfo>> cachedProviderInfos = new ConcurrentHashMap<String, List<ServiceParticipantInfo>>();
-	private final Map<String, CountDownLatch> providerSubscribeLatch = new ConcurrentHashMap<String, CountDownLatch>();
+	private final ConcurrentHashMap<String, CountDownLatch> cacheInitLatches = new ConcurrentHashMap<String, CountDownLatch>();
+	private final List<ServiceParticipantInfo> localParticipantInfos = new CopyOnWriteArrayList<ServiceParticipantInfo>();
 	
-	private final List<ServiceParticipantInfo> localParticipantInfos = new ArrayList<ServiceParticipantInfo>();
 	private final CuratorFramework client; 
 	private volatile boolean started = false;
 	private volatile boolean closed = false;
@@ -58,24 +59,36 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 		
 		//if no provider then wait for first async subscribe action to complete and query again
-		CountDownLatch subscribeLatch = providerSubscribeLatch.get(serviceName);
-		if (subscribeLatch != null) {
-			try {
-				subscribeLatch.await();
-			} catch (InterruptedException e) {
-				throw new RegistryExcpetion(e.getMessage(), e);
-			}
+		CountDownLatch subscribeLatch = cacheInitLatches.get(serviceName);
+		
+		try {
+			subscribeLatch.await();
+		} catch (InterruptedException e) {
+			throw new RegistryExcpetion(e.getMessage(), e);
 		}
-
+		
 		return cachedProviderInfos.get(serviceName);
 	}
 	
 	@Override
 	public void registerParticipant(ServiceParticipantInfo participantInfo) {
+		
+		if(this.localParticipantInfos.contains(participantInfo)) {
+			return;
+		}
+		
 		if(participantInfo.getType() == ParticipantType.CONSUMER) {
-			providerSubscribeLatch.put(participantInfo.getServiceName(), new CountDownLatch(1));
+			cacheInitLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
 		}
 		this.localParticipantInfos.add(participantInfo);
+		
+		if(started) {
+			this.init(participantInfo);
+			this.publish(participantInfo);
+			if(participantInfo.getType() == ParticipantType.CONSUMER) {
+				this.subscribe(getProviderPath(participantInfo.getServiceName()));
+			}
+		}
 	}
 
 	@Override
@@ -103,9 +116,9 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 			
 			try {
-				this.initLocalParticipantsServicePathInBackground();
-				this.subscribeProviderInfosInBackground();
-				this.publishParticipantInfosInBackground();
+				this.initAll();
+				this.subscribeAll();
+				this.publishAll();
 			} catch (Exception e) {
 				throw new RegistryExcpetion(e.getMessage(), e);
 			}
@@ -115,57 +128,84 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		
 	}
 	
-	private void subscribeProviderInfosInBackground() throws Exception   {
+	private void subscribeAll() throws Exception   {
 		for (ServiceParticipantInfo participantInfo : localParticipantInfos) {
 			if(participantInfo.getType() == ParticipantType.CONSUMER) {
-				String providersPath = String.format("/%s/providers", participantInfo.getServiceName());
-				this.client.getChildren().watched().inBackground().forPath(providersPath);
+				subscribe(getProviderPath(participantInfo.getServiceName()));
 			}
 		}
 	}
+
+
+	private String getProviderPath(String serviceName) {
+		String providersPath = String.format("/%s/providers", serviceName);
+		return providersPath;
+	}
 	
-	private void getProviderInfosInBackground(String changedProvidersPath)
-			throws Exception {
-		this.client.getChildren().watched().inBackground().forPath(changedProvidersPath);
+	private void subscribe(String changedProvidersPath) {
+		try {
+			this.client.getChildren().watched().inBackground().forPath(changedProvidersPath);
+		} catch (Exception e) {
+			throw new RegistryExcpetion(e.getMessage(), e);
+		}
 	}
 
 
-	private void refreshProviders(String serviceName, List<String> providerJsons) {
+	private void refreshCachedProviders(String serviceName, List<String> providerJsons) {
 		List<ServiceParticipantInfo> providers = new ArrayList<ServiceParticipantInfo>();
 		for (String json : providerJsons) {
 			providers.add(JSON.parseObject(json, ServiceParticipantInfo.class));
 		}
 		this.cachedProviderInfos.put(serviceName, providers);
 		//if there are consumer threads blocked at get providers then wake up them
-		if(this.providerSubscribeLatch.size() > 0) {
-			CountDownLatch subscribeLatch = this.providerSubscribeLatch.remove(serviceName);
+		if(this.cacheInitLatches.size() > 0) {
+			CountDownLatch subscribeLatch = this.cacheInitLatches.remove(serviceName);
 			if(subscribeLatch != null) {
 				subscribeLatch.countDown();
 			}
 		}
 	}
 	
-	private void initLocalParticipantsServicePathInBackground() throws Exception {
+	private void initAll()   {
 		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
+			init(participantInfo);
+		}
+	}
+
+
+	private void init(ServiceParticipantInfo participantInfo)  {
+		try {
 			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName());
 			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/providers");
 			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/consumers");
+		} catch (Exception e) {
+			throw new RegistryExcpetion(e.getMessage(), e);
 		}
+
 	}
 	
-	private void publishParticipantInfosInBackground() throws Exception {
+	private void publishAll() throws Exception {
 		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
-			String  participantPath = null;
-			if(participantInfo.getType() == ParticipantType.PROVIDER) {
-				participantPath = String.format("/%s/providers/%s", 
-						participantInfo.getServiceName(),JSON.toJSONString(participantInfo));
-			}
-			else {
-				participantPath = String.format("/%s/consumers/%s", 
-						participantInfo.getServiceName(),JSON.toJSONString(participantInfo));
-			}
-			
+			publish(participantInfo);
+		}
+	}
+
+
+	private void publish(ServiceParticipantInfo participantInfo)  {
+		String  participantPath = null;
+		if(participantInfo.getType() == ParticipantType.PROVIDER) {
+			participantPath = String.format("/%s/providers/%s", 
+					participantInfo.getServiceName(),JSON.toJSONString(participantInfo));
+		}
+		else {
+			participantPath = String.format("/%s/consumers/%s", 
+					participantInfo.getServiceName(),JSON.toJSONString(participantInfo));
+		}
+		
+		try {
 			this.client.create().withMode(CreateMode.EPHEMERAL).inBackground().forPath(participantPath);
+		} catch (Exception e) {
+			throw new RegistryExcpetion(e.getMessage(), e);
 		}
 	}
 	
@@ -196,12 +236,12 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		switch (event.getType()) {
 		case WATCHED:
 			if(event.getWatchedEvent().getType() == EventType.NodeChildrenChanged) {
-				getProviderInfosInBackground(event.getPath());
+				subscribe(event.getPath());
 			}
 			break;
 		case CHILDREN:
 			if(event.getPath().endsWith("/providers")) {
-				refreshProviders(parseServiveName(event.getPath()), event.getChildren());
+				refreshCachedProviders(parseServiveName(event.getPath()), event.getChildren());
 			}
 			break;
 		default:
@@ -228,8 +268,8 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		case RECONNECTED:
 			if (currentState == ConnectionState.LOST) {
 				try {
-					this.subscribeProviderInfosInBackground();
-					this.publishParticipantInfosInBackground();
+					this.subscribeAll();
+					this.publishAll();
 				} catch (Exception e) {
 					logger.error("republish local providers failed!", e);
 				}

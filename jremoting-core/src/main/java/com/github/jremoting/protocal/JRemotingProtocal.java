@@ -15,9 +15,13 @@ import com.github.jremoting.io.ByteBufferInputStream;
 import com.github.jremoting.io.ByteBufferOutputStream;
 import com.github.jremoting.io.ObjectInput;
 import com.github.jremoting.io.ObjectOutput;
+import com.github.jremoting.util.Logger;
+import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.ReflectionUtil;
 
 public class JRemotingProtocal implements Protocal {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(JRemotingProtocal.class);
 	
 	public static final String NAME = "jremoting";
 	
@@ -51,63 +55,69 @@ public class JRemotingProtocal implements Protocal {
 	@Override
 	public void encode(Message msg, ByteBuffer buffer) throws ProtocalException {
 		
-		boolean isHeartbeatMessage = msg instanceof HeartbeatMessage;
-		boolean isTwoWay = msg.isTwoWay();
-		boolean isRequest = msg instanceof Invoke;
-		boolean isErrorMsg = msg instanceof ErrorMessage;
-		
-		
-		int flag = (isRequest ? FLAG_REQUEST : 0)
-				| (isTwoWay ? FLAG_TWOWAY : 0) 
-				| (isHeartbeatMessage ? FLAG_EVENT : 0)
-				| msg.getSerializer().getId();
-		
-		int status = isErrorMsg ? STATUS_ERROR : STATUS_OK;
-		
-		//encode head
-		buffer.writeShort(MAGIC);
-		buffer.writeByte(flag);
-		buffer.writeByte(status);
-		buffer.writeLong(msg.getId());
-		
-		int bodyLengthOffset = buffer.writerIndex();
-		buffer.writeInt(0);
-		
-		if(isHeartbeatMessage) {
-			return;
-		}
-		
-		Serializer serializer = serializers[msg.getSerializer().getId()];
-		
-		ObjectOutput output = serializer.createObjectOutput(new ByteBufferOutputStream(buffer));
-		
-		if(isErrorMsg) {
-			ErrorMessage errorMessage = (ErrorMessage)msg;
-			output.writeString(errorMessage.getErrorMsg());
-		}
-		else if(isRequest) {
-			Invoke invoke = (Invoke)msg;
-			encodeRequestBody(invoke, output);
-		}
-		else {
-			InvokeResult invokeResult = (InvokeResult)msg;
-			if(invokeResult.getResult() == null) {
-				output.writeString(NULL);
+		try {
+			boolean isHeartbeatMessage = msg instanceof HeartbeatMessage;
+			boolean isTwoWay = msg.isTwoWay();
+			boolean isRequest = msg instanceof Invoke;
+			boolean isErrorMsg = msg instanceof ErrorMessage;
+			int serializeId = isHeartbeatMessage ? 0 : msg.getSerializer().getId();
+			
+			int flag = (isRequest ? FLAG_REQUEST : 0)
+					| (isTwoWay ? FLAG_TWOWAY : 0) 
+					| (isHeartbeatMessage ? FLAG_EVENT : 0)
+					| serializeId;
+			
+			int status = isErrorMsg ? STATUS_ERROR : STATUS_OK;
+			
+			//encode head
+			buffer.writeShort(MAGIC);
+			buffer.writeByte(flag);
+			buffer.writeByte(status);
+			buffer.writeLong(msg.getId());
+			
+			int bodyLengthOffset = buffer.writerIndex();
+			buffer.writeInt(0);
+			
+			if(isHeartbeatMessage) {
+				return;
+			}
+			
+			Serializer serializer = serializers[msg.getSerializer().getId()];
+			
+			ObjectOutput output = serializer.createObjectOutput(new ByteBufferOutputStream(buffer));
+			
+			if(isErrorMsg) {
+				ErrorMessage errorMessage = (ErrorMessage)msg;
+				output.writeString(errorMessage.getErrorMsg());
+			}
+			else if(isRequest) {
+				Invoke invoke = (Invoke)msg;
+				encodeRequestBody(invoke, output);
 			}
 			else {
-				output.writeString(invokeResult.getResult().getClass().getName());
-				output.writeObject(invokeResult.getResult());
+				InvokeResult invokeResult = (InvokeResult)msg;
+				if(invokeResult.getResult() == null) {
+					output.writeString(NULL);
+				}
+				else {
+					output.writeString(invokeResult.getResult().getClass().getName());
+					output.writeObject(invokeResult.getResult());
+				}
 			}
+			
+			output.close();
+			
+			//write body length
+			int bodyLength = buffer.writerIndex() - bodyLengthOffset - 4;
+			int savedWriterIndex = buffer.writerIndex();
+			buffer.writerIndex(bodyLengthOffset);
+			buffer.writeInt(bodyLength);
+			buffer.writerIndex(savedWriterIndex);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			throw new ProtocalException("encode msg failed",e, msg.getId());
 		}
-		
-		output.close();
-		
-		//write body length
-		int bodyLength = buffer.writerIndex() - bodyLengthOffset - 4;
-		int savedWriterIndex = buffer.writerIndex();
-		buffer.writerIndex(bodyLengthOffset);
-		buffer.writeInt(bodyLength);
-		buffer.writerIndex(savedWriterIndex);
+	
 		
 	}
 	
@@ -124,7 +134,7 @@ public class JRemotingProtocal implements Protocal {
 		}
 		
 		for (int i= 0; i <  argLength; i++) {
-			output.writeString(invoke.getParameterTypes()[i].getName());
+			output.writeString(invoke.getParameterTypeNames()[i]);
 			output.writeObject(invoke.getArgs()[i]);
 		}
 	}
@@ -153,23 +163,23 @@ public class JRemotingProtocal implements Protocal {
 			return ErrorMessage.NEED_MORE_INPUT_MESSAGE;
 		}
 		
-		boolean isHeartbeat = (flag & FLAG_EVENT) > 0;
+		boolean isHeartbeat = (flag & FLAG_EVENT) > 0;	
 		boolean isRequest = (flag & FLAG_REQUEST) > 0;
 		boolean isTwoWay = (flag & FLAG_TWOWAY) > 0 ;
 		int serializerId = (flag & SERIALIZATION_MASK);
 		boolean isErrorMsg = (status != STATUS_OK);
 		
-		Serializer serializer = serializers[serializerId];
-		
-		if(isHeartbeat) {
-			return new HeartbeatMessage(isTwoWay, serializer);
+		if (isHeartbeat) {
+			if (isTwoWay) {
+				return HeartbeatMessage.PING;
+			} else {
+				return HeartbeatMessage.PONG;
+			}
 		}
 		
-		//decode body
-		int bodyEndOffset = buffer.readerIndex() + bodyLength;
-		
 		try {
-			
+			//decode body
+			Serializer serializer = serializers[serializerId];	
 			ObjectInput input = serializer.createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
 			Message msg = null;
 			if(isErrorMsg) {
@@ -194,12 +204,9 @@ public class JRemotingProtocal implements Protocal {
 			
 			
 		} catch (Exception e) {
-			throw new ProtocalException("decode msg  failed!", null ,e);
+			LOGGER.error(e.getMessage(), e);
+			throw new ProtocalException("decode msg  failed!" ,e , msgId);
 		}
-		finally {
-			buffer.readerIndex(bodyEndOffset);
-		}
-	
 	}
 	
 
@@ -213,7 +220,7 @@ public class JRemotingProtocal implements Protocal {
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(interfaceName, version, methodName,null, null, null, serializer);
+			Invoke invoke = new Invoke(interfaceName, version, methodName,serializer, null, null ,null ,false);
 			invoke.setId(msgId);
 			return invoke;
 		}
@@ -227,7 +234,7 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		Invoke invoke = new Invoke(interfaceName, version, methodName, args,parameterTypes ,null, serializer);
+		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer,args , parameterTypes, null,false);
 		invoke.setId(msgId);
 		return invoke;
 	}

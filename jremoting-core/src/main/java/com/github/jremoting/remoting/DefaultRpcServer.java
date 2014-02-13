@@ -115,12 +115,17 @@ public class DefaultRpcServer implements RpcServer, ApplicationListener<Applicat
 		if(event instanceof ContextRefreshedEvent) {
 			if(containsProvider){
 				this.start();
-				this.registry.start();
+				if(this.registry != null) {
+					this.registry.start();
+				}
+				
 			}
 		}
 		else if(event instanceof ContextClosedEvent) {
 			if(started) {
-				this.registry.close();
+				if(this.registry != null) {
+					this.registry.close();
+				}
 				this.close();
 			}
 		}

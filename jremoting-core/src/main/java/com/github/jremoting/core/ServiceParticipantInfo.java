@@ -5,8 +5,7 @@ public class ServiceParticipantInfo {
 	public static enum ParticipantType {
 		PROVIDER,CONSUMER
 	}
-
-
+	
 	private  String address;
 	private  String serviceName;
 	private  ParticipantType type;
@@ -40,5 +39,22 @@ public class ServiceParticipantInfo {
 
 	public void setType(ParticipantType type) {
 		this.type = type;
+	}
+	
+	@Override
+	public int hashCode() {
+		return serviceName.hashCode() + address.hashCode() + type.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof ServiceParticipantInfo) {
+			ServiceParticipantInfo that = (ServiceParticipantInfo)obj;
+			return this.serviceName.equals(that.serviceName) &&
+					this.address.equals(that.address) &&
+					this.type == that.type;
+		}
+		
+		return false;
 	}
 }

@@ -39,10 +39,9 @@ public class ClientInvocationHandler implements InvocationHandler {
 		Invoke invoke = new Invoke(serviceName, 
 				serviceVersion,
 				method.getName(),
-				args,
-				method.getParameterTypes() ,
-				method.getReturnType(), 
-				serializer);
+				serializer,
+				args ,
+				method.getParameterTypes(), null,false);
 		
 		if(remoteAddress != null) {
 			invoke.setRemoteAddress(remoteAddress);

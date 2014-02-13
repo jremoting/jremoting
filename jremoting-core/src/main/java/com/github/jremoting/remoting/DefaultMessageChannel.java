@@ -7,6 +7,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,9 +80,9 @@ public class DefaultMessageChannel implements MessageChannel  {
 						@Override
 						public void initChannel(SocketChannel ch)
 								throws Exception {
-							ch.pipeline().addLast(
+							ch.pipeline().addLast(new IdleStateHandler(0,0,5),
 									new NettyMessageCodec(protocal),
-									new NettyClientHandler(protocal));
+									new NettyClientHandler());
 						}
 					});
 			try {

@@ -24,11 +24,11 @@ public class JRemotingProtocalTest {
 		final Invoke  invocation = new Invoke(
 				"com.github.jremoting.core.test.TestService",
 				"1.0", 
-				"hello", 
+				"hello",
+				serializer,
 				new Object[]{"xhan"},
-				new Class<?>[]{String.class},
-				String.class,
-				serializer);
+				new Class<?>[]{String.class},null,false
+				);
 		invocation.setId(1);		
 		
 		Object obj = clientToServer(invocation);
@@ -52,11 +52,10 @@ public class JRemotingProtocalTest {
 		final Invoke  invocation = new Invoke(
 				"com.github.jremoting.core.test.TestService",
 				"1.0", 
-				"hello", 
+				"hello", serializer,
 				new Object[]{new HelloInput(),1,"4"},
-				new Class<?>[]{HelloInput.class,Integer.class, String.class},
-				String.class, 
-				serializer);
+				new Class<?>[]{HelloInput.class,Integer.class, String.class}, null,false
+				);
 		invocation.setId(1);		
 		
 		Object obj = clientToServer(invocation);

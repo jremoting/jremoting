@@ -5,7 +5,6 @@ import java.util.List;
 import com.github.jremoting.core.ErrorMessage;
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
-import com.github.jremoting.exception.ProtocalException;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -23,24 +22,31 @@ public class NettyMessageCodec extends  ByteToMessageCodec<Message>{
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out)
 			throws Exception {
-		protocal.encode(msg, new DefaultByteBuffer(out));
+		try {
+			protocal.encode(msg, new DefaultByteBuffer(out));
+		} catch (Exception e) {
+			ctx.fireExceptionCaught(e);
+		}
 	}
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in,
 			List<Object> out) throws Exception {
 	
-		Message msg = protocal.decode(new DefaultByteBuffer(in));
-		if(msg == ErrorMessage.NEED_MORE_INPUT_MESSAGE) {
-			return;
+		try {
+			Message msg = protocal.decode(new DefaultByteBuffer(in));
+			if(msg == ErrorMessage.NEED_MORE_INPUT_MESSAGE) {
+				return;
+			}
+			
+			if (msg != null) {
+				out.add(msg);
+				return;
+			}
+		} catch (Exception e) {
+			ctx.fireExceptionCaught(e);
 		}
-		
-		if (msg != null) {
-			out.add(msg);
-			return;
-		}
-	
-		throw new ProtocalException("unknown  msg", null, null);
+
 	}
 
 }
