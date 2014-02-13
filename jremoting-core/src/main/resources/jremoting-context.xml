@@ -7,7 +7,11 @@
 	<bean id="jsonSerializer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
 	<bean id="hessianSerializer" class="com.github.jremoting.serializer.HessianSerializer" ></bean>
 
+	<bean id="registry" class="com.github.jremoting.registry.DefaultServiceRegistry">
+		<constructor-arg name="zookeeperConnectionString" value="127.0.0.1:2181" />
+	</bean>
 	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
+		<constructor-arg name="registry" ref="registry" />
 		<constructor-arg name="serializers">
 			<array>
 				<ref bean="jsonSerializer"/>
@@ -24,29 +28,16 @@
 	</bean>
 
 
-	<bean id="registry" class="com.github.jremoting.registry.DefaultServiceRegistry">
-		<constructor-arg name="zookeeperConnectionString" value="127.0.0.1:2181" />
-	</bean>
+
 
 	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
-		<constructor-arg name="serializer" ref="jsonSerializer" />
-		<constructor-arg name="registry" ref="registry" />
-		<constructor-arg name="invokeFilterChain">
-			<bean class="com.github.jremoting.invoke.ClientInvokeFilterChain">
-				<constructor-arg name="messageChannel">
-					<bean id="messageChannel" class="com.github.jremoting.remoting.DefaultMessageChannel">
-						<constructor-arg name="eventLoopGroup" ref="childGroup" />
-					</bean>
-				</constructor-arg>
-				<constructor-arg name="invokeFilters">
-					<list>
-					 <bean class="com.github.jremoting.invoke.ClusterInvokeFilter">
-					 	<constructor-arg name="registry" ref="registry"></constructor-arg>
-					 </bean>
-					</list>
-				</constructor-arg>
-			</bean>
+		<constructor-arg name="defaultSerializer" ref="jsonSerializer" />
+		<constructor-arg name="eventLoopGroup" ref="childGroup" />
+		<constructor-arg name="invokeFilters">
+			<list>
+				<bean class="com.github.jremoting.invoke.ClusterInvokeFilter" />
+			</list>
 		</constructor-arg>
 	</bean>
 
@@ -55,14 +46,10 @@
 		<constructor-arg name="childGroup" ref="childGroup" />
 		<constructor-arg name="executor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
-		<constructor-arg name="port" value="8687"/>
-		<constructor-arg name="registry" ref="registry" />
-		<constructor-arg name="invokeFilterChain">
-			<bean class="com.github.jremoting.invoke.ServerInvokeFilterChain">
-				<constructor-arg name="invokeFilters">
-					<list></list>
-				</constructor-arg>
-			</bean>
+		<constructor-arg name="port" value="8687" />
+		<constructor-arg name="invokeFilters">
+			<list></list>
 		</constructor-arg>
+
 	</bean>
 </beans>

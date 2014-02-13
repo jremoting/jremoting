@@ -25,9 +25,11 @@ public class DefaultMessageChannel implements MessageChannel  {
 	private final ConcurrentHashMap<String, Object> channelLocks = new ConcurrentHashMap<String, Object>();
 	
 	private final EventLoopGroup eventLoopGroup;
+	private final Protocal protocal;
 	
-	public DefaultMessageChannel(EventLoopGroup eventLoopGroup) {
+	public DefaultMessageChannel(EventLoopGroup eventLoopGroup, Protocal protocal) {
 		this.eventLoopGroup = eventLoopGroup;
+		this.protocal = protocal;
 	}
 	
 	
@@ -38,7 +40,7 @@ public class DefaultMessageChannel implements MessageChannel  {
 		Channel channel = channels.get(address);
 
 		if (channel == null || !channel.isActive()) {
-			channel = connect(address, msg.getProtocal());
+			channel = connect(address);
 		}
 		
 		if(msg.isTwoWay()) {
@@ -53,7 +55,7 @@ public class DefaultMessageChannel implements MessageChannel  {
 		
 	}
 	
-	private Channel connect(String remoteAddress,final Protocal protocal) {
+	private Channel connect(String remoteAddress) {
 		Object channelLock = channelLocks.get(remoteAddress);
 		if (channelLock == null) {
 			channelLocks.putIfAbsent(remoteAddress, new Object());

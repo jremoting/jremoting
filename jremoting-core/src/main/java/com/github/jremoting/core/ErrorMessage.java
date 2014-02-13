@@ -3,7 +3,7 @@ package com.github.jremoting.core;
 public class ErrorMessage extends InvokeResult {
 
 	public ErrorMessage(String errorMsg,long msgId ,Protocal protocal, Serializer serializer) {
-		super(errorMsg, msgId,protocal, serializer);
+		super(errorMsg, msgId, serializer);
 	}
 
 	public String getErrorMsg() {

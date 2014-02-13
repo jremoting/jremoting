@@ -2,15 +2,13 @@ package com.github.jremoting.core;
 
 public abstract class Message {
 	private final boolean isTwoWay;
-	private  Protocal protocal;
 	private  Serializer serializer;
 	private String remoteAddress;
 	private long id;
 	private long timeout;
 	
-	public Message(boolean isTwoWay , Protocal protocal, Serializer serializer) {
+	public Message(boolean isTwoWay , Serializer serializer) {
 		this.isTwoWay = isTwoWay;
-		this.protocal = protocal;
 		this.setSerializer(serializer);
 	}
 
@@ -26,12 +24,6 @@ public abstract class Message {
 		this.remoteAddress = address;
 	}
 
-	public Protocal getProtocal() {
-		return protocal;
-	}
-	public void setProtocal(Protocal protocal) {
-		this.protocal = protocal;
-	}
 	public long getId() {
 		return id;
 	}

@@ -2,6 +2,7 @@ package com.github.jremoting.protocal;
 
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
+import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.io.ByteBuffer;
 
@@ -28,6 +29,12 @@ public class DubboProtocal implements Protocal {
 
 	@Override
 	public Message decode(ByteBuffer buffer) throws ProtocalException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ServiceRegistry getRegistry() {
 		// TODO Auto-generated method stub
 		return null;
 	}

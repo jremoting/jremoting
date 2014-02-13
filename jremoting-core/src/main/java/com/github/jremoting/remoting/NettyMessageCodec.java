@@ -23,7 +23,7 @@ public class NettyMessageCodec extends  ByteToMessageCodec<Message>{
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out)
 			throws Exception {
-		msg.getProtocal().encode(msg, new DefaultByteBuffer(out));
+		protocal.encode(msg, new DefaultByteBuffer(out));
 	}
 
 	@Override

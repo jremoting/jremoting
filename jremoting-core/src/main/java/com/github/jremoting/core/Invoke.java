@@ -11,13 +11,13 @@ public class Invoke extends Message {
 	private final Class<?>[] parameterTypes;
 
 	private Object target;
+	private ServiceRegistry registry;
 	
 	
 	public Invoke(String interfaceName, String version,String methodName ,
 			Object[] args, Class<?>[] parameterTypes,
-			Class<?> returnType,
-			Protocal protocal ,Serializer serializer) {
-		super(true, protocal, serializer);
+			Class<?> returnType, Serializer serializer) {
+		super(true, serializer);
 		this.args = args;
 		this.interfaceName = interfaceName;
 		this.version = version;
@@ -26,7 +26,6 @@ public class Invoke extends Message {
 		this.returnType = returnType;
 	}
 	
-
 	public Object[] getArgs() {
 		return args;
 	}
@@ -66,6 +65,16 @@ public class Invoke extends Message {
 
 	public Class<?>[] getParameterTypes() {
 		return parameterTypes;
+	}
+
+
+	public ServiceRegistry getRegistry() {
+		return registry;
+	}
+
+
+	public void setRegistry(ServiceRegistry registry) {
+		this.registry = registry;
 	}
 	
 }

@@ -1,5 +1,6 @@
 package com.github.jremoting.remoting;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.springframework.context.ApplicationEvent;
@@ -15,6 +16,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcServer;
 import com.github.jremoting.core.ServiceParticipantInfo;
@@ -46,13 +48,13 @@ public class DefaultRpcServer implements RpcServer, ApplicationListener<Applicat
 			ExecutorService executor,
 			Protocal protocal, 
 			int port,
-			ServerInvokeFilterChain invokeFilterChain, ServiceRegistry registry) {
+			List<InvokeFilter> invokeFilters) {
 		this.executor = executor;
 		this.parentGroup = parentGroup;
 		this.childGroup = childGroup;
 		this.protocal = protocal;
-		this.invokeFilterChain = invokeFilterChain;
-		this.registry = registry;
+		this.invokeFilterChain = new ServerInvokeFilterChain(invokeFilters);
+		this.registry = protocal.getRegistry();
 		this.serverAddress = NetUtil.getLocalHost() + ":" + port;
 	}
 

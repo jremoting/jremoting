@@ -28,8 +28,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 		if(msg instanceof HeartbeatMessage) {
 			HeartbeatMessage heartbeatMessage = (HeartbeatMessage)msg;
 			if(heartbeatMessage.isTwoWay()) {
-				ctx.writeAndFlush(new HeartbeatMessage(false, heartbeatMessage.getProtocal(), 
-						heartbeatMessage.getSerializer()));
+				ctx.writeAndFlush(new HeartbeatMessage(false,heartbeatMessage.getSerializer()));
 			}
 		}
 		else if(msg instanceof Invoke) {
@@ -39,7 +38,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 				@Override
 				public void run() {
 					Object result = invokeFilterChain.invoke(invoke);
-					InvokeResult invokeResult = new InvokeResult(result, invoke.getId(),invoke.getProtocal(), invoke.getSerializer());
+					InvokeResult invokeResult = new InvokeResult(result, invoke.getId(),invoke.getSerializer());
 					ctx.writeAndFlush(invokeResult);
 				}
 			});

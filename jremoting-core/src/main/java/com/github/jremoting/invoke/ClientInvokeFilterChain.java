@@ -14,18 +14,10 @@ import com.github.jremoting.exception.RemotingException;
 
 public class ClientInvokeFilterChain {
 
-	private final MessageChannel messageChannel;
-	private final long DEFAULT_TIMEOUT = 60*1000*5; //default timeout 5 mins
-	public MessageChannel getMessageChannel() {
-		return messageChannel;
-	}
-
 	private final InvokeFilter head;
 	
 	public ClientInvokeFilterChain(MessageChannel messageChannel, List<InvokeFilter> invokeFilters) {
-		this.messageChannel = messageChannel;
-		
-		invokeFilters.add(new ClientTailInvokeFilter());
+		invokeFilters.add(new ClientTailInvokeFilter(messageChannel));
 		this.head = InvokeFilterUtil.link(invokeFilters);
 	}
 
@@ -33,8 +25,14 @@ public class ClientInvokeFilterChain {
 		return this.head.invoke(invoke);
 	}
 	
-	private  class ClientTailInvokeFilter implements InvokeFilter {
+	private static class ClientTailInvokeFilter implements InvokeFilter {
 		
+		private static final long DEFAULT_TIMEOUT = 60*1000*5; //default timeout 5 mins
+		
+		public ClientTailInvokeFilter(MessageChannel messageChannel) {
+			this.messageChannel = messageChannel;
+		}
+		private final MessageChannel messageChannel;
 		@Override
 		public Object invoke(Invoke invoke) {
 			if(!invoke.isTwoWay()) {

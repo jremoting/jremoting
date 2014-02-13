@@ -2,8 +2,8 @@ package com.github.jremoting.core;
 
 public class HeartbeatMessage extends Message {
 
-	public HeartbeatMessage(boolean isTwoWay, Protocal protocal, Serializer serializer) {
-		super(isTwoWay, protocal, serializer);
+	public HeartbeatMessage(boolean isTwoWay,  Serializer serializer) {
+		super(isTwoWay, serializer);
 	}
 
 }

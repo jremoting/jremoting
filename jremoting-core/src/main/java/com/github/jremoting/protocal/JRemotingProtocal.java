@@ -8,6 +8,7 @@ import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.SerializerUtil;
+import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.io.ByteBuffer;
 import com.github.jremoting.io.ByteBufferInputStream;
@@ -38,12 +39,13 @@ public class JRemotingProtocal implements Protocal {
     protected static final int      STATUS_OK = 20;
     
     private static final String NULL = "NULL";
-    
+    private final ServiceRegistry registry;
 
 	private final Serializer[] serializers;
 	
-	public JRemotingProtocal(Serializer[] serializers) {
+	public JRemotingProtocal(Serializer[] serializers, ServiceRegistry registry) {
 		this.serializers = SerializerUtil.reindex(serializers);
+		this.registry = registry;
 	}
 	
 	@Override
@@ -160,7 +162,7 @@ public class JRemotingProtocal implements Protocal {
 		Serializer serializer = serializers[serializerId];
 		
 		if(isHeartbeat) {
-			return new HeartbeatMessage(isTwoWay, this, serializer);
+			return new HeartbeatMessage(isTwoWay, serializer);
 		}
 		
 		//decode body
@@ -185,7 +187,7 @@ public class JRemotingProtocal implements Protocal {
 				    result = input.readObject(resultClass);
 				}
 				
-				msg= new InvokeResult(result, msgId,this, serializer);
+				msg= new InvokeResult(result, msgId, serializer);
 			}
 			input.close();
 			return msg;
@@ -211,7 +213,7 @@ public class JRemotingProtocal implements Protocal {
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(interfaceName, version, methodName,null, null, null, this, serializer);
+			Invoke invoke = new Invoke(interfaceName, version, methodName,null, null, null, serializer);
 			invoke.setId(msgId);
 			return invoke;
 		}
@@ -225,10 +227,14 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		Invoke invoke = new Invoke(interfaceName, version, methodName, args,parameterTypes ,null,
-				this, serializer);
+		Invoke invoke = new Invoke(interfaceName, version, methodName, args,parameterTypes ,null, serializer);
 		invoke.setId(msgId);
 		return invoke;
+	}
+
+	@Override
+	public ServiceRegistry getRegistry() {
+		return registry;
 	}
 	
 }

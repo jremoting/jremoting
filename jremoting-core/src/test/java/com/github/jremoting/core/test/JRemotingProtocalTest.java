@@ -10,14 +10,13 @@ import com.github.jremoting.remoting.NettyMessageCodec;
 import com.github.jremoting.serializer.JsonSerializer;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
-import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.test.TestService.HelloInput;
 
 public class JRemotingProtocalTest {
 
 	private Serializer serializer = new JsonSerializer();
-	private JRemotingProtocal protocal = new JRemotingProtocal(new Serializer[]{ serializer});
+	private JRemotingProtocal protocal = new JRemotingProtocal(new Serializer[]{ serializer}, null);
 	
 	@Test
 	public void testClientToServer() {
@@ -28,8 +27,7 @@ public class JRemotingProtocalTest {
 				"hello", 
 				new Object[]{"xhan"},
 				new Class<?>[]{String.class},
-				String.class, 
-				protocal, 
+				String.class,
 				serializer);
 		invocation.setId(1);		
 		
@@ -44,7 +42,7 @@ public class JRemotingProtocalTest {
 		Assert.assertEquals("hello", decodedInvocation.getMethodName());
 		Assert.assertEquals(1, decodedInvocation.getArgs().length);
 		Assert.assertEquals("xhan", decodedInvocation.getArgs()[0]);
-		Assert.assertEquals(protocal, decodedInvocation.getProtocal());
+		
 		Assert.assertEquals(serializer.getId(), decodedInvocation.getSerializer());
 	}
 	
@@ -58,7 +56,6 @@ public class JRemotingProtocalTest {
 				new Object[]{new HelloInput(),1,"4"},
 				new Class<?>[]{HelloInput.class,Integer.class, String.class},
 				String.class, 
-				protocal, 
 				serializer);
 		invocation.setId(1);		
 		
@@ -75,14 +72,14 @@ public class JRemotingProtocalTest {
 		Assert.assertEquals(new HelloInput(), decodedInvocation.getArgs()[0]);
 		Assert.assertEquals(1, decodedInvocation.getArgs()[1]);
 		Assert.assertEquals("4", decodedInvocation.getArgs()[2]);
-		Assert.assertEquals(protocal, decodedInvocation.getProtocal());
+	
 		Assert.assertEquals(serializer.getId(), decodedInvocation.getSerializer());
 	}
 	
 	@Test
 	public void testServerToClient() {
 
-		InvokeResult result = new InvokeResult("hello,world", 0 ,protocal,serializer);
+		InvokeResult result = new InvokeResult("hello,world", 0 ,serializer);
 		
 
 

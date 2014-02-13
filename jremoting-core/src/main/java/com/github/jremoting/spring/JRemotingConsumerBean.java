@@ -4,7 +4,6 @@ import java.lang.reflect.Proxy;
 
 import org.springframework.beans.factory.FactoryBean;
 
-import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.ServiceParticipantInfo;
@@ -18,7 +17,6 @@ public class JRemotingConsumerBean implements FactoryBean {
 
 	private String interfaceName;
 	private String version;
-	private Protocal protocal;
 	private Serializer serializer;
 	private RpcClient rpcClient;
 
@@ -29,7 +27,7 @@ public class JRemotingConsumerBean implements FactoryBean {
 	@Override
 	public Object getObject() throws Exception {
 		return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{getObjectType()}, 
-				new ClientInvocationHandler(rpcClient, protocal, serializer, interfaceName, version, address, timeout));
+				new ClientInvocationHandler(rpcClient, serializer, interfaceName, version, address, timeout));
 	}
 	
 	@Override
@@ -56,12 +54,6 @@ public class JRemotingConsumerBean implements FactoryBean {
 	}
 	public void setVersion(String version) {
 		this.version = version;
-	}
-	public Protocal getProtocal() {
-		return protocal;
-	}
-	public void setProtocal(Protocal protocal) {
-		this.protocal = protocal;
 	}
 	public Serializer getSerializer() {
 		return serializer;
