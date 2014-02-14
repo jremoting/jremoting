@@ -50,6 +50,6 @@
 		<constructor-arg name="invokeFilters">
 			<list></list>
 		</constructor-arg>
-
 	</bean>
+	
 </beans>

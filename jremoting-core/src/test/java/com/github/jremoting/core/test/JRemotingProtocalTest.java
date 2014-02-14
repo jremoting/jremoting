@@ -27,7 +27,7 @@ public class JRemotingProtocalTest {
 				"hello",
 				serializer,
 				new Object[]{"xhan"},
-				new Class<?>[]{String.class},null,false
+				new Class<?>[]{String.class}
 				);
 		invocation.setId(1);		
 		
@@ -54,7 +54,7 @@ public class JRemotingProtocalTest {
 				"1.0", 
 				"hello", serializer,
 				new Object[]{new HelloInput(),1,"4"},
-				new Class<?>[]{HelloInput.class,Integer.class, String.class}, null,false
+				new Class<?>[]{HelloInput.class,Integer.class, String.class}
 				);
 		invocation.setId(1);		
 		

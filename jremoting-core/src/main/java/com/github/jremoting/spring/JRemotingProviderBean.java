@@ -10,6 +10,10 @@ public class JRemotingProviderBean implements ServiceProvider    {
 	private Object target;
 	private RpcServer rpcServer;
 	
+	public void start() {
+		this.rpcServer.register(this);
+	}
+	
 	public String getInterfaceName() {
 		return interfaceName;
 	}
@@ -44,7 +48,6 @@ public class JRemotingProviderBean implements ServiceProvider    {
 
 	public void setRpcServer(RpcServer rpcServer) {
 		this.rpcServer = rpcServer;
-		this.rpcServer.register(this);
 	}
 	
 }

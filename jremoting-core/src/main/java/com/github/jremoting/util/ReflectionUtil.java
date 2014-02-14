@@ -30,8 +30,13 @@ public class ReflectionUtil {
 		else if ("char".equals(className)) {
 			return char.class;
 		}
+		
+		try {
+			return ReflectionUtil.class.getClassLoader().loadClass(className);
+		} catch (Exception e) {
+			return null;
+		}
 
-		return ReflectionUtil.class.getClassLoader().loadClass(className);
 	}
 
 	

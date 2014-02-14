@@ -1,5 +1,7 @@
 package com.github.jremoting.protocal;
 
+import java.util.HashMap;
+
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
@@ -44,6 +46,7 @@ public class JRemotingProtocal implements Protocal {
     
     private static final String NULL = "NULL";
     private final ServiceRegistry registry;
+	private static Class<?>[] EMPTY_TYPE_ARRAY = new Class<?>[0];
 
 	private final Serializer[] serializers;
 	
@@ -195,6 +198,10 @@ public class JRemotingProtocal implements Protocal {
 				String resultClassName = input.readString();
 				if(!NULL.equals(resultClassName)) {
 					Class<?> resultClass = ReflectionUtil.findClass(resultClassName);
+					//generic invoke result will use HashMap decode
+					if(resultClass == null) {
+						resultClass = HashMap.class;
+					}
 				    result = input.readObject(resultClass);
 				}
 				
@@ -211,6 +218,7 @@ public class JRemotingProtocal implements Protocal {
 	}
 	
 
+	
 
 	private Invoke decodeRequestBody(long msgId, Serializer serializer,ObjectInput input) throws ClassNotFoundException {
 		
@@ -221,7 +229,7 @@ public class JRemotingProtocal implements Protocal {
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(interfaceName, version, methodName,serializer, null, null ,null ,false);
+			Invoke invoke = new Invoke(interfaceName, version, methodName,serializer, null, EMPTY_TYPE_ARRAY);
 			invoke.setId(msgId);
 			return invoke;
 		}
@@ -235,7 +243,7 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer,args , parameterTypes, null,false);
+		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer,args , parameterTypes);
 		invoke.setId(msgId);
 		return invoke;
 	}

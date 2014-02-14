@@ -17,9 +17,9 @@ public class Invoke extends Message {
 	private final boolean generic;
 	
 	
+	
 	public Invoke(String interfaceName, String version,String methodName ,
-			Serializer serializer, Object[] args, Class<?>[] parameterTypes,
-			String[] parameterTypeNames, boolean generic) {
+			Serializer serializer, Object[] args, Class<?>[] parameterTypes) {
 		super(true, serializer);
 		this.args = args;
 		this.interfaceName = interfaceName;
@@ -27,24 +27,29 @@ public class Invoke extends Message {
 		this.methodName = methodName;
 		this.parameterTypes = parameterTypes;
 		
-		if(generic && parameterTypeNames == null) {
-			throw new IllegalArgumentException("parameterTypeNames can not be null when generic invoke");
+		this.parameterTypeNames = new String[this.parameterTypes.length];
+		for (int i = 0; i < this.parameterTypeNames.length; i++) {
+			this.parameterTypeNames[i] = this.parameterTypes[i].getName();
 		}
-	
-		if(parameterTypeNames == null && parameterTypes != null) {
-			this.parameterTypeNames = new String[this.parameterTypes.length];
-			for (int i = 0; i < this.parameterTypeNames.length; i++) {
-				this.parameterTypeNames[i] = this.parameterTypes[i].getName();
-			}
-		}
-		else {
-			this.parameterTypeNames = null;
-		}
-		
+
 		this.serviceName = this.interfaceName + ":" + this.version;
-		this.generic = generic;
-		
+		this.generic = false;
 	}
+	
+	public Invoke(String interfaceName, String version,String methodName ,
+			Serializer serializer, Object[] args, String[] parameterTypeNames) {
+		super(true, serializer);
+		this.args = args;
+		this.interfaceName = interfaceName;
+		this.version = version;
+		this.methodName = methodName;
+		this.parameterTypeNames = parameterTypeNames;
+		this.serviceName = this.interfaceName + ":" + this.version;
+		this.generic = true;
+		this.parameterTypes = null;
+	}
+	
+	
 	public Object[] getArgs() {
 		return args;
 	}

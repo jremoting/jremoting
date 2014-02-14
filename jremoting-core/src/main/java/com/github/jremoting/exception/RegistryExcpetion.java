@@ -4,6 +4,11 @@ public class RegistryExcpetion extends RemotingException {
 
 	private static final long serialVersionUID = -3886286251874286573L;
 
+	
+	public RegistryExcpetion(String msg) {
+		super(msg);
+	}
+	
 	public RegistryExcpetion(String msg, Throwable throwable) {
 		super(msg,throwable);
 	}

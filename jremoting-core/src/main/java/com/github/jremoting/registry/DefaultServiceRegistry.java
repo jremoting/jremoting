@@ -61,6 +61,10 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		//if no provider then wait for first async subscribe action to complete and query again
 		CountDownLatch subscribeLatch = cacheInitLatches.get(serviceName);
 		
+		if(subscribeLatch == null) {
+			throw new RegistryExcpetion("serviceName " + serviceName + " is not register to subscribe providers!");
+		}
+		
 		try {
 			subscribeLatch.await();
 		} catch (InterruptedException e) {
@@ -157,7 +161,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			providers.add(JSON.parseObject(json, ServiceParticipantInfo.class));
 		}
 		this.cachedProviderInfos.put(serviceName, providers);
-		//if there are consumer threads blocked at get providers then wake up them
+		//if there are consumer threads blocked to wait init subscribe  then wake up them
 		if(this.cacheInitLatches.size() > 0) {
 			CountDownLatch subscribeLatch = this.cacheInitLatches.remove(serviceName);
 			if(subscribeLatch != null) {
@@ -203,6 +207,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 		
 		try {
+			this.client.delete().inBackground().forPath(participantPath); //delete path that previous session created  
 			this.client.create().withMode(CreateMode.EPHEMERAL).inBackground().forPath(participantPath);
 		} catch (Exception e) {
 			throw new RegistryExcpetion(e.getMessage(), e);

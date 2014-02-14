@@ -1,38 +1,34 @@
 package com.github.jremoting.core.test;
 
 import java.io.IOException;
-import java.util.Date;
+import java.util.HashMap;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.alibaba.fastjson.JSON;
-import com.github.jremoting.core.test.TestService.HelloInput;
-import com.github.jremoting.core.test.TestService.HelloOutput;
+import com.github.jremoting.core.GenericService;
+import com.github.jremoting.core.RpcClient;
+
 
 public class JRemotingClientTest {
 	public static void main(String[] args) throws IOException {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("client-test.xml");
 		
-		TestService testService = context.getBean(TestService.class);
+		RpcClient rpcClient = context.getBean(RpcClient.class);
 		
+		GenericService genericService =  new GenericService("com.github.jremoting.core.test.TestService", "1.0", rpcClient);
+	
+		genericService.start();
 		
-		for (int i = 0; i < 100; i++) {
-			
-			testService.hello3('0', false, 1, 2L, 3D, 4f, (short) 5, (byte) 6, "7",
-					new Date(), new java.sql.Date(12121212));
-
-			HelloInput input = new HelloInput();
-			input.setId(1212);
-
-			HelloOutput result = testService.hello(input, 324);
-
-			System.out.println(JSON.toJSON(result));
-
-			testService.hello1();
-		  
-		}
+		HashMap<String, Object> genericInput = new HashMap<String, Object>();
+		genericInput.put("id", 1221);
+		genericInput.put("msg", "generic call!");
+		
+		Object result = genericService.invoke("hello",
+				new String[]{"com.github.jremoting.core.test.TestService$HelloInput", "int"}, 
+				new Object[]{genericInput, 2112});
 	
-	
+		System.out.println(JSON.toJSONString(result));
 		
 		
 		System.in.read();

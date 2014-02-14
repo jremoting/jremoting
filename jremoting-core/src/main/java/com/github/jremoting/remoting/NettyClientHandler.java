@@ -94,7 +94,10 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 			}
 		}
     	else if(msg instanceof HeartbeatMessage) {
-    		LOGGER.info("PONG");
+    		if(LOGGER.isDebugEnabled()) {
+    			LOGGER.debug("PONG");
+    		}
+    		
     	}
 		else {
 			ctx.fireChannelRead(msg);
@@ -120,7 +123,9 @@ public class NettyClientHandler extends ChannelDuplexHandler {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (evt instanceof IdleStateEvent) {
 			ctx.writeAndFlush(HeartbeatMessage.PING).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
-			LOGGER.info("PING");
+			if(LOGGER.isDebugEnabled()) {
+    			LOGGER.debug("PING");
+    		}
 		}
     }
 }
