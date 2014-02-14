@@ -21,19 +21,22 @@ public class GenericService  {
 			String[] parameterTypeNames, Object[] args) {
 		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer, args, parameterTypeNames);
 		invoke.setTimeout(timeout);
+		invoke.setRemoteAddress(address);
 		return rpcClient.invoke(invoke);
 	}
 	
-	public void start() {
+	public GenericService start() {
 		this.rpcClient.register(new ServiceParticipantInfo(this.interfaceName + ":" + this.version , NetUtil.getLocalHost(), ParticipantType.CONSUMER));
+		return this;
 	}
 
 	public long getTimeout() {
 		return timeout;
 	}
 
-	public void setTimeout(long timeout) {
+	public GenericService setTimeout(long timeout) {
 		this.timeout = timeout;
+		return this;
 	}
 	public String getVersion() {
 		return version;
@@ -55,8 +58,9 @@ public class GenericService  {
 		return address;
 	}
 
-	public void setAddress(String address) {
+	public GenericService setAddress(String address) {
 		this.address = address;
+		return this;
 	}
 
 	public String getInterfaceName() {
