@@ -3,11 +3,6 @@ package com.github.jremoting.remoting;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -25,13 +20,13 @@ import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
+import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
 
-public class DefaultRpcServer implements RpcServer, ApplicationListener<ApplicationEvent> {
-	
-	private volatile boolean started = false;
+public class DefaultRpcServer implements RpcServer {
+
 	private final EventLoopGroup parentGroup;
 	private final EventLoopGroup childGroup;
 	private final Protocal protocal;
@@ -42,6 +37,8 @@ public class DefaultRpcServer implements RpcServer, ApplicationListener<Applicat
 	private volatile boolean containsProvider = false;
 	private volatile Channel serverChannel;
 	private final Logger logger = LoggerFactory.getLogger(DefaultRpcServer.class);
+	
+	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 
 	public DefaultRpcServer(EventLoopGroup parentGroup, 
 			EventLoopGroup childGroup,
@@ -61,43 +58,62 @@ public class DefaultRpcServer implements RpcServer, ApplicationListener<Applicat
 	@Override
 	public void start() {
 		
-		logger.info("jremoting rpc server begin to listen address:" + this.serverAddress);
-		if(started) {
+		if(!containsProvider){ 
 			return;
 		}
 		
-		synchronized (this) {
-			if(started) {
-				return;
+		logger.info("jremoting rpc server begin to listen address:" + this.serverAddress);
+		
+		lifeCycleSupport.start(new Runnable() {
+			@Override
+			public void run() {
+				doStart();
 			}
-			ServerBootstrap bootstrap = new ServerBootstrap();
-			bootstrap.group(parentGroup, childGroup)
-			.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
-				public void initChannel(SocketChannel ch) throws Exception {
-					ch.pipeline().addLast(new NettyMessageCodec(protocal),
-							new NettyServerHandler(executor,invokeFilterChain));
-				}
-			});
-			
-			
-			try {
-			 	ChannelFuture future = bootstrap.bind(NetUtil.toInetSocketAddress(serverAddress)).sync();
-			 	serverChannel = future.channel();
-			} catch (InterruptedException e) {
-				throw new RemotingException("jremmoting can not bind to local address:" + this.serverAddress);
+		});
+	}
+
+	private void doStart() {
+		ServerBootstrap bootstrap = new ServerBootstrap();
+		bootstrap.group(parentGroup, childGroup)
+		.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
+			public void initChannel(SocketChannel ch) throws Exception {
+				ch.pipeline().addLast(new NettyMessageCodec(protocal),
+						new NettyServerHandler(executor,invokeFilterChain));
 			}
-			started = true;
+		});
+		
+		
+		try {
+		 	ChannelFuture future = bootstrap.bind(NetUtil.toInetSocketAddress(serverAddress)).sync();
+		 	serverChannel = future.channel();
+		 	if(this.registry != null) {
+				this.registry.start();
+			}
+		 	
+		} catch (InterruptedException e) {
+			throw new RemotingException("jremmoting can not bind to local address:" + this.serverAddress);
 		}
 	}
 
 	@Override
 	public void close() {
-		if(started) {
-			this.serverChannel.close();
-			this.parentGroup.shutdownGracefully();
-			this.executor.shutdown();
-			this.childGroup.shutdownGracefully();
+		lifeCycleSupport.close(new Runnable() {
+			@Override
+			public void run() {
+				doClose();
+			}
+		});
+	}
+
+	private void doClose() {
+		if(this.registry != null) {
+			this.registry.close();
 		}
+		
+		this.serverChannel.close();
+		this.parentGroup.shutdownGracefully();
+		this.executor.shutdown();
+		this.childGroup.shutdownGracefully();
 	}
 
 	@Override
@@ -109,26 +125,4 @@ public class DefaultRpcServer implements RpcServer, ApplicationListener<Applicat
 			containsProvider = true;
 		}
 	}
-
-	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		if(event instanceof ContextRefreshedEvent) {
-			if(containsProvider){
-				this.start();
-				if(this.registry != null) {
-					this.registry.start();
-				}
-				
-			}
-		}
-		else if(event instanceof ContextClosedEvent) {
-			if(started) {
-				if(this.registry != null) {
-					this.registry.close();
-				}
-				this.close();
-			}
-		}
-	}
-
 }

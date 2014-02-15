@@ -4,11 +4,6 @@ import io.netty.channel.EventLoopGroup;
 
 import java.util.List;
 
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.core.MessageChannel;
@@ -19,13 +14,16 @@ import com.github.jremoting.core.ServiceParticipantInfo;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
+import com.github.jremoting.util.LifeCycleSupport;
 
-public class DefaultRpcClient implements RpcClient,  ApplicationListener<ApplicationEvent> {
+public class DefaultRpcClient implements RpcClient {
 	
 	private final Serializer defaultSerializer;
 	private final ClientInvokeFilterChain invokeFilterChain;
 	private final ServiceRegistry registry;
 	private final MessageChannel messageChannel;
+	
+	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	
 	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,EventLoopGroup eventLoopGroup, 
 			List<InvokeFilter> invokeFilters) {
@@ -55,20 +53,28 @@ public class DefaultRpcClient implements RpcClient,  ApplicationListener<Applica
 	}
 
 	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		if(event instanceof ContextRefreshedEvent) {
-			if(this.registry != null) {
-				this.registry.start();
+	public void close() {
+		lifeCycleSupport.close(new Runnable() {
+			@Override
+			public void run() {
+				if(DefaultRpcClient.this.registry != null) {
+					DefaultRpcClient.this.registry.close();
+				}
+				DefaultRpcClient.this.messageChannel.close();
 			}
-			
-		}
-		else if (event instanceof ContextClosedEvent) {
-			if(this.registry != null) {
-				this.registry.close();
+		});
+	}
+
+	@Override
+	public void start() {
+		lifeCycleSupport.start(new Runnable() {
+			@Override
+			public void run() {
+				if(DefaultRpcClient.this.registry != null) {
+					DefaultRpcClient.this.registry.start();
+				}
 			}
-			
-			this.messageChannel.close();
-		}
+		});
 	}
 
 }

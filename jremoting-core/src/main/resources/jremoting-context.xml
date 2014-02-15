@@ -52,4 +52,17 @@
 		</constructor-arg>
 	</bean>
 	
+	<bean id="jremmotingLifeCycle" class="com.github.jremoting.spring.JRemotingLifeCycleBean">
+		<property name="rpcClients">
+			<list>
+				<ref bean="rpcClient"/>
+			</list>
+		</property>
+		<property name="rpcServers">
+			<list>
+				<ref bean="rpcServer"/>
+			</list>
+		</property>
+	</bean>
+	
 </beans>

@@ -24,6 +24,7 @@ import com.github.jremoting.core.ServiceParticipantInfo;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.RegistryExcpetion;
+import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 
@@ -37,8 +38,8 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	private final List<ServiceParticipantInfo> localParticipantInfos = new CopyOnWriteArrayList<ServiceParticipantInfo>();
 	
 	private final CuratorFramework client; 
-	private volatile boolean started = false;
-	private volatile boolean closed = false;
+	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
+	
 	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultServiceRegistry.class);
 	
 	public DefaultServiceRegistry(String zookeeperConnectionString) {
@@ -86,7 +87,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 		this.localParticipantInfos.add(participantInfo);
 		
-		if(started) {
+		if(lifeCycleSupport.isStarted()) {
 			this.init(participantInfo);
 			this.publish(participantInfo);
 			if(participantInfo.getType() == ParticipantType.CONSUMER) {
@@ -97,39 +98,40 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 	@Override
 	public void start() {
-		if(started) {
-			return;
-		}
-		synchronized (this) {
-			if(started) {
-				return;
-			}
-			
-			//close connection when process exit , let other consumers see this process die immediately
-			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-				@Override
-				public void run() {
-					DefaultServiceRegistry.this.close();
-				}
-			}));
-			
-			this.client.getCuratorListenable().addListener(this);
-			this.client.getConnectionStateListenable().addListener(this);
-			this.client.getUnhandledErrorListenable().addListener(this);
-			this.client.start();
 
-			
-			try {
-				this.initAll();
-				this.subscribeAll();
-				this.publishAll();
-			} catch (Exception e) {
-				throw new RegistryExcpetion(e.getMessage(), e);
+		lifeCycleSupport.start(new Runnable() {
+
+			@Override
+			public void run() {
+				doStart();
+
 			}
-			
-			this.started = true;
-		}
+		});
+	}
+
+
+	private void doStart() {
+		//close connection when process exit , let other consumers see this process die immediately
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+			public void run() {
+				DefaultServiceRegistry.this.close();
+			}
+		}));
 		
+		this.client.getCuratorListenable().addListener(this);
+		this.client.getConnectionStateListenable().addListener(this);
+		this.client.getUnhandledErrorListenable().addListener(this);
+		this.client.start();
+
+		
+		try {
+			this.initAll();
+			this.subscribeAll();
+			this.publishAll();
+		} catch (Exception e) {
+			throw new RegistryExcpetion(e.getMessage(), e);
+		}
 	}
 	
 	private void subscribeAll() throws Exception   {
@@ -218,19 +220,13 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 	@Override
 	public void close() {
-		if (closed) {
-			return;
-		}
-
-		synchronized (this) {
-			if (closed) {
-				return;
+		lifeCycleSupport.close(new Runnable() {
+			@Override
+			public void run() {
+				DefaultServiceRegistry.this.client.close();
+				LOGGER.info("service register closed before process exit!");
 			}
-			
-			this.client.close();
-			closed = true;
-			LOGGER.info("service register closed before process exit!");
-		}
+		});
 	}
 
 
