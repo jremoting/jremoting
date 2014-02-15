@@ -9,6 +9,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -36,7 +37,6 @@ public class DefaultRpcServer implements RpcServer {
 	private final ServerInvokeFilterChain invokeFilterChain;
 	private final ServiceRegistry registry;
 	private final String serverAddress;
-	private volatile boolean containsProvider = false;
 	private volatile Channel serverChannel;
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
 	
@@ -60,10 +60,6 @@ public class DefaultRpcServer implements RpcServer {
 
 	@Override
 	public void start() {
-		
-		if(!containsProvider){ 
-			return;
-		}
 		lifeCycleSupport.start(new Runnable() {
 			@Override
 			public void run() {
@@ -76,12 +72,16 @@ public class DefaultRpcServer implements RpcServer {
 	
 		ServerBootstrap bootstrap = new ServerBootstrap();
 		bootstrap.group(parentGroup, childGroup)
-		.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
-			public void initChannel(SocketChannel ch) throws Exception {
-				ch.pipeline().addLast(new NettyMessageCodec(protocal),
-						new NettyServerHandler(executor,invokeFilterChain,providers));
-			}
-		});
+				.channel(NioServerSocketChannel.class)
+				.childOption(ChannelOption.TCP_NODELAY, true)
+				.childOption(ChannelOption.SO_KEEPALIVE, true)
+				.childHandler(new ChannelInitializer<SocketChannel>() {
+					public void initChannel(SocketChannel ch) throws Exception {
+						ch.pipeline().addLast(
+								new NettyMessageCodec(protocal),
+								new NettyServerHandler(executor,invokeFilterChain, providers));
+					}
+				});
 		
 		
 		try {
@@ -89,9 +89,6 @@ public class DefaultRpcServer implements RpcServer {
 		 	serverChannel = future.channel();
 		 	
 			LOGGER.info("jremoting rpc server begin to listen address:" + this.serverAddress);
-		 	if(this.registry != null) {
-				this.registry.start();
-			}
 		 	
 		} catch (InterruptedException e) {
 			throw new RemotingException("jremmoting can not bind to local address:" + this.serverAddress);
@@ -112,10 +109,15 @@ public class DefaultRpcServer implements RpcServer {
 		if(this.registry != null) {
 			this.registry.close();
 		}
+		//close server channel and server channel io thread to refuse new connection
+		if(this.serverChannel != null) {
+			this.serverChannel.close();
+		}
 		
-		this.serverChannel.close();
 		this.parentGroup.shutdownGracefully();
+		//shutdown service executor thread pool refuse new invoke
 		this.executor.shutdown();
+		//
 		this.childGroup.shutdownGracefully();
 		LOGGER.info("jremoting rpc server closed normally");
 	}
@@ -123,10 +125,10 @@ public class DefaultRpcServer implements RpcServer {
 	@Override
 	public void register(ServiceProvider provider) {
 		this.providers.put(provider.getServiceName(), provider);
-		this.containsProvider = true;
 		this.start();
-		this.registry.registerParticipant(new ServiceParticipantInfo(provider.getServiceName(),
+		if(this.registry != null) {
+			this.registry.registerParticipant(new ServiceParticipantInfo(provider.getServiceName(),
 				this.serverAddress, ParticipantType.PROVIDER));
-		
+		}
 	}
 }

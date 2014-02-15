@@ -12,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.MessageFuture;
+import com.github.jremoting.exception.RemotingException;
 
 public class DefaultMessageFuture implements MessageFuture {
 	
@@ -73,9 +74,12 @@ public class DefaultMessageFuture implements MessageFuture {
 			throw new TimeoutException();
 		}
 		
-		if(result instanceof RuntimeException) {
-			throw (RuntimeException)result;
+		
+		
+		if(result instanceof Throwable) {
+			throw new RemotingException((Throwable)result);
 		}
+		
 		return result;
 	}
 

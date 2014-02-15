@@ -62,7 +62,7 @@ public class JRemotingClientTest {
 				}
 			}
 		});
-		holder.set(future);
+		holder.set(f);
 		
 		
 		System.in.read();

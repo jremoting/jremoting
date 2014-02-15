@@ -4,6 +4,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -76,6 +77,9 @@ public class DefaultMessageChannel implements MessageChannel  {
 			Bootstrap b = new Bootstrap();
 			b.group(eventLoopGroup).channel(NioSocketChannel.class)
 					.remoteAddress(address)
+					.option(ChannelOption.TCP_NODELAY, true)
+					.option(ChannelOption.SO_KEEPALIVE, true)
+					.option(ChannelOption.SO_REUSEADDR, true)
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						public void initChannel(SocketChannel ch)
@@ -102,9 +106,6 @@ public class DefaultMessageChannel implements MessageChannel  {
 
 	@Override
 	public void close() {
-		for (Channel channel : channels.values()) {
-			channel.close();
-		}
 		eventLoopGroup.shutdownGracefully();
 	}
 }

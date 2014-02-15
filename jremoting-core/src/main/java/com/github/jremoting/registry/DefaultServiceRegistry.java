@@ -46,7 +46,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
 		this.client = CuratorFrameworkFactory.builder()
 				.connectString(zookeeperConnectionString)
-				.sessionTimeoutMs(10 * 1000).connectionTimeoutMs(5 * 1000)
+				.sessionTimeoutMs(5 * 1000).connectionTimeoutMs(5 * 1000)
 				.namespace("jremoting").retryPolicy(retryPolicy).build();
 	}
 	
@@ -253,7 +253,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 				try {
 					this.recover();
 				} catch (Exception e) {
-					LOGGER.error("republish local providers failed!", e);
+					LOGGER.error("republish local participant failed!", e);
 				}
 			}
 			currentState = ConnectionState.RECONNECTED;

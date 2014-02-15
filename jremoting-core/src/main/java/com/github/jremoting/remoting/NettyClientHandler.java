@@ -68,6 +68,8 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 		}
 		
 		ctx.fireChannelInactive();
+		
+		LOGGER.info("client connection inactive!");
 	}
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {

@@ -65,6 +65,14 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 		}
 	}
 	
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		
+		ctx.fireChannelInactive();
+		
+		LOGGER.info("server connection inactive!");
+	}
+	
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
             throws Exception {
