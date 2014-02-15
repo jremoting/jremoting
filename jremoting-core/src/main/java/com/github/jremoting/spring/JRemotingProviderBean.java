@@ -1,5 +1,7 @@
 package com.github.jremoting.spring;
 
+import java.util.concurrent.Executor;
+
 import com.github.jremoting.core.RpcServer;
 import com.github.jremoting.core.ServiceProvider;
 
@@ -9,6 +11,7 @@ public class JRemotingProviderBean implements ServiceProvider    {
 	private final String version;
 	private final Object target;
 	private final RpcServer rpcServer;
+	private Executor executor;
 	
 	public JRemotingProviderBean(String interfaceName,String version, Object target, RpcServer rpcServer ) {
 		this.interfaceName = interfaceName;
@@ -41,5 +44,14 @@ public class JRemotingProviderBean implements ServiceProvider    {
 
 	public RpcServer getRpcServer() {
 		return rpcServer;
+	}
+
+	@Override
+	public Executor getExecutor() {
+		return executor;
+	}
+
+	public void setExecutor(Executor executor) {
+		this.executor = executor;
 	}
 }

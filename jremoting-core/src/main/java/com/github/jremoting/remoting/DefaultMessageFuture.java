@@ -1,16 +1,17 @@
 package com.github.jremoting.remoting;
 
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.MessageFuture;
-import com.github.jremoting.core.MessageFutureListener;
 
 public class DefaultMessageFuture implements MessageFuture {
 	
@@ -20,9 +21,17 @@ public class DefaultMessageFuture implements MessageFuture {
 	private static final Object CANCEL = new Object();
 	private static final Object VOID = new Object();
 	private final CountDownLatch latch = new CountDownLatch(1);
-	private final CopyOnWriteArrayList<MessageFutureListener> listeners = new CopyOnWriteArrayList<MessageFutureListener>();
-	private static final ExecutorService listenerExecutor = Executors.newSingleThreadExecutor();
+	private final Map<Runnable,Executor> listeners = new ConcurrentHashMap<Runnable, Executor>();
 	private final long startTime = System.currentTimeMillis();
+	private final Executor defaultExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+		@Override
+		public Thread newThread(Runnable runnable) {
+			Thread thread = new Thread(runnable);
+			thread.setDaemon(true);
+			thread.setName("JRemoting-Default-Callback-Runner");
+			return thread;
+		}
+	});
 	
 	
 
@@ -81,30 +90,21 @@ public class DefaultMessageFuture implements MessageFuture {
 	}
 
 	@Override
-	public void addListener(MessageFutureListener listener) {
-		listeners.add(listener);
-	}
-
-	@Override
-	public void removeListener(MessageFutureListener listener) {
-		listeners.remove(listener);
+	public void addListener(Runnable listener, Executor executor) {
+		if(executor == null) {
+			listeners.put(listener, defaultExecutor);
+		}
+		else {
+			listeners.put(listener, executor);
+		}
 	}
 	
 	private void notifyListeners() {
 		if (listeners.size() > 0) {
-			listenerExecutor.execute(new Runnable() {
-				@Override
-				public void run() {
-					for (MessageFutureListener listener : listeners) {
-						try {
-							listener.onMessage(DefaultMessageFuture.this.result);
-						}
-						catch(Throwable throwable) {
-							//ignore
-						}
-					}
-				}
-			});
+			for(Runnable listener: listeners.keySet()) {
+				Executor executor = listeners.get(listener);
+				executor.execute(listener);
+			}
 		}
 	}
 	
@@ -121,4 +121,6 @@ public class DefaultMessageFuture implements MessageFuture {
 	public long getStartTime() {
 		return startTime;
 	}
+
+
 }

@@ -3,16 +3,18 @@ package com.github.jremoting.spring;
 import java.lang.reflect.Proxy;
 
 import org.springframework.beans.factory.FactoryBean;
-
 import com.github.jremoting.core.GenericService;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ClientInvocationHandler;
+import com.github.jremoting.util.ReflectionUtil;
 
 
 @SuppressWarnings("rawtypes")
 public class JRemotingConsumerBean extends GenericService implements FactoryBean {
-
+	
+	private String asyncInterfaceName;
+	
 	public JRemotingConsumerBean(String interfaceName, String version,
 			RpcClient rpcClient) {
 		super(interfaceName, version, rpcClient);
@@ -20,8 +22,19 @@ public class JRemotingConsumerBean extends GenericService implements FactoryBean
 
 	@Override
 	public Object getObject() throws Exception {
-		return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{getObjectType()}, 
-				new ClientInvocationHandler(getRpcClient(), getSerializer(), getInterfaceName(), getVersion(), getAddress(), getTimeout()));
+		if(this.asyncInterfaceName == null) {
+			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
+					ReflectionUtil.findClass(getInterfaceName())}, 
+					new ClientInvocationHandler(getRpcClient(), getSerializer(),
+							getInterfaceName(), getVersion(), getAddress(), getTimeout(), getCallbackExecutor()));
+		}
+		else {
+			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
+				ReflectionUtil.findClass(getInterfaceName()), ReflectionUtil.findClass(asyncInterfaceName)}, 
+				new ClientInvocationHandler(getRpcClient(), getSerializer(),
+						getInterfaceName(), getVersion(), getAddress(), getTimeout(),getCallbackExecutor()));
+		}
+	
 	}
 	
 	@Override
@@ -35,5 +48,13 @@ public class JRemotingConsumerBean extends GenericService implements FactoryBean
 	@Override
 	public boolean isSingleton() {
 		return true;
+	}
+
+	public String getAsyncInterfaceName() {
+		return asyncInterfaceName;
+	}
+
+	public void setAsyncInterfaceName(String asyncInterfaceName) {
+		this.asyncInterfaceName = asyncInterfaceName;
 	}
 }

@@ -33,6 +33,10 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 	private final Runnable timeoutFutureReaper = new Runnable() {
 		@Override
 		public void run() {
+			if(futures.size() == 0) {
+				return;
+			}
+			
 			List<Long> timeoutMsgIds = new ArrayList<Long>(futures.size());
 			for (DefaultMessageFuture future : futures.values()) {
 				if(future.isTimeout()) {
@@ -74,7 +78,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         		message.setId(nextMsgId++);
         		futures.put(message.getId(), future);
         		if(removeTimoutFutrueTask == null) {
-        			removeTimoutFutrueTask = ctx.executor().scheduleAtFixedRate(timeoutFutureReaper, 5, 5, TimeUnit.SECONDS);
+        			removeTimoutFutrueTask = ctx.executor().scheduleAtFixedRate(timeoutFutureReaper, 1, 1, TimeUnit.SECONDS);
             	}
         	}
         	
@@ -97,7 +101,6 @@ public class NettyClientHandler extends ChannelDuplexHandler {
     		if(LOGGER.isDebugEnabled()) {
     			LOGGER.debug("PONG");
     		}
-    		
     	}
 		else {
 			ctx.fireChannelRead(msg);

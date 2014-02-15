@@ -1,6 +1,8 @@
 package com.github.jremoting.remoting;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -39,6 +41,7 @@ public class DefaultRpcServer implements RpcServer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
+	private final Map<String, ServiceProvider> providers = new ConcurrentHashMap<String, ServiceProvider>();
 
 	public DefaultRpcServer(EventLoopGroup parentGroup, 
 			EventLoopGroup childGroup,
@@ -61,9 +64,6 @@ public class DefaultRpcServer implements RpcServer {
 		if(!containsProvider){ 
 			return;
 		}
-		
-		
-		
 		lifeCycleSupport.start(new Runnable() {
 			@Override
 			public void run() {
@@ -79,7 +79,7 @@ public class DefaultRpcServer implements RpcServer {
 		.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
 			public void initChannel(SocketChannel ch) throws Exception {
 				ch.pipeline().addLast(new NettyMessageCodec(protocal),
-						new NettyServerHandler(executor,invokeFilterChain));
+						new NettyServerHandler(executor,invokeFilterChain,providers));
 			}
 		});
 		
@@ -122,7 +122,7 @@ public class DefaultRpcServer implements RpcServer {
 
 	@Override
 	public void register(ServiceProvider provider) {
-		this.invokeFilterChain.register(provider);
+		this.providers.put(provider.getServiceName(), provider);
 		this.containsProvider = true;
 		this.start();
 		this.registry.registerParticipant(new ServiceParticipantInfo(provider.getServiceName(),

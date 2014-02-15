@@ -41,8 +41,15 @@ public class ClientInvokeFilterChain {
 				return null;
 			}
 			
-			
 			MessageFuture future = messageChannel.send(invoke);
+			
+			if(invoke.isAsync()) {
+				if(invoke.getCallback() != null) {
+					future.addListener(invoke.getCallback(), invoke.getCallbackExecutor());
+				}
+				return future;
+			}
+			
 			try {
 				if(invoke.getTimeout() <= 0) {
 					invoke.setTimeout(DEFAULT_TIMEOUT);

@@ -1,11 +1,12 @@
 package com.github.jremoting.remoting;
 
-
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
+import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
@@ -20,10 +21,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(NettyServerHandler.class);
 	private final ServerInvokeFilterChain invokeFilterChain;
 	private final Executor executor;
+	private final Map<String, ServiceProvider> providers;
 	
-	public NettyServerHandler(Executor executor, ServerInvokeFilterChain invokeFilterChain) {
+	public NettyServerHandler(Executor executor, ServerInvokeFilterChain invokeFilterChain,
+			Map<String, ServiceProvider> providers) {
 		this.executor = executor;
 		this.invokeFilterChain = invokeFilterChain;
+		this.providers = providers;
 	}
 	
 	@Override
@@ -37,15 +41,24 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 		}
 		else if(msg instanceof Invoke) {
 			final Invoke invoke = (Invoke)msg;
+			ServiceProvider provider = providers.get(invoke.getServiceName());
+			invoke.setTarget(provider.getTarget());
 			
-			executor.execute(new Runnable() {
+			Runnable serviceRunnable = new Runnable() {
 				@Override
 				public void run() {
 					Object result = invokeFilterChain.invoke(invoke);
 					InvokeResult invokeResult = new InvokeResult(result, invoke.getId(),invoke.getSerializer());
 					ctx.writeAndFlush(invokeResult).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
 				}
-			});
+			};
+			
+			if(provider.getExecutor() != null) {
+				provider.getExecutor().execute(serviceRunnable);
+			}
+			else {
+				executor.execute(serviceRunnable);
+			}
 		}
 		else {
 			ctx.fireChannelRead(msg);

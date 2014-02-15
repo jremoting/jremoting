@@ -1,5 +1,6 @@
 package com.github.jremoting.core;
 
+import java.util.concurrent.Executor;
 
 
 public class Invoke extends Message {
@@ -8,16 +9,19 @@ public class Invoke extends Message {
 	private final String interfaceName;
 	private final Object[] args;
 	private final Class<?>[] parameterTypes;
-	private final String[] parameterTypeNames;
 	
+	private final String[] parameterTypeNames;
+	private final String serviceName;
 
 	private Object target;
 	private ServiceRegistry registry;
-	private final String serviceName;
-	private final boolean generic;
 	
 	
-	
+	//async invoke field
+	private boolean isAsync = false;
+	private Runnable callback;
+	private Executor callbackExecutor;
+
 	public Invoke(String interfaceName, String version,String methodName ,
 			Serializer serializer, Object[] args, Class<?>[] parameterTypes) {
 		super(true, serializer);
@@ -33,7 +37,7 @@ public class Invoke extends Message {
 		}
 
 		this.serviceName = this.interfaceName + ":" + this.version;
-		this.generic = false;
+
 	}
 	
 	public Invoke(String interfaceName, String version,String methodName ,
@@ -45,7 +49,6 @@ public class Invoke extends Message {
 		this.methodName = methodName;
 		this.parameterTypeNames = parameterTypeNames;
 		this.serviceName = this.interfaceName + ":" + this.version;
-		this.generic = true;
 		this.parameterTypes = null;
 	}
 	
@@ -99,8 +102,28 @@ public class Invoke extends Message {
 	public String[] getParameterTypeNames() {
 		return parameterTypeNames;
 	}
-	public boolean isGeneric() {
-		return generic;
+
+	public Executor getCallbackExecutor() {
+		return callbackExecutor;
+	}
+
+	public void setCallbackExecutor(Executor callbackExecutor) {
+		this.callbackExecutor = callbackExecutor;
+	}
+
+	public Runnable getCallback() {
+		return callback;
+	}
+
+	public void setCallback(Runnable callback) {
+		this.callback = callback;
+	}
+	
+	public boolean isAsync() {
+		return isAsync;
+	}
+	public void setAsync(boolean isAsync) {
+		this.isAsync = isAsync;
 	}
 	
 }
