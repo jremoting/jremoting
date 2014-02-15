@@ -7,8 +7,9 @@ public class GenericService  {
 	 
 	private final String interfaceName;
 	private final String version;
-	private long timeout;
 	private final RpcClient rpcClient;
+	
+	private long timeout;
 	private Serializer serializer;
 	private String address;
 

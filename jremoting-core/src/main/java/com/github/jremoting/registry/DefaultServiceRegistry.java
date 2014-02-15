@@ -33,13 +33,13 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 												UnhandledErrorListener {
 
 	private final Map<String, List<ServiceParticipantInfo>> cachedProviderInfos = new ConcurrentHashMap<String, List<ServiceParticipantInfo>>();
-	private final ConcurrentHashMap<String, CountDownLatch> cacheInitLatches = new ConcurrentHashMap<String, CountDownLatch>();
+	private final ConcurrentHashMap<String, CountDownLatch> initSubscribeLatches = new ConcurrentHashMap<String, CountDownLatch>();
 	private final List<ServiceParticipantInfo> localParticipantInfos = new CopyOnWriteArrayList<ServiceParticipantInfo>();
 	
 	private final CuratorFramework client; 
 	private volatile boolean started = false;
 	private volatile boolean closed = false;
-	private final Logger logger = LoggerFactory.getLogger(DefaultServiceRegistry.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultServiceRegistry.class);
 	
 	public DefaultServiceRegistry(String zookeeperConnectionString) {
 		RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
@@ -59,7 +59,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 		
 		//if no provider then wait for first async subscribe action to complete and query again
-		CountDownLatch subscribeLatch = cacheInitLatches.get(serviceName);
+		CountDownLatch subscribeLatch = initSubscribeLatches.get(serviceName);
 		
 		if(subscribeLatch == null) {
 			throw new RegistryExcpetion("serviceName " + serviceName + " is not register to subscribe providers!");
@@ -82,7 +82,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 		
 		if(participantInfo.getType() == ParticipantType.CONSUMER) {
-			cacheInitLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
+			initSubscribeLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
 		}
 		this.localParticipantInfos.add(participantInfo);
 		
@@ -162,8 +162,8 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 		this.cachedProviderInfos.put(serviceName, providers);
 		//if there are consumer threads blocked to wait init subscribe  then wake up them
-		if(this.cacheInitLatches.size() > 0) {
-			CountDownLatch subscribeLatch = this.cacheInitLatches.remove(serviceName);
+		if(this.initSubscribeLatches.size() > 0) {
+			CountDownLatch subscribeLatch = this.initSubscribeLatches.remove(serviceName);
 			if(subscribeLatch != null) {
 				subscribeLatch.countDown();
 			}
@@ -229,7 +229,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			
 			this.client.close();
 			closed = true;
-			logger.info("register closed before process exit!");
+			LOGGER.info("service register closed before process exit!");
 		}
 	}
 
@@ -237,7 +237,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	@Override
 	public void eventReceived(CuratorFramework client, CuratorEvent event)
 			throws Exception {
-		System.out.println(event);
+		
 		switch (event.getType()) {
 		case WATCHED:
 			if(event.getWatchedEvent().getType() == EventType.NodeChildrenChanged) {
@@ -251,6 +251,10 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			break;
 		default:
 			break;
+		}
+		
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug(event.toString());
 		}
 	}
 	
@@ -276,7 +280,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 					this.subscribeAll();
 					this.publishAll();
 				} catch (Exception e) {
-					logger.error("republish local providers failed!", e);
+					LOGGER.error("republish local providers failed!", e);
 				}
 			}
 			currentState = ConnectionState.RECONNECTED;
@@ -287,6 +291,6 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 	@Override
 	public void unhandledError(String message, Throwable e) {
-		logger.error(message, e);
+		LOGGER.error(message, e);
 	}
 }

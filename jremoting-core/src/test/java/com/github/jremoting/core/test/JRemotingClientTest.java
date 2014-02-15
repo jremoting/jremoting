@@ -16,9 +16,7 @@ public class JRemotingClientTest {
 		
 		RpcClient rpcClient = context.getBean(RpcClient.class);
 		
-		GenericService genericService =  new GenericService("com.github.jremoting.core.test.TestService", "1.0", rpcClient);
-	
-		genericService.start();
+		GenericService genericService =  new GenericService("com.github.jremoting.core.test.TestService", "1.0", rpcClient).start();
 		
 		HashMap<String, Object> genericInput = new HashMap<String, Object>();
 		genericInput.put("id", 1221);
@@ -29,7 +27,10 @@ public class JRemotingClientTest {
 				new Object[]{genericInput, 2112});
 	
 		System.out.println(JSON.toJSONString(result));
+
+		TestService testService = context.getBean(TestService.class);
 		
+		testService.hello1();
 		
 		System.in.read();
 		

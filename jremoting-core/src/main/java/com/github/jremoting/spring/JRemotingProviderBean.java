@@ -5,10 +5,17 @@ import com.github.jremoting.core.ServiceProvider;
 
 public class JRemotingProviderBean implements ServiceProvider    {
 
-	private String interfaceName;
-	private String version;
-	private Object target;
-	private RpcServer rpcServer;
+	private final String interfaceName;
+	private final String version;
+	private final Object target;
+	private final RpcServer rpcServer;
+	
+	public JRemotingProviderBean(String interfaceName,String version, Object target, RpcServer rpcServer ) {
+		this.interfaceName = interfaceName;
+		this.version = version;
+		this.target = target;
+		this.rpcServer = rpcServer;
+	}
 	
 	public void start() {
 		this.rpcServer.register(this);
@@ -18,16 +25,10 @@ public class JRemotingProviderBean implements ServiceProvider    {
 		return interfaceName;
 	}
 	
-	public void setInterfaceName(String interfaceName) {
-		this.interfaceName = interfaceName;
-	}
 	public String getVersion() {
 		return version;
 	}
-	public void setVersion(String version) {
-		this.version = version;
-	}
-	
+
 	@Override
 	public String getServiceName() {
 		return this.interfaceName + ":" + this.version;
@@ -38,16 +39,7 @@ public class JRemotingProviderBean implements ServiceProvider    {
 		return target;
 	}
 
-	public void setTarget(Object target) {
-		this.target = target;
-	}
-
 	public RpcServer getRpcServer() {
 		return rpcServer;
 	}
-
-	public void setRpcServer(RpcServer rpcServer) {
-		this.rpcServer = rpcServer;
-	}
-	
 }
