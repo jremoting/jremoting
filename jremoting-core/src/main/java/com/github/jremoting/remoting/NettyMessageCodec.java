@@ -21,31 +21,22 @@ public class NettyMessageCodec extends  ByteToMessageCodec<Message>{
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out)
 			throws Exception {
-		try {
-			protocal.encode(msg, new DefaultByteBuffer(out));
-		} catch (Exception e) {
-			ctx.fireExceptionCaught(e);
-		}
+		protocal.encode(msg, new DefaultByteBuffer(out));
 	}
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in,
 			List<Object> out) throws Exception {
-	
-		try {
-			Message msg = protocal.decode(new DefaultByteBuffer(in));
-			if(msg == Message.NEED_MORE) {
-				return;
-			}
-			
-			if (msg != null) {
-				out.add(msg);
-				return;
-			}
-		} catch (Exception e) {
-			ctx.fireExceptionCaught(e);
+		
+		Message msg = protocal.decode(new DefaultByteBuffer(in));
+		if (msg == Message.NEED_MORE) {
+			return;
 		}
 
+		if (msg != null) {
+			out.add(msg);
+			return;
+		}
 	}
 
 }

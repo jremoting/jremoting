@@ -3,9 +3,6 @@ package com.github.jremoting.core;
 public abstract class Message {
 	
 	public static final Message NEED_MORE = new Message(false, null) {};
-	public static final Message SERVER_ERROR = new Message(false, null) {};
-	public static final Message SERVER_BUSY = new Message(false, null) {};
-	
 	private final boolean isTwoWay;
 	private  Serializer serializer;
 	private String remoteAddress;

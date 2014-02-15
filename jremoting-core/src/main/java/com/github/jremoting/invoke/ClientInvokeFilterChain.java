@@ -11,7 +11,6 @@ import com.github.jremoting.core.InvokeFilterUtil;
 import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.exception.RemotingException;
-import com.github.jremoting.exception.ServerErrorException;
 
 public class ClientInvokeFilterChain {
 
@@ -36,12 +35,16 @@ public class ClientInvokeFilterChain {
 		private final MessageChannel messageChannel;
 		@Override
 		public Object invoke(Invoke invoke) {
-			if(!invoke.isTwoWay()) {
-				messageChannel.send(invoke);
-				return null;
+			
+			if(invoke.getTimeout() <= 0) {
+				invoke.setTimeout(DEFAULT_TIMEOUT);
 			}
 			
 			MessageFuture future = messageChannel.send(invoke);
+			//one way message return null
+			if(future == null) {
+				return null;
+			}
 			
 			if(invoke.isAsync()) {
 				if(invoke.getCallback() != null) {
@@ -51,14 +54,9 @@ public class ClientInvokeFilterChain {
 			}
 			
 			try {
-				if(invoke.getTimeout() <= 0) {
-					invoke.setTimeout(DEFAULT_TIMEOUT);
-				}
-				Object result =  future.get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
-				if(result instanceof ServerErrorException) {
-					throw (ServerErrorException)result;
-				}
-				return result;
+
+				return future.get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
+				
 			} catch (InterruptedException e) {
 				throw new RemotingException(e);
 			} catch (ExecutionException e) {

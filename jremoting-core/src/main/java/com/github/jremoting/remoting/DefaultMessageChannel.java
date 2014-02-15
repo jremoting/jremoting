@@ -17,7 +17,7 @@ import com.github.jremoting.core.Message;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.Protocal;
-import com.github.jremoting.exception.ConnectFailedException;
+import com.github.jremoting.exception.ConnectionRefusedException;
 import com.github.jremoting.util.NetUtil;
 
 public class DefaultMessageChannel implements MessageChannel  {
@@ -98,7 +98,7 @@ public class DefaultMessageChannel implements MessageChannel  {
 				return channel;
 
 			} catch (Exception e) {
-				throw new ConnectFailedException("connection failed!", e);
+				throw new ConnectionRefusedException("connection failed!", e);
 			}
 		}
 	}

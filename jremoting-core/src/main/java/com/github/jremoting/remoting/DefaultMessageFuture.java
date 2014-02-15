@@ -20,7 +20,7 @@ public class DefaultMessageFuture implements MessageFuture {
 	private volatile Object result;
 	
 	private static final Object CANCEL = new Object();
-	private static final Object VOID = new Object();
+	private static final Object NULL = new Object();
 	private final CountDownLatch latch = new CountDownLatch(1);
 	private final Map<Runnable,Executor> listeners = new ConcurrentHashMap<Runnable, Executor>();
 	private final long startTime = System.currentTimeMillis();
@@ -63,6 +63,9 @@ public class DefaultMessageFuture implements MessageFuture {
 		if(result instanceof RuntimeException) {
 			throw (RuntimeException)result;
 		}
+		else if(result instanceof Throwable) {
+			throw new RemotingException((Throwable)result);
+		}
 		return result;
 	}
 
@@ -74,9 +77,10 @@ public class DefaultMessageFuture implements MessageFuture {
 			throw new TimeoutException();
 		}
 		
-		
-		
-		if(result instanceof Throwable) {
+		if(result instanceof RuntimeException) {
+			throw (RuntimeException)result;
+		}
+		else if(result instanceof Throwable) {
 			throw new RemotingException((Throwable)result);
 		}
 		
@@ -85,7 +89,7 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	@Override
 	public boolean isCancelled() {
-		return result != null && result == CANCEL;
+		return result == CANCEL;
 	}
 
 	@Override
@@ -113,7 +117,7 @@ public class DefaultMessageFuture implements MessageFuture {
 	}
 	
 	public void setResult(Object result) {
-		this.result = (result == null? VOID : result);
+		this.result = (result == null? NULL : result);
 		latch.countDown();
 		notifyListeners();
 	}

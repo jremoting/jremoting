@@ -11,7 +11,10 @@ import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.SerializerUtil;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.ProtocalException;
+import com.github.jremoting.exception.RemotingException;
+import com.github.jremoting.exception.ServerBusyException;
 import com.github.jremoting.exception.ServerErrorException;
+import com.github.jremoting.exception.ServiceUnavailableException;
 import com.github.jremoting.io.ByteBuffer;
 import com.github.jremoting.io.ByteBufferInputStream;
 import com.github.jremoting.io.ByteBufferOutputStream;
@@ -25,24 +28,20 @@ public class JRemotingProtocal implements Protocal {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(JRemotingProtocal.class);
 	
-	public static final String NAME = "jremoting";
-	
-	public static final short MAGIC = (short) 0xBABE; //1011101010111110
-	
-	 // header length.
-    protected static final int      HEAD_LENGTH      = 16;
-    // message flag.
-    protected static final int     FLAG_REQUEST       =  0x80; //10000000
-
-    protected static final int     FLAG_TWOWAY        =  0x40; //01000000
-
-    protected static final int     FLAG_EVENT     =  0x20;	  //00100000
-
-    protected static final int      SERIALIZATION_MASK = 0x1f;		  //00011111
+	public static final short MAGIC = (short) 0xBABE; // 1011101010111110
+	protected static final int HEAD_LENGTH = 16;// header length.
+	// message flag.
+	protected static final int FLAG_REQUEST = 0x80; // 10000000
+	protected static final int FLAG_TWOWAY = 0x40; // 01000000
+	protected static final int FLAG_EVENT = 0x20; // 00100000
+	protected static final int SERIALIZATION_MASK = 0x1f; // 00011111
     
-    
-    protected static final int      STATUS_ERROR = 50;
-    protected static final int      STATUS_OK = 20;
+    private static final int  STATUS_OK = 20;
+    private static final int  STATUS_SERVER_ERROR = 50;
+    private static final int  STATUS_SERVER_BUSY = 51;
+    private static final int  STATUS_SEVICE_UNAVAILABLE = 52;
+    private static final int  STATUS_UNKNOWN_ERROR = 55;
+	
     
     private static final String NULL = "NULL";
     private final ServiceRegistry registry;
@@ -70,7 +69,7 @@ public class JRemotingProtocal implements Protocal {
 					| (isHeartbeatMessage ? FLAG_EVENT : 0)
 					| serializeId;
 			
-			int status = isErrorMsg ? STATUS_ERROR : STATUS_OK;
+			int status = isErrorMsg ? getStatus((InvokeResult)msg) : STATUS_OK;
 			
 			//encode head
 			buffer.writeShort(MAGIC);
@@ -119,10 +118,8 @@ public class JRemotingProtocal implements Protocal {
 			buffer.writerIndex(savedWriterIndex);
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
-			throw new ProtocalException("encode msg failed",e, msg.getId());
+			throw new ProtocalException("encode msg failed",e);
 		}
-	
-		
 	}
 	
 	private void encodeRequestBody(Invoke invoke, ObjectOutput output) {
@@ -146,49 +143,52 @@ public class JRemotingProtocal implements Protocal {
 
 	@Override
 	public Message decode(ByteBuffer buffer) throws ProtocalException {
-		if(buffer.readableBytes() < HEAD_LENGTH) {
-			return Message.NEED_MORE;
-		}
-		buffer.markReaderIndex();
-		
-		short magic = buffer.readShort();
-		if(magic != MAGIC) {
-			buffer.resetReaderIndex();
-			return null;
-		}
-		
-		int flag = buffer.readByte();
-		int status = buffer.readByte();
-		long msgId = buffer.readLong();
-		int bodyLength = buffer.readInt();
-		
-		if(buffer.readableBytes() < bodyLength) {
-			buffer.resetReaderIndex();
-			return Message.NEED_MORE;
-		}
-		
-		boolean isHeartbeat = (flag & FLAG_EVENT) > 0;	
-		boolean isRequest = (flag & FLAG_REQUEST) > 0;
-		boolean isTwoWay = (flag & FLAG_TWOWAY) > 0 ;
-		int serializerId = (flag & SERIALIZATION_MASK);
-		boolean isErrorMsg = (status != STATUS_OK);
-		
-		if (isHeartbeat) {
-			if (isTwoWay) {
-				return HeartbeatMessage.PING;
-			} else {
-				return HeartbeatMessage.PONG;
-			}
-		}
-		
+
 		try {
+			
+			if(buffer.readableBytes() < HEAD_LENGTH) {
+				return Message.NEED_MORE;
+			}
+			buffer.markReaderIndex();
+			
+			short magic = buffer.readShort();
+			if(magic != MAGIC) {
+				buffer.resetReaderIndex();
+				return null;
+			}
+			
+			int flag = buffer.readByte();
+			int status = buffer.readByte();
+			long msgId = buffer.readLong();
+			int bodyLength = buffer.readInt();
+			
+			if(buffer.readableBytes() < bodyLength) {
+				buffer.resetReaderIndex();
+				return Message.NEED_MORE;
+			}
+			
+			boolean isHeartbeat = (flag & FLAG_EVENT) > 0;	
+			boolean isRequest = (flag & FLAG_REQUEST) > 0;
+			boolean isTwoWay = (flag & FLAG_TWOWAY) > 0 ;
+			int serializerId = (flag & SERIALIZATION_MASK);
+			boolean isErrorMsg = (status != STATUS_OK);
+			
+			if (isHeartbeat) {
+				if (isTwoWay) {
+					return HeartbeatMessage.PING;
+				} else {
+					return HeartbeatMessage.PONG;
+				}
+			}
+			
 			//decode body
 			Serializer serializer = serializers[serializerId];	
 			ObjectInput input = serializer.createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
 			Message msg = null;
 			if(isErrorMsg) {
 				String errorMsg = input.readString();
-				msg =   new InvokeResult(new ServerErrorException(errorMsg), msgId, null);
+				RemotingException error = getException(status, errorMsg);
+				msg =   new InvokeResult(error, msgId, null);
 			}
 			else if(isRequest) {
 				msg =  decodeRequestBody(msgId,serializer ,input);
@@ -213,7 +213,7 @@ public class JRemotingProtocal implements Protocal {
 			
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
-			throw new ProtocalException("decode msg  failed!" ,e , msgId);
+			throw new ProtocalException("decode msg  failed!" ,e);
 		}
 	}
 	
@@ -251,6 +251,40 @@ public class JRemotingProtocal implements Protocal {
 	@Override
 	public ServiceRegistry getRegistry() {
 		return registry;
+	}
+	
+	private int getStatus(InvokeResult result) {
+		
+		if(!(result.getResult() instanceof Throwable)) {
+			return STATUS_OK;
+		}
+		
+		if(result.getResult() instanceof ServerErrorException) {
+			return STATUS_SERVER_ERROR;
+		}
+		
+		if(result.getResult() instanceof ServerBusyException) {
+			return STATUS_SERVER_BUSY;
+		}
+		if(result.getResult() instanceof ServiceUnavailableException) {
+			return STATUS_SEVICE_UNAVAILABLE;
+		}
+		
+		return STATUS_UNKNOWN_ERROR;
+	}
+	
+	private RemotingException getException( int status, String errorMsg) {
+		switch (status) {
+		case STATUS_SERVER_ERROR:
+			return new ServerErrorException(errorMsg);
+		case STATUS_SERVER_BUSY :
+			return new ServerBusyException();
+		case STATUS_SEVICE_UNAVAILABLE :
+			return new ServiceUnavailableException();
+
+		default:
+			return new RemotingException("UNKNOWN_ERROR");
+		}
 	}
 	
 }
