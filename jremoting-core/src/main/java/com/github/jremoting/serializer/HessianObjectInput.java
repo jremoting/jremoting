@@ -13,6 +13,7 @@ public class HessianObjectInput implements ObjectInput {
 	
 	public HessianObjectInput(InputStream in) {
 		this.input = new Hessian2Input(in);
+		this.input.setSerializerFactory(HessianSerializerFactory.INSTANCE);
 	}
 	
 	@Override

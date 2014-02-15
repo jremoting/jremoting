@@ -32,7 +32,7 @@
 
 	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
-		<constructor-arg name="defaultSerializer" ref="jsonSerializer" />
+		<constructor-arg name="defaultSerializer" ref="hessianSerializer" />
 		<constructor-arg name="eventLoopGroup" ref="childGroup" />
 		<constructor-arg name="invokeFilters">
 			<list>

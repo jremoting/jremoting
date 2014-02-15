@@ -11,7 +11,8 @@ public class HessianObjectOutput implements ObjectOutput{
 
 	private final Hessian2Output output;
 	public HessianObjectOutput(OutputStream out) {
-		output = new Hessian2Output(out);
+		this.output = new Hessian2Output(out);
+		this.output.setSerializerFactory(HessianSerializerFactory.INSTANCE);
 	}
 	@Override
 	public void writeString(String value) {
