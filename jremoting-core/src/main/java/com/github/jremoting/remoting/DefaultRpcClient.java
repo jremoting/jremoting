@@ -22,6 +22,7 @@ public class DefaultRpcClient implements RpcClient {
 	private final ClientInvokeFilterChain invokeFilterChain;
 	private final ServiceRegistry registry;
 	private final MessageChannel messageChannel;
+	private volatile boolean containsConsumer = false;
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	
@@ -50,6 +51,8 @@ public class DefaultRpcClient implements RpcClient {
 			throw new IllegalArgumentException("can only register consumer info");
 		}	
 		this.registry.registerParticipant(consumerInfo);
+		this.containsConsumer = true;
+		this.start();
 	}
 
 	@Override
@@ -67,6 +70,9 @@ public class DefaultRpcClient implements RpcClient {
 
 	@Override
 	public void start() {
+		if(!containsConsumer) {
+			return;
+		}
 		lifeCycleSupport.start(new Runnable() {
 			@Override
 			public void run() {

@@ -82,29 +82,23 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			return;
 		}
 		
-		if(participantInfo.getType() == ParticipantType.CONSUMER) {
-			initSubscribeLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
-		}
 		this.localParticipantInfos.add(participantInfo);
 		
-		if(lifeCycleSupport.isStarted()) {
-			this.init(participantInfo);
-			this.publish(participantInfo);
-			if(participantInfo.getType() == ParticipantType.CONSUMER) {
-				this.subscribe(getProviderPath(participantInfo.getServiceName()));
-			}
+		this.start();
+		this.initServicePath(participantInfo);
+		this.publish(participantInfo);
+		if (participantInfo.getType() == ParticipantType.CONSUMER) {
+			this.initSubscribeLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
+			this.subscribe(getProviderPath(participantInfo.getServiceName()));
 		}
 	}
 
 	@Override
 	public void start() {
-
 		lifeCycleSupport.start(new Runnable() {
-
 			@Override
 			public void run() {
 				doStart();
-
 			}
 		});
 	}
@@ -123,24 +117,9 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		this.client.getConnectionStateListenable().addListener(this);
 		this.client.getUnhandledErrorListenable().addListener(this);
 		this.client.start();
-
-		
-		try {
-			this.initAll();
-			this.subscribeAll();
-			this.publishAll();
-		} catch (Exception e) {
-			throw new RegistryExcpetion(e.getMessage(), e);
-		}
 	}
 	
-	private void subscribeAll() throws Exception   {
-		for (ServiceParticipantInfo participantInfo : localParticipantInfos) {
-			if(participantInfo.getType() == ParticipantType.CONSUMER) {
-				subscribe(getProviderPath(participantInfo.getServiceName()));
-			}
-		}
-	}
+
 
 
 	private String getProviderPath(String serviceName) {
@@ -170,29 +149,18 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 				subscribeLatch.countDown();
 			}
 		}
+		LOGGER.info("received providers for service:" + serviceName);
+		LOGGER.info("providers:" + JSON.toJSONString(providers));
 	}
 	
-	private void initAll()   {
-		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
-			init(participantInfo);
-		}
-	}
 
-
-	private void init(ServiceParticipantInfo participantInfo)  {
+	private void initServicePath(ServiceParticipantInfo participantInfo)  {
 		try {
 			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName());
 			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/providers");
 			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/consumers");
 		} catch (Exception e) {
 			throw new RegistryExcpetion(e.getMessage(), e);
-		}
-
-	}
-	
-	private void publishAll() throws Exception {
-		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
-			publish(participantInfo);
 		}
 	}
 
@@ -211,6 +179,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		try {
 			this.client.delete().inBackground().forPath(participantPath); //delete path that previous session created  
 			this.client.create().withMode(CreateMode.EPHEMERAL).inBackground().forPath(participantPath);
+			LOGGER.info("publish participant to path:" + participantPath);
 		} catch (Exception e) {
 			throw new RegistryExcpetion(e.getMessage(), e);
 		}
@@ -261,6 +230,15 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 
 	private ConnectionState currentState;
+	
+	private void recover() throws Exception   {
+		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
+			if(participantInfo.getType() == ParticipantType.CONSUMER) {
+				subscribe(getProviderPath(participantInfo.getServiceName()));
+			}
+			publish(participantInfo);
+		}
+	}
 
 	@Override
 	public void stateChanged(CuratorFramework client, ConnectionState newState) {
@@ -273,8 +251,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		case RECONNECTED:
 			if (currentState == ConnectionState.LOST) {
 				try {
-					this.subscribeAll();
-					this.publishAll();
+					this.recover();
 				} catch (Exception e) {
 					LOGGER.error("republish local providers failed!", e);
 				}

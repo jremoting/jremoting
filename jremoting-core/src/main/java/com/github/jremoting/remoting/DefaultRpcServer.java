@@ -36,7 +36,7 @@ public class DefaultRpcServer implements RpcServer {
 	private final String serverAddress;
 	private volatile boolean containsProvider = false;
 	private volatile Channel serverChannel;
-	private final Logger logger = LoggerFactory.getLogger(DefaultRpcServer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 
@@ -62,7 +62,7 @@ public class DefaultRpcServer implements RpcServer {
 			return;
 		}
 		
-		logger.info("jremoting rpc server begin to listen address:" + this.serverAddress);
+		
 		
 		lifeCycleSupport.start(new Runnable() {
 			@Override
@@ -73,6 +73,7 @@ public class DefaultRpcServer implements RpcServer {
 	}
 
 	private void doStart() {
+	
 		ServerBootstrap bootstrap = new ServerBootstrap();
 		bootstrap.group(parentGroup, childGroup)
 		.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
@@ -86,6 +87,8 @@ public class DefaultRpcServer implements RpcServer {
 		try {
 		 	ChannelFuture future = bootstrap.bind(NetUtil.toInetSocketAddress(serverAddress)).sync();
 		 	serverChannel = future.channel();
+		 	
+			LOGGER.info("jremoting rpc server begin to listen address:" + this.serverAddress);
 		 	if(this.registry != null) {
 				this.registry.start();
 			}
@@ -114,15 +117,16 @@ public class DefaultRpcServer implements RpcServer {
 		this.parentGroup.shutdownGracefully();
 		this.executor.shutdown();
 		this.childGroup.shutdownGracefully();
+		LOGGER.info("jremoting rpc server closed normally");
 	}
 
 	@Override
 	public void register(ServiceProvider provider) {
 		this.invokeFilterChain.register(provider);
+		this.containsProvider = true;
+		this.start();
 		this.registry.registerParticipant(new ServiceParticipantInfo(provider.getServiceName(),
 				this.serverAddress, ParticipantType.PROVIDER));
-		if(!containsProvider) {
-			containsProvider = true;
-		}
+		
 	}
 }
