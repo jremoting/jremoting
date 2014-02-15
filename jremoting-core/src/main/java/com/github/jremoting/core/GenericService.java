@@ -29,13 +29,13 @@ public class GenericService  {
 	}
 
 	
-	public Future<?> asyncInvoke(String methodName, String[] parameterTypeNames, Object[] args) {
+	public Future<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args) {
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
 		return (Future<?>)rpcClient.invoke(invoke);
 	}
 	
-	public Future<?> asyncInvoke(String methodName, String[] parameterTypeNames, Object[] args,
+	public Future<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args,
 			Runnable callback) {
 		
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
@@ -46,7 +46,7 @@ public class GenericService  {
 		return (Future<?>)rpcClient.invoke(invoke);
 	}
 	
-	public Future<?> asyncInvoke(String methodName, String[] parameterTypeNames, Object[] args
+	public Future<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args
 			,Executor executor ,Runnable callback) {
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);

@@ -38,8 +38,7 @@ public class JRemotingClientTest {
 		testService.hello1();
 		
 		AsyncTestService asyncTestService = (AsyncTestService)testService;
-		
-		
+
 		HelloInput input = new HelloInput();
 		input.setId(12);
 		input.setMsg("async test");
