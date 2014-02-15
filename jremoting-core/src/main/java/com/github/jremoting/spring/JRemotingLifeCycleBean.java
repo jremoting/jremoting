@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
 
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.RpcServer;
@@ -17,16 +16,7 @@ public class JRemotingLifeCycleBean implements ApplicationListener<ApplicationEv
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
-		if(event instanceof ContextRefreshedEvent) {
-			for (RpcClient rpcClient : rpcClients) {
-				rpcClient.start();
-			}
-			for(RpcServer rpcServer : rpcServers) {
-				rpcServer.start();
-			}
-			
-		}
-		else if (event instanceof ContextClosedEvent) {
+		if (event instanceof ContextClosedEvent) {
 			for(RpcServer rpcServer : rpcServers) {
 				rpcServer.close();
 			}
