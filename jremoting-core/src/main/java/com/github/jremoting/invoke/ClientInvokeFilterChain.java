@@ -7,7 +7,6 @@ import java.util.concurrent.TimeoutException;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
-import com.github.jremoting.core.InvokeFilterUtil;
 import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.exception.RemotingException;

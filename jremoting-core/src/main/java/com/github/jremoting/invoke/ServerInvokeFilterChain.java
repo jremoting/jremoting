@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
-import com.github.jremoting.core.InvokeFilterUtil;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.ReflectionUtil;
 

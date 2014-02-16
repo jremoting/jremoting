@@ -1,6 +1,8 @@
-package com.github.jremoting.core;
+package com.github.jremoting.invoke;
 
 import java.util.List;
+
+import com.github.jremoting.core.InvokeFilter;
 
 
 

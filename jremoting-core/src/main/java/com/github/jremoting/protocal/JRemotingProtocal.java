@@ -8,7 +8,6 @@ import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.core.SerializerUtil;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.exception.RemotingException;

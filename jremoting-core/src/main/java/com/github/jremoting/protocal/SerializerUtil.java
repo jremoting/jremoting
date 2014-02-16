@@ -1,4 +1,6 @@
-package com.github.jremoting.core;
+package com.github.jremoting.protocal;
+
+import com.github.jremoting.core.Serializer;
 
 
 
