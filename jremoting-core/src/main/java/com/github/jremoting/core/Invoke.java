@@ -21,6 +21,7 @@ public class Invoke extends Message {
 	private boolean isAsync = false;
 	private Runnable callback;
 	private Executor callbackExecutor;
+	private int retry = 0;
 
 	public Invoke(String interfaceName, String version,String methodName ,
 			Serializer serializer, Object[] args, Class<?>[] parameterTypes) {
@@ -124,6 +125,14 @@ public class Invoke extends Message {
 	}
 	public void setAsync(boolean isAsync) {
 		this.isAsync = isAsync;
+	}
+
+	public int getRetry() {
+		return retry;
+	}
+
+	public void setRetry(int retry) {
+		this.retry = retry;
 	}
 	
 }
