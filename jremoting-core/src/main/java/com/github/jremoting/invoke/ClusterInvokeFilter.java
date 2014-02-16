@@ -30,7 +30,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 			throw new RemotingException("no provier for service " + invoke.getServiceName());
 		}
 		
-		Object result = null;
+
 		
 		int nextProviderIndex = (int)(nextIndex.getAndIncrement());
 		
@@ -60,6 +60,6 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 			}
 		}
 		
-		return result;
+		throw new RemotingException("should not happen!");
 	}
 }
