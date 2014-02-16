@@ -1,5 +1,6 @@
 package com.github.jremoting.core;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 
@@ -21,6 +22,9 @@ public class Invoke extends Message {
 	private boolean isAsync = false;
 	private Runnable callback;
 	private Executor callbackExecutor;
+	private MessageFuture resultFuture;
+	private Map<String, Object> asyncContext;
+	private InvokeFilter tailInvokeFilter;
 	private int retry = 0;
 
 	public Invoke(String interfaceName, String version,String methodName ,
@@ -133,6 +137,30 @@ public class Invoke extends Message {
 
 	public void setRetry(int retry) {
 		this.retry = retry;
+	}
+
+	public MessageFuture getResultFuture() {
+		return resultFuture;
+	}
+
+	public void setResultFuture(MessageFuture resultFuture) {
+		this.resultFuture = resultFuture;
+	}
+
+	public Map<String, Object> getAsyncContext() {
+		return asyncContext;
+	}
+
+	public void setAsyncContext(Map<String, Object> asyncContext) {
+		this.asyncContext = asyncContext;
+	}
+
+	public InvokeFilter getTailInvokeFilter() {
+		return tailInvokeFilter;
+	}
+
+	public void setTailInvokeFilter(InvokeFilter tailInvokeFilter) {
+		this.tailInvokeFilter = tailInvokeFilter;
 	}
 	
 }

@@ -1,28 +1,58 @@
 package com.github.jremoting.invoke;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.ReflectionUtil;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 
 public class ServerInvokeFilterChain    {
 	
 	private final InvokeFilter head;
-
+	private final InvokeFilter tail;
 	public ServerInvokeFilterChain(List<InvokeFilter> invokeFilters) {
-		invokeFilters.add(new ServerTailInvokeFilter());
-		this.head = InvokeFilterUtil.link(invokeFilters);
+		List<InvokeFilter> filters = new ArrayList<InvokeFilter>(invokeFilters.size() + 2);
+		this.head = new ServerHeadInvokeFilter();
+		filters.add(head);
+		
+		for (InvokeFilter invokeFilter : invokeFilters) {
+			filters.add(invokeFilter);
+		}
+		this.tail = new ServerTailInvokeFilter();
+		filters.add(tail);
+		
+		InvokeFilterUtil.link(filters);
 	}
 	
-	public  Object invoke(Invoke invoke) {
+	public Object invoke(Invoke invoke) {
 		return this.head.invoke(invoke);
 	}
 	
-	private  class ServerTailInvokeFilter implements InvokeFilter {
+	
+	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+		return this.head.beginInvoke(invoke);
+	}
+
+	
+	public void endInvoke(Invoke invoke, Object result) {
+		this.tail.endInvoke(invoke, result);
+	}
+	
+	
+	private static class ServerHeadInvokeFilter extends AbstractInvokeFilter {
+		@Override
+		public void endInvoke(Invoke invoke, Object result) {
+			invoke.getResultFuture().setResult(result);
+		}
+	}
+	
+	private static class ServerTailInvokeFilter extends AbstractInvokeFilter {
 		
 		@Override
 		public Object invoke(Invoke invoke) {
@@ -41,14 +71,6 @@ public class ServerInvokeFilterChain    {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-		}
-		
-		@Override
-		public InvokeFilter getNext() {
-			return null;
-		}
-		@Override
-		public void setNext(InvokeFilter next) {
 		}
 	}
 }

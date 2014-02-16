@@ -1,4 +1,4 @@
-package com.github.jremoting.util;
+package com.github.jremoting.util.concurrent;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;

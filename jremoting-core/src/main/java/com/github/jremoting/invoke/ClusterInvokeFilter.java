@@ -10,6 +10,7 @@ import com.github.jremoting.exception.FailoverableException;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	
@@ -61,5 +62,32 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		}
 		
 		throw new RemotingException("should not happen!");
+	}
+	
+	@Override
+	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+		// if invoke already has remote address then skip registry for debug use
+		if (invoke.getRemoteAddress() != null) {
+			return getNext().beginInvoke(invoke);
+		}
+
+		List<ServiceParticipantInfo> providers = invoke.getRegistry()
+				.getProviders(invoke.getServiceName());
+
+		if (providers == null || providers.isEmpty()) {
+			throw new RemotingException("no provier for service "
+					+ invoke.getServiceName());
+		}
+
+		int nextProviderIndex = (int) (nextIndex.getAndIncrement());
+		
+		invoke.setRemoteAddress(providers.get(nextProviderIndex % providers.size()).getAddress());
+		
+		return getNext().beginInvoke(invoke);
+	}
+
+	@Override
+	public void endInvoke(Invoke invoke, Object result) {
+		getPrev().endInvoke(invoke, result);
 	}
 }

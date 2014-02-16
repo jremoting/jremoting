@@ -26,13 +26,13 @@ public class JRemotingConsumerBean extends GenericService implements FactoryBean
 			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
 					ReflectionUtil.findClass(getInterfaceName())}, 
 					new ClientInvocationHandler(getRpcClient(), getSerializer(),
-							getInterfaceName(), getVersion(), getAddress(), getTimeout(), getCallbackExecutor()));
+							getInterfaceName(), getVersion(), getAddress(), getTimeout()));
 		}
 		else {
 			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
 				ReflectionUtil.findClass(getInterfaceName()), ReflectionUtil.findClass(asyncInterfaceName)}, 
 				new ClientInvocationHandler(getRpcClient(), getSerializer(),
-						getInterfaceName(), getVersion(), getAddress(), getTimeout(),getCallbackExecutor()));
+						getInterfaceName(), getVersion(), getAddress(), getTimeout()));
 		}
 	
 	}

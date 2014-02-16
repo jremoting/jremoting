@@ -2,7 +2,9 @@ package com.github.jremoting.invoke;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.RpcClient;
@@ -16,15 +18,14 @@ public class ClientInvocationHandler implements InvocationHandler {
 	private final String serviceVersion;
 	private final String remoteAddress;
 	private final long timeout;
-	private final Executor defaultCallbackExecutor;
-	
+	private final static AtomicLong NEXT_MSG_ID = new AtomicLong(0);
 	
 	public ClientInvocationHandler(RpcClient rpcClient,
 			Serializer serializer,
 			String serviceName, 
 			String serviceVersion,
 			String remoteAddress,
-			long timeout, Executor callbackExecutor) {
+			long timeout) {
 		
 		this.rpcClient = rpcClient;
 		this.serializer = serializer;
@@ -32,7 +33,6 @@ public class ClientInvocationHandler implements InvocationHandler {
 		this.serviceName = serviceName;
 		this.remoteAddress = remoteAddress;
 		this.timeout = timeout;
-		this.defaultCallbackExecutor= callbackExecutor;
 	}
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
@@ -57,22 +57,24 @@ public class ClientInvocationHandler implements InvocationHandler {
 			invoke.setRemoteAddress(remoteAddress);
 		}
 		invoke.setTimeout(this.timeout);
+		invoke.setId(NEXT_MSG_ID.incrementAndGet());
+		
 		return rpcClient.invoke(invoke);
 	}
 	private Invoke createAsynInvoke(Method method, Object[] args) {
 		Invoke invoke = null;
 		Runnable callback = null;
-		Executor callbackExecutor = null;
+		Executor methodCallbackExecutor = null;
 		String methodName = method.getName().replace("$", "");
 		
 		if(args.length > 0 && args[args.length - 1] instanceof Runnable) {
 			callback = (Runnable) args[args.length - 1];
 		}
 		if(callback != null && args.length > 1 && args[args.length - 2] instanceof Executor) {
-			callbackExecutor = (Executor)args[args.length - 2];
+			methodCallbackExecutor = (Executor)args[args.length - 2];
 		}
 		
-		if(callback == null && callbackExecutor == null) {
+		if(callback == null && methodCallbackExecutor == null) {
 			   invoke = new Invoke(serviceName, 
 						serviceVersion,
 						methodName,
@@ -80,7 +82,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 						args ,
 						method.getParameterTypes());
 		}
-		else if (callback != null && callbackExecutor != null) {
+		else if (callback != null && methodCallbackExecutor != null) {
 			Object[] newArgs = new Object[args.length -2];
 			Class<?>[] newParameterTypes = new Class<?>[args.length - 2];
 			for (int i = 0; i < newArgs.length; i++) {
@@ -109,11 +111,9 @@ public class ClientInvocationHandler implements InvocationHandler {
 					newParameterTypes);
 		}
 		invoke.setAsync(true);
+		invoke.setAsyncContext(new HashMap<String, Object>());
 		invoke.setCallback(callback);
-		if(callbackExecutor == null) {
-			callbackExecutor = defaultCallbackExecutor;
-		}
-		invoke.setCallbackExecutor(callbackExecutor);
+		invoke.setCallbackExecutor(methodCallbackExecutor);
 		return invoke;
 	}
 	public long getTimeout() {

@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.github.jremoting.core.HeartbeatMessage;
+import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
-import com.github.jremoting.core.Message;
 import com.github.jremoting.exception.ConnectionLossException;
 import com.github.jremoting.exception.ConnectionWriteException;
 import com.github.jremoting.exception.TimeoutException;
@@ -26,48 +26,47 @@ import io.netty.handler.timeout.IdleStateEvent;
 public class NettyClientHandler extends ChannelDuplexHandler {
 
 	private final Map<Long, DefaultMessageFuture> futures = new HashMap<Long, DefaultMessageFuture>();
-	private long nextMsgId = 0;
 	private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
-	
+
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		
+
 		String remoteAddress = NetUtil.toStringAddress(ctx.channel().remoteAddress());
 		ConnectionLossException exception = new ConnectionLossException("connection lost remoteAddress->" + remoteAddress);
 		for (DefaultMessageFuture future : futures.values()) {
-			future.setResult(exception);
+			future.onResult(exception);
 		}
 		LOGGER.info("connection inactive remoteAddress->" + remoteAddress);
 	}
-	
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof DefaultMessageFuture) {
-        	//set msg id 
+        
         	DefaultMessageFuture future = (DefaultMessageFuture)msg;
-        	final Message message  = future.getMessage();
-			message.setId(nextMsgId++);
-			futures.put(message.getId(), future);
-			
+        	final Invoke invoke  = future.getInvoke();
+		
+			futures.put(invoke.getId(), future);
+
 			//schedule timeout task
 			ctx.executor().schedule(new Runnable() {
 				@Override
 				public void run() {
-					DefaultMessageFuture timoutFuture = futures.remove(message.getId());
+					DefaultMessageFuture timoutFuture = futures.remove(invoke.getId());
 					if (timoutFuture != null) {
-						timoutFuture.setResult(new TimeoutException("invoke timeout :" + message.getTimeout()));
+						timoutFuture.onResult(new TimeoutException("invoke timeout :" + invoke.getTimeout()));
 					}
 				}
-			}, message.getTimeout(), TimeUnit.MILLISECONDS);
+			}, invoke.getTimeout(), TimeUnit.MILLISECONDS);
 
 			//write msg if failed notify caller and close channel
-        	ctx.writeAndFlush(message, promise).addListener(new ChannelFutureListener() {
+        	ctx.writeAndFlush(invoke, promise).addListener(new ChannelFutureListener() {
 				@Override
 				public void operationComplete(ChannelFuture future) throws Exception {
 					if(!future.isSuccess()) {
-						DefaultMessageFuture msgFuture = futures.remove(message.getId());
+						DefaultMessageFuture msgFuture = futures.remove(invoke.getId());
 						if(msgFuture != null) {
-							msgFuture.setResult(new ConnectionWriteException("msgId:" + message.getId(), future.cause()));
+							msgFuture.onResult(new ConnectionWriteException("msgId:" + invoke.getId(), future.cause()));
 						}
 						future.channel().close();
 					}
@@ -85,7 +84,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 			InvokeResult invokeResult = (InvokeResult)msg;
 			DefaultMessageFuture future = futures.remove(invokeResult.getId());
 			if(future != null) {
-				future.setResult(invokeResult.getResult());
+				future.onResult(invokeResult.getResult());
 			}
 		}
     	else if(msg instanceof HeartbeatMessage) {

@@ -8,7 +8,7 @@ import com.github.jremoting.core.InvokeFilter;
 
 public class InvokeFilterUtil {
 
-	public static InvokeFilter link(List<InvokeFilter> filters) {
+	public static void link(List<InvokeFilter> filters) {
 		
 		if(filters == null || filters.size() < 1) {
 			throw new IllegalArgumentException("filters must at least contain one InvokeFilter!");
@@ -21,9 +21,9 @@ public class InvokeFilterUtil {
 			if(i + 1 < filters.size()) {
 				next = filters.get(i+1);
 				current.setNext(next);
+				next.setPrev(current);
 			}
 		}
-		return filters.get(0);
 	}
 	
 }

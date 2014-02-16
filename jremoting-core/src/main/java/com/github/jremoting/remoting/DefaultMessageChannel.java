@@ -13,7 +13,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.github.jremoting.core.Message;
+import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.Protocal;
@@ -36,8 +36,9 @@ public class DefaultMessageChannel implements MessageChannel  {
 	
 	
 	@Override
-	public MessageFuture send(Message msg) {
-		String address = msg.getRemoteAddress();
+	public MessageFuture send(Invoke invoke) {
+		
+		String address = invoke.getRemoteAddress();
 
 		Channel channel = channels.get(address);
 
@@ -45,13 +46,13 @@ public class DefaultMessageChannel implements MessageChannel  {
 			channel = connect(address);
 		}
 		
-		if(msg.isTwoWay()) {
-			DefaultMessageFuture future = new DefaultMessageFuture(msg);
+		if(invoke.isTwoWay()) {
+			DefaultMessageFuture future = new DefaultMessageFuture(invoke);
 		    channel.writeAndFlush(future);
 		    return future;
 		}
 		else {
-			channel.writeAndFlush(msg);
+			channel.writeAndFlush(invoke);
 			return null;
 		}
 		

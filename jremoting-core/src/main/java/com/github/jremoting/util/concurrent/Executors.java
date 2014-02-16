@@ -1,4 +1,4 @@
-package com.github.jremoting.util;
+package com.github.jremoting.util.concurrent;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;

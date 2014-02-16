@@ -20,18 +20,19 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="eventExecutor" class="com.github.jremoting.util.EventExecutor"></bean>
+	<bean id="eventExecutor" class="com.github.jremoting.util.concurrent.EventExecutor"></bean>
 	
-	<bean id="executor" class="com.github.jremoting.util.Executors" factory-method="newExecutor">
-		<constructor-arg name="corePoolSize" value="1"></constructor-arg>
-		<constructor-arg name="maxPoolSize" value="1"></constructor-arg>
-		<constructor-arg name="queueSize" value="1"></constructor-arg>
+	<bean id="executor" class="com.github.jremoting.util.concurrent.Executors" factory-method="newExecutor">
+		<constructor-arg name="corePoolSize" value="3"></constructor-arg>
+		<constructor-arg name="maxPoolSize" value="20"></constructor-arg>
+		<constructor-arg name="queueSize" value="20"></constructor-arg>
 	</bean>
 
 	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="defaultSerializer" ref="hessianSerializer" />
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
+		<constructor-arg name="callbackExecutor" ref="executor" />
 		<constructor-arg name="invokeFilters">
 			<list>
 				<bean class="com.github.jremoting.invoke.ClusterInvokeFilter" />
@@ -41,7 +42,7 @@
 
 	<bean id="rpcServer" class="com.github.jremoting.remoting.DefaultRpcServer">
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
-		<constructor-arg name="executor" ref="executor" />
+		<constructor-arg name="serviceExecutor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="port" value="8687" />
 		<constructor-arg name="invokeFilters">

@@ -1,8 +1,7 @@
 package com.github.jremoting.core;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
-public interface MessageFuture extends Future<Object> {
-	void addListener(Runnable listener, Executor executor);
+public interface MessageFuture extends ListenableFuture<Object> {
+	void setResult(Object obj);
 }

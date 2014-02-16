@@ -1,10 +1,10 @@
 package com.github.jremoting.core;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.util.NetUtil;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class GenericService  {
 	 
@@ -15,7 +15,6 @@ public class GenericService  {
 	private long timeout;
 	private Serializer serializer;
 	private String address;
-	private Executor callbackExecutor;
 
 	public GenericService(String interfaceName, String version, RpcClient rpcClient) {
 		this.interfaceName = interfaceName;
@@ -29,31 +28,29 @@ public class GenericService  {
 	}
 
 	
-	public Future<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args) {
+	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args) {
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
-		return (Future<?>)rpcClient.invoke(invoke);
+		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 	
-	public Future<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args,
+	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args,
 			Runnable callback) {
 		
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
 		invoke.setCallback(callback);
-		invoke.setCallbackExecutor(this.callbackExecutor);
-		
-		return (Future<?>)rpcClient.invoke(invoke);
+		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 	
-	public Future<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args
+	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args
 			,Executor executor ,Runnable callback) {
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
 		invoke.setCallback(callback);
 		invoke.setCallbackExecutor(executor);
 		
-		return (Future<?>)rpcClient.invoke(invoke);
+		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 	
 	public GenericService start() {
@@ -105,12 +102,4 @@ public class GenericService  {
 	public String getInterfaceName() {
 		return interfaceName;
 	}
-	public Executor getCallbackExecutor() {
-		return callbackExecutor;
-	}
-	public GenericService setCallbackExecutor(Executor callbackExecutor) {
-		this.callbackExecutor = callbackExecutor;
-		return this;
-	}
-
 }

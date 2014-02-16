@@ -13,6 +13,7 @@ import com.github.jremoting.core.GenericService;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.test.TestService.HelloInput;
 import com.github.jremoting.core.test.TestService.HelloOutput;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 
 public class JRemotingClientTest {
@@ -63,6 +64,29 @@ public class JRemotingClientTest {
 			}
 		});
 		holder.set(f);
+		
+		
+		
+		
+		final ListenableFuture<HelloOutput> furFuture =  asyncTestService.$hello(input, 1212);
+		furFuture.setListener(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					System.out.println("new async +" + furFuture.get());
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}, null);
+		
+		
+		
 		
 		
 		System.in.read();

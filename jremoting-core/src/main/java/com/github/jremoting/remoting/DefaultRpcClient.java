@@ -1,6 +1,7 @@
 package com.github.jremoting.remoting;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
@@ -12,8 +13,8 @@ import com.github.jremoting.core.ServiceParticipantInfo;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
-import com.github.jremoting.util.EventExecutor;
 import com.github.jremoting.util.LifeCycleSupport;
+import com.github.jremoting.util.concurrent.EventExecutor;
 
 public class DefaultRpcClient implements RpcClient {
 	
@@ -21,15 +22,16 @@ public class DefaultRpcClient implements RpcClient {
 	private final ClientInvokeFilterChain invokeFilterChain;
 	private final ServiceRegistry registry;
 	private final MessageChannel messageChannel;
-	
+	private final ExecutorService callbackExecutor;
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	
-	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,EventExecutor eventExecutor, 
+	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,ExecutorService callbackExecutor  ,EventExecutor eventExecutor, 
 			List<InvokeFilter> invokeFilters) {
 		this.defaultSerializer = defaultSerializer;
 		this.messageChannel = new DefaultMessageChannel(eventExecutor.getChildGroup(), protocal);
 		this.invokeFilterChain = new ClientInvokeFilterChain(this.messageChannel , invokeFilters);
 		this.registry = protocal.getRegistry();
+		this.callbackExecutor = callbackExecutor;
 	}
 	
 	@Override
@@ -40,7 +42,17 @@ public class DefaultRpcClient implements RpcClient {
 		if(invoke.getRegistry() == null) {
 			invoke.setRegistry(registry);
 		}
-		return this.invokeFilterChain.invoke(invoke);
+		if(invoke.getCallbackExecutor() == null) {
+			invoke.setCallbackExecutor(callbackExecutor);
+		}
+		
+		if(invoke.isAsync()) {
+			return this.invokeFilterChain.beginInvoke(invoke);
+		}
+		else {
+			return this.invokeFilterChain.invoke(invoke);
+		}
+		
 	}
 
 	@Override
@@ -61,6 +73,7 @@ public class DefaultRpcClient implements RpcClient {
 					DefaultRpcClient.this.registry.close();
 				}
 				DefaultRpcClient.this.messageChannel.close();
+				DefaultRpcClient.this.callbackExecutor.shutdown();
 			}
 		});
 	}

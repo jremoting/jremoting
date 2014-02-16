@@ -23,18 +23,18 @@ import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
-import com.github.jremoting.util.EventExecutor;
 import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
+import com.github.jremoting.util.concurrent.EventExecutor;
 
 public class DefaultRpcServer implements RpcServer {
 
 	private final EventLoopGroup parentGroup;
 	private final EventLoopGroup childGroup;
 	private final Protocal protocal;
-	private final ExecutorService executor;
+	private final ExecutorService serviceExecutor;
 	private final ServerInvokeFilterChain invokeFilterChain;
 	private final ServiceRegistry registry;
 	private final String serverAddress;
@@ -45,11 +45,11 @@ public class DefaultRpcServer implements RpcServer {
 	private final Map<String, ServiceProvider> providers = new ConcurrentHashMap<String, ServiceProvider>();
 
 	public DefaultRpcServer(EventExecutor eventExecutor,
-			ExecutorService executor,
+			ExecutorService serviceExecutor,
 			Protocal protocal, 
 			int port,
 			List<InvokeFilter> invokeFilters) {
-		this.executor = executor;
+		this.serviceExecutor = serviceExecutor;
 		this.parentGroup = eventExecutor.getParentGroup();
 		this.childGroup = eventExecutor.getChildGroup();
 		this.protocal = protocal;
@@ -79,7 +79,7 @@ public class DefaultRpcServer implements RpcServer {
 					public void initChannel(SocketChannel ch) throws Exception {
 						ch.pipeline().addLast(
 								new NettyMessageCodec(protocal),
-								new NettyServerHandler(executor,invokeFilterChain, providers));
+								new NettyServerHandler(serviceExecutor,invokeFilterChain, providers));
 					}
 				});
 		
@@ -116,7 +116,7 @@ public class DefaultRpcServer implements RpcServer {
 		
 		this.parentGroup.shutdownGracefully();
 		//shutdown service executor thread pool refuse new invoke
-		this.executor.shutdown();
+		this.serviceExecutor.shutdown();
 		//
 		this.childGroup.shutdownGracefully();
 		LOGGER.info("jremoting rpc server closed normally");
