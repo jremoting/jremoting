@@ -1,7 +1,5 @@
 package com.github.jremoting.remoting;
 
-import io.netty.channel.EventLoopGroup;
-
 import java.util.List;
 
 import com.github.jremoting.core.Invoke;
@@ -14,6 +12,7 @@ import com.github.jremoting.core.ServiceParticipantInfo;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
+import com.github.jremoting.util.EventExecutor;
 import com.github.jremoting.util.LifeCycleSupport;
 
 public class DefaultRpcClient implements RpcClient {
@@ -25,10 +24,10 @@ public class DefaultRpcClient implements RpcClient {
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	
-	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,EventLoopGroup eventLoopGroup, 
+	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,EventExecutor eventExecutor, 
 			List<InvokeFilter> invokeFilters) {
 		this.defaultSerializer = defaultSerializer;
-		this.messageChannel = new DefaultMessageChannel(eventLoopGroup, protocal);
+		this.messageChannel = new DefaultMessageChannel(eventExecutor.getChildGroup(), protocal);
 		this.invokeFilterChain = new ClientInvokeFilterChain(this.messageChannel , invokeFilters);
 		this.registry = protocal.getRegistry();
 	}

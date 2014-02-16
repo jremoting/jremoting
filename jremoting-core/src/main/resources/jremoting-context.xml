@@ -19,21 +19,19 @@
 			</array>
 		</constructor-arg>
 	</bean>
+
+	<bean id="eventExecutor" class="com.github.jremoting.util.EventExecutor"></bean>
 	
-		
-	<bean id="parentGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
-	<bean id="childGroup" class="io.netty.channel.nio.NioEventLoopGroup"></bean>
-	<bean id="executor" class="java.util.concurrent.Executors" factory-method="newFixedThreadPool">
-		<constructor-arg value="100"></constructor-arg>
+	<bean id="executor" class="com.github.jremoting.util.Executors" factory-method="newExecutor">
+		<constructor-arg name="corePoolSize" value="1"></constructor-arg>
+		<constructor-arg name="maxPoolSize" value="1"></constructor-arg>
+		<constructor-arg name="queueSize" value="1"></constructor-arg>
 	</bean>
-
-
-
 
 	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="defaultSerializer" ref="hessianSerializer" />
-		<constructor-arg name="eventLoopGroup" ref="childGroup" />
+		<constructor-arg name="eventExecutor" ref="eventExecutor" />
 		<constructor-arg name="invokeFilters">
 			<list>
 				<bean class="com.github.jremoting.invoke.ClusterInvokeFilter" />
@@ -42,8 +40,7 @@
 	</bean>
 
 	<bean id="rpcServer" class="com.github.jremoting.remoting.DefaultRpcServer">
-		<constructor-arg name="parentGroup" ref="parentGroup" />
-		<constructor-arg name="childGroup" ref="childGroup" />
+		<constructor-arg name="eventExecutor" ref="eventExecutor" />
 		<constructor-arg name="executor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="port" value="8687" />

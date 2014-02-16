@@ -23,6 +23,7 @@ import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
+import com.github.jremoting.util.EventExecutor;
 import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
@@ -43,15 +44,14 @@ public class DefaultRpcServer implements RpcServer {
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	private final Map<String, ServiceProvider> providers = new ConcurrentHashMap<String, ServiceProvider>();
 
-	public DefaultRpcServer(EventLoopGroup parentGroup, 
-			EventLoopGroup childGroup,
+	public DefaultRpcServer(EventExecutor eventExecutor,
 			ExecutorService executor,
 			Protocal protocal, 
 			int port,
 			List<InvokeFilter> invokeFilters) {
 		this.executor = executor;
-		this.parentGroup = parentGroup;
-		this.childGroup = childGroup;
+		this.parentGroup = eventExecutor.getParentGroup();
+		this.childGroup = eventExecutor.getChildGroup();
 		this.protocal = protocal;
 		this.invokeFilterChain = new ServerInvokeFilterChain(invokeFilters);
 		this.registry = protocal.getRegistry();
