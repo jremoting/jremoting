@@ -1,7 +1,7 @@
 package com.github.jremoting.exception;
 
 
-public class ConnectionRefusedException extends RemotingException {
+public class ConnectionRefusedException extends FailoverableException {
 
 	private static final long serialVersionUID = -5593371872289925895L;
 
