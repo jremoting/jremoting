@@ -38,9 +38,29 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 		}
 		LOGGER.info("connection inactive remoteAddress->" + remoteAddress);
 	}
+	
+	
+	private class WriteChannelFutureListener implements ChannelFutureListener {
+
+		private final long msgId;
+		public WriteChannelFutureListener(long msgId) {
+			this.msgId = msgId;
+		}
+		@Override
+		public void operationComplete(ChannelFuture future) throws Exception {
+			if(!future.isSuccess()) {
+				DefaultMessageFuture msgFuture = futures.remove(msgId);
+				if(msgFuture != null) {
+					msgFuture.onResult(new ConnectionWriteException("msgId:" + msgId, future.cause()));
+				}
+				future.channel().close();
+			}
+		}
+	}
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+   
         if(msg instanceof DefaultMessageFuture) {
         
         	DefaultMessageFuture future = (DefaultMessageFuture)msg;
@@ -60,24 +80,18 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 			}, invoke.getTimeout(), TimeUnit.MILLISECONDS);
 
 			//write msg if failed notify caller and close channel
-        	ctx.writeAndFlush(invoke, promise).addListener(new ChannelFutureListener() {
-				@Override
-				public void operationComplete(ChannelFuture future) throws Exception {
-					if(!future.isSuccess()) {
-						DefaultMessageFuture msgFuture = futures.remove(invoke.getId());
-						if(msgFuture != null) {
-							msgFuture.onResult(new ConnectionWriteException("msgId:" + invoke.getId(), future.cause()));
-						}
-						future.channel().close();
-					}
-				}
-			});
+        	ctx.writeAndFlush(invoke, promise).addListener(new WriteChannelFutureListener(invoke.getId()));
         	
         }
+        else if(msg instanceof Invoke) {
+        	Invoke invoke = (Invoke)msg;
+        	ctx.writeAndFlush(msg, promise).addListener(new WriteChannelFutureListener(invoke.getId()));
+        }
         else {
-        	ctx.write(msg, promise);
+        	ctx.write(msg,promise);
 		}
     }
+    
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     	if (msg instanceof InvokeResult) {

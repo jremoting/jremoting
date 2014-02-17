@@ -53,7 +53,7 @@ public class ClientInvokeFilterChain {
 	public static class ClientHeadInvokeFilter extends AbstractInvokeFilter {
 		@Override
 		public void endInvoke(Invoke invoke, Object result) {
-			invoke.getResultFuture().setResult(result);
+			System.out.println("head invoke filter's endInvoke is called!");
 		}
 	}
 	private static class ClientTailInvokeFilter extends AbstractInvokeFilter {

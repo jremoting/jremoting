@@ -47,9 +47,16 @@ public class DefaultMessageChannel implements MessageChannel  {
 		}
 		
 		if(invoke.isTwoWay()) {
-			DefaultMessageFuture future = new DefaultMessageFuture(invoke);
-		    channel.writeAndFlush(future);
-		    return future;
+			//only bind invoke with one future
+			if(invoke.getResultFuture() == null) {
+				DefaultMessageFuture future = new DefaultMessageFuture(invoke);
+			    channel.writeAndFlush(future);
+			    return future;
+			}
+			else {
+				channel.writeAndFlush(invoke);
+				return invoke.getResultFuture();
+			}
 		}
 		else {
 			channel.writeAndFlush(invoke);
