@@ -12,7 +12,7 @@ import com.github.jremoting.util.ReflectionUtil;
 import com.github.jremoting.util.concurrent.ListenableFuture;
 
 
-public class ServerInvokeFilterChain    {
+public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
 	
 	private final InvokeFilter head;
 	private final InvokeFilter tail;
@@ -30,16 +30,17 @@ public class ServerInvokeFilterChain    {
 		InvokeFilterUtil.link(filters);
 	}
 	
+	@Override
 	public Object invoke(Invoke invoke) {
 		return this.head.invoke(invoke);
 	}
 	
-	
+	@Override
 	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
 		return this.head.beginInvoke(invoke);
 	}
 
-	
+	@Override
 	public void endInvoke(Invoke invoke, Object result) {
 		this.tail.endInvoke(invoke, result);
 	}

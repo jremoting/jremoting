@@ -24,7 +24,7 @@ public class Invoke extends Message {
 	private Executor callbackExecutor;
 	private MessageFuture resultFuture;
 	private Map<String, Object> asyncContexts;
-	private InvokeFilter tailInvokeFilter;
+	private InvokeFilter invokeChain;
 	private int retry = 0;
 
 	public Invoke(String interfaceName, String version,String methodName ,
@@ -162,12 +162,12 @@ public class Invoke extends Message {
 		this.asyncContexts = asyncContexts;
 	}
 
-	public InvokeFilter getTailInvokeFilter() {
-		return tailInvokeFilter;
+	public InvokeFilter getInvokeChain() {
+		return invokeChain;
 	}
 
-	public void setTailInvokeFilter(InvokeFilter tailInvokeFilter) {
-		this.tailInvokeFilter = tailInvokeFilter;
+	public void setInvokeChain(InvokeFilter invokeChain) {
+		this.invokeChain = invokeChain;
 	}
 	
 }

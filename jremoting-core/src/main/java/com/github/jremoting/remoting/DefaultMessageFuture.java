@@ -124,7 +124,7 @@ public class DefaultMessageFuture implements MessageFuture {
 			public void run() {
 				try {
 					//run invoke filters's enInvoke first then run user callback 
-					DefaultMessageFuture.this.invoke.getTailInvokeFilter().endInvoke(invoke, result);
+					DefaultMessageFuture.this.invoke.getInvokeChain().endInvoke(invoke, result);
 				} catch (Throwable th) {
 					LOGGER.error("error happens when run endInvoke chain , msg->" + th.getMessage(), th);
 				}
