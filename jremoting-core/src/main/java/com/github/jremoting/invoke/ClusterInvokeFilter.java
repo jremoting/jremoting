@@ -1,8 +1,6 @@
 package com.github.jremoting.invoke;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.ServiceParticipantInfo;
@@ -16,8 +14,6 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	
 	private final static Logger LOGGER = LoggerFactory.getLogger(ClusterInvokeFilter.class);
 	
-	private AtomicLong nextIndex = new AtomicLong(0);
-
 	@Override
 	public Object invoke(Invoke invoke) {
 		// if invoke already has remote address then skip registry for debug use
@@ -33,7 +29,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		
 
 		
-		int nextProviderIndex = (int)(nextIndex.getAndIncrement());
+		int nextProviderIndex = (int)(invoke.getId());
 		
 		//if encounter failoverable exception will try next provider in provider list
 		//if all failed then throw last exception
@@ -64,6 +60,21 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		throw new RemotingException("should not happen!");
 	}
 	
+	
+	private static class ClusterAsyncInvokeContext {
+		public final List<ServiceParticipantInfo> providers;
+		public int nextProviderIndex = 0;
+		public int tryTimes = 0 ;
+		
+		public ClusterAsyncInvokeContext( List<ServiceParticipantInfo> providers, int nextProviderIndex) {
+			this.providers = providers;
+			this.nextProviderIndex = nextProviderIndex;
+			this.tryTimes = providers.size();
+		}
+		
+		public static final String CONTEXT_KEY = ClusterAsyncInvokeContext.class.getName();
+	}
+	
 	@Override
 	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
 		// if invoke already has remote address then skip registry for debug use
@@ -71,23 +82,32 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 			return getNext().beginInvoke(invoke);
 		}
 
-		List<ServiceParticipantInfo> providers = invoke.getRegistry()
-				.getProviders(invoke.getServiceName());
-
-		if (providers == null || providers.isEmpty()) {
-			throw new RemotingException("no provier for service "
-					+ invoke.getServiceName());
+		ClusterAsyncInvokeContext context = (ClusterAsyncInvokeContext) invoke
+				.getAsyncContext(ClusterAsyncInvokeContext.CONTEXT_KEY);
+		if(context == null) {
+			List<ServiceParticipantInfo> providers = invoke.getRegistry()
+					.getProviders(invoke.getServiceName());
+			context = new ClusterAsyncInvokeContext(providers, (int)invoke.getId());
+			invoke.setAsyncContext(ClusterAsyncInvokeContext.CONTEXT_KEY, context);
 		}
-
-		int nextProviderIndex = (int) (nextIndex.getAndIncrement());
-		
-		invoke.setRemoteAddress(providers.get(nextProviderIndex % providers.size()).getAddress());
-		
+	
+		invoke.setRemoteAddress(context.providers.get(context.nextProviderIndex++ % context.providers.size()).getAddress());
+		context.tryTimes--;
 		return getNext().beginInvoke(invoke);
 	}
 
 	@Override
 	public void endInvoke(Invoke invoke, Object result) {
+		if(result instanceof FailoverableException) {
+			ClusterAsyncInvokeContext context = (ClusterAsyncInvokeContext) invoke
+					.getAsyncContext(ClusterAsyncInvokeContext.CONTEXT_KEY);
+			
+			if(context.tryTimes > 0) {
+				this.beginInvoke(invoke);
+				return;
+			}
+		}
+		
 		getPrev().endInvoke(invoke, result);
 	}
 }

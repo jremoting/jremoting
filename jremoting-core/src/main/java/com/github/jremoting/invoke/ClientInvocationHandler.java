@@ -111,7 +111,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 					newParameterTypes);
 		}
 		invoke.setAsync(true);
-		invoke.setAsyncContext(new HashMap<String, Object>());
+		invoke.initAsyncContexts(new HashMap<String, Object>());
 		invoke.setCallback(callback);
 		invoke.setCallbackExecutor(methodCallbackExecutor);
 		return invoke;

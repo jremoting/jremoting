@@ -23,7 +23,7 @@ public class Invoke extends Message {
 	private Runnable callback;
 	private Executor callbackExecutor;
 	private MessageFuture resultFuture;
-	private Map<String, Object> asyncContext;
+	private Map<String, Object> asyncContexts;
 	private InvokeFilter tailInvokeFilter;
 	private int retry = 0;
 
@@ -144,15 +144,22 @@ public class Invoke extends Message {
 	}
 
 	public void setResultFuture(MessageFuture resultFuture) {
+		if(this.resultFuture != null) {
+			throw new IllegalStateException("invoke can only bind to one result future!");
+		}
 		this.resultFuture = resultFuture;
 	}
 
-	public Map<String, Object> getAsyncContext() {
-		return asyncContext;
+	public Object getAsyncContext(String key) {
+		return asyncContexts.get(key);
+	}
+	
+	public void setAsyncContext(String key, Object context) {
+		this.asyncContexts.put(key, context);
 	}
 
-	public void setAsyncContext(Map<String, Object> asyncContext) {
-		this.asyncContext = asyncContext;
+	public void initAsyncContexts(Map<String, Object> asyncContexts) {
+		this.asyncContexts = asyncContexts;
 	}
 
 	public InvokeFilter getTailInvokeFilter() {
