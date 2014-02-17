@@ -13,6 +13,7 @@ import com.github.jremoting.exception.ServerBusyException;
 import com.github.jremoting.exception.ServerErrorException;
 import com.github.jremoting.exception.ServiceUnavailableException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
+import com.github.jremoting.util.JvmUtil;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
@@ -83,9 +84,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 					executor.execute(serviceRunnable);
 				}
 			} catch (RejectedExecutionException e) {
+				
+				JvmUtil.dumpJvmInfo();
+				
 				InvokeResult errorResult = new InvokeResult(new ServerBusyException(), invoke.getId(),
 						invoke.getSerializer());
 				ctx.writeAndFlush(errorResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+
 			}
 		}
 		else {
