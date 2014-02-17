@@ -24,6 +24,8 @@ import com.sun.management.HotSpotDiagnosticMXBean;
 
 @SuppressWarnings("restriction")
 public class JvmUtil {
+	
+	
 	private static final String HOTSPOT_BEAN_NAME = "com.sun.management:type=HotSpotDiagnostic";
     private static volatile HotSpotDiagnosticMXBean hotspotMBean;
     private static volatile MemoryMXBean memoryMBean;
@@ -103,7 +105,7 @@ public class JvmUtil {
 				FileOutputStream jstackStream = null;
 				
 				try {
-					String jstackFileName = "jremoting_jstack.log." + System.currentTimeMillis();
+					String jstackFileName = "jremoting_jstack.log." + DateUtil.getGenerateIdTime();
 					
 					jstackStream = new FileOutputStream(new File(logDir, jstackFileName));
 					jstack(jstackStream);
