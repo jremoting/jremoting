@@ -9,6 +9,8 @@ import java.util.concurrent.TimeoutException;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.exception.RemotingException;
+import com.github.jremoting.util.Logger;
+import com.github.jremoting.util.LoggerFactory;
 
 public class DefaultMessageFuture implements MessageFuture {
 	
@@ -23,6 +25,8 @@ public class DefaultMessageFuture implements MessageFuture {
 	
 	private volatile Runnable listener;
 	private volatile Executor executor;
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMessageFuture.class);
 	
 	
 
@@ -90,7 +94,10 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	@Override
 	public void setListener(Runnable listener, Executor executor) {
-		this.executor = executor;
+		if(executor != null) {
+			this.executor = executor;
+		}
+		
 		this.listener = listener;
 	}
 
@@ -100,25 +107,38 @@ public class DefaultMessageFuture implements MessageFuture {
 	}
 	
 	public void onResult(final Object result) {
-		if(invoke.isAsync()) {
-			invoke.getCallbackExecutor().execute(new Runnable() {
-				@Override
-				public void run() {
-					Invoke invoke = DefaultMessageFuture.this.invoke;
-					invoke.getTailInvokeFilter().endInvoke(invoke, result);
+		
+		if(!invoke.isAsync()) {
+			this.setResult(result);
+			return;
+		}
+
+		//use user executor if not set then use default executor
+		Executor callbackExecutor = this.executor;
+		if (callbackExecutor == null) {
+			callbackExecutor = invoke.getCallbackExecutor();
+		}
+
+		callbackExecutor.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					//run invoke filters's enInvoke first then run user callback 
+					DefaultMessageFuture.this.invoke.getTailInvokeFilter().endInvoke(invoke, result);
+				} catch (Throwable th) {
+					LOGGER.error("error happens when run endInvoke chain , msg->" + th.getMessage(), th);
+				}
+				
+				try {
+					setResult(result);
 					if(listener != null) {
 						listener.run();
 					}
+				} catch (Throwable th) {
+					LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
 				}
-			});
-		}
-		else {
-			this.setResult(result);
-			if(listener != null) {
-				this.executor.execute(listener);
 			}
-		}
-
+		});
 	}
 
 	public Invoke getInvoke() {
