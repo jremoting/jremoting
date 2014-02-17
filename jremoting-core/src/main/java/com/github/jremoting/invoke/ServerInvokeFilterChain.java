@@ -49,7 +49,7 @@ public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
 	private static class ServerHeadInvokeFilter extends AbstractInvokeFilter {
 		@Override
 		public void endInvoke(Invoke invoke, Object result) {
-			invoke.getResultFuture().setResult(result);
+			System.out.println("end of server async end invoke filter");
 		}
 	}
 	

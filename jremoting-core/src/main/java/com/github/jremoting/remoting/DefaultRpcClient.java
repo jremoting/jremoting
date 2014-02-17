@@ -2,6 +2,7 @@ package com.github.jremoting.remoting;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
@@ -24,6 +25,7 @@ public class DefaultRpcClient implements RpcClient {
 	private final MessageChannel messageChannel;
 	private final ExecutorService callbackExecutor;
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
+	private final static AtomicLong NEXT_MSG_ID = new AtomicLong(0);
 	
 	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,ExecutorService callbackExecutor  ,EventExecutor eventExecutor, 
 			List<InvokeFilter> invokeFilters) {
@@ -36,6 +38,9 @@ public class DefaultRpcClient implements RpcClient {
 	
 	@Override
 	public Object invoke(Invoke invoke) {
+		
+		invoke.setId(NEXT_MSG_ID.incrementAndGet());
+		
 		if(invoke.getSerializer() == null) {
 			invoke.setSerializer(defaultSerializer);
 		}

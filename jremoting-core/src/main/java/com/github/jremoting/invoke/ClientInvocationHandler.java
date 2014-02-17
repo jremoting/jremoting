@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.RpcClient;
@@ -18,7 +17,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 	private final String serviceVersion;
 	private final String remoteAddress;
 	private final long timeout;
-	private final static AtomicLong NEXT_MSG_ID = new AtomicLong(0);
+	
 	
 	public ClientInvocationHandler(RpcClient rpcClient,
 			Serializer serializer,
@@ -57,7 +56,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 			invoke.setRemoteAddress(remoteAddress);
 		}
 		invoke.setTimeout(this.timeout);
-		invoke.setId(NEXT_MSG_ID.incrementAndGet());
+		
 		
 		return rpcClient.invoke(invoke);
 	}
