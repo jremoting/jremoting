@@ -11,6 +11,7 @@ public class JRemotingProviderBean implements ServiceProvider    {
 	private final String version;
 	private final Object target;
 	private final RpcServer rpcServer;
+	private boolean supportAsync = false;
 	private Executor executor;
 	
 	public JRemotingProviderBean(String interfaceName,String version, Object target, RpcServer rpcServer ) {
@@ -53,5 +54,14 @@ public class JRemotingProviderBean implements ServiceProvider    {
 
 	public void setExecutor(Executor executor) {
 		this.executor = executor;
+	}
+	
+	@Override
+	public boolean isSupportAsync() {
+		return supportAsync;
+	}
+
+	public void setSupportAsync(boolean supportAsync) {
+		this.supportAsync = supportAsync;
 	}
 }

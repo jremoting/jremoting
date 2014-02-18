@@ -1,14 +1,11 @@
 package com.github.jremoting.invoke;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
-import com.github.jremoting.exception.RemotingException;
-import com.github.jremoting.util.ReflectionUtil;
 import com.github.jremoting.util.concurrent.ListenableFuture;
 
 
@@ -58,17 +55,16 @@ public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
 		@Override
 		public Object invoke(Invoke invoke) {
 			try {
-
-				Method targetMethod = ReflectionUtil.findMethod(invoke.getTarget().getClass(), 
-						invoke.getMethodName(),
-						invoke.getParameterTypes());
-				
-			    if(targetMethod == null) {
-			    	throw new RemotingException("can not find method!");
-			    }
-			    
-			    return targetMethod.invoke(invoke.getTarget(), invoke.getArgs());
-			
+			    return invoke.getTargetMethod().invoke(invoke.getTarget(), invoke.getArgs());
+			} catch (Exception e) {
+				throw new RuntimeException(e.getCause());
+			}
+		}
+		@SuppressWarnings("unchecked")
+		@Override
+		public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+			try {
+			    return (ListenableFuture<Object>)invoke.getTargetMethod().invoke(invoke.getTarget(), invoke.getArgs());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

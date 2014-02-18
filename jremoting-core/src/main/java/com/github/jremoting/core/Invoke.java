@@ -1,5 +1,6 @@
 package com.github.jremoting.core;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -15,11 +16,11 @@ public class Invoke extends Message {
 	private final String[] parameterTypeNames;
 	private final String serviceName;
 
-	private Object target;
+	
 	private ServiceRegistry registry;
 	
 	
-	//async invoke field
+	//client async invoke field
 	private boolean isAsync = false;
 	private Runnable callback;
 	private Executor callbackExecutor;
@@ -30,6 +31,10 @@ public class Invoke extends Message {
 	private Map<String, Object> asyncContexts;
 	private InvokeFilter invokeChain;
 	private int retry = 0;
+	
+	//server async invoke field
+	private Object target;
+	private Method targetMethod;
 
 	public Invoke(String interfaceName, String version,String methodName ,
 			Serializer serializer, Object[] args, Class<?>[] parameterTypes) {
@@ -179,6 +184,14 @@ public class Invoke extends Message {
 
 	public void setInvokeChain(InvokeFilter invokeChain) {
 		this.invokeChain = invokeChain;
+	}
+
+	public Method getTargetMethod() {
+		return targetMethod;
+	}
+
+	public void setTargetMethod(Method targetMethod) {
+		this.targetMethod = targetMethod;
 	}
 	
 }

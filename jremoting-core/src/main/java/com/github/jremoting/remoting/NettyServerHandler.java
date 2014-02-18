@@ -1,6 +1,7 @@
 package com.github.jremoting.remoting;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
@@ -17,6 +18,9 @@ import com.github.jremoting.util.JvmUtil;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
+import com.github.jremoting.util.ReflectionUtil;
+import com.github.jremoting.util.concurrent.FutureListener;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFutureListener;
@@ -53,36 +57,42 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			ServiceProvider provider = providers.get(invoke.getServiceName());
 			
 			if(provider == null) {
-				
-				InvokeResult errorResult = new InvokeResult(new ServiceUnavailableException(), invoke.getId(),
+				InvokeResult errorResult = new InvokeResult(new ServiceUnavailableException("no provider found"), invoke.getId(),
 						invoke.getSerializer());
 				ctx.writeAndFlush(errorResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 				return;
 			}
 			
 			invoke.setTarget(provider.getTarget());
+		
+			findTargetMethod(invoke, provider);
 			
-			Runnable serviceRunnable = new Runnable() {
-				@Override
-				public void run() {
-					try {
-						Object result = invokeFilterChain.invoke(invoke);
-						InvokeResult invokeResult = new InvokeResult(result,invoke.getId(), invoke.getSerializer());
-						ctx.writeAndFlush(invokeResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-					} catch (Throwable e) {
-						InvokeResult errorResult = new InvokeResult(new ServerErrorException(e.getMessage()), invoke.getId(),
-								invoke.getSerializer());
-						ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-					}
-				}
-			};
+			if(invoke.getTargetMethod() == null) {
+				InvokeResult errorResult = new InvokeResult(new ServiceUnavailableException("mo method found"), invoke.getId(),
+						invoke.getSerializer());
+				ctx.writeAndFlush(errorResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+				return;
+			}
+			
+			Executor serviceExecutor = provider.getExecutor();
+			if(serviceExecutor == null) {
+				serviceExecutor = executor;
+			}
 
 			try {
-				if (provider.getExecutor() != null) {
-					provider.getExecutor().execute(serviceRunnable);
-				} else {
-					executor.execute(serviceRunnable);
-				}
+				serviceExecutor.execute( new Runnable() {
+					@Override
+					public void run() {
+						
+						if(invoke.isAsync())  {
+							doBegincInvoke(invoke, ctx);
+						}
+						else {
+							doInvoke(invoke, ctx);
+						}
+					}
+				});
+				
 			} catch (RejectedExecutionException e) {
 				
 				JvmUtil.dumpJvmInfo();
@@ -90,12 +100,71 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 				InvokeResult errorResult = new InvokeResult(new ServerBusyException(), invoke.getId(),
 						invoke.getSerializer());
 				ctx.writeAndFlush(errorResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-
 			}
 		}
 		else {
 			ctx.fireChannelRead(msg);
 		}
+	}
+
+	private void findTargetMethod(final Invoke invoke, ServiceProvider provider) {
+		if(provider.isSupportAsync()) {
+			Method targetMethod  = ReflectionUtil.findMethod(invoke.getTarget().getClass(), 
+					"$" + invoke.getMethodName(),
+					invoke.getParameterTypes());
+		     if(targetMethod != null && ListenableFuture.class.isAssignableFrom(targetMethod.getReturnType())) {
+		    	 invoke.setAsync(true);
+		    	 invoke.setTargetMethod(targetMethod);
+		     }
+		} 
+
+		if(invoke.getTargetMethod() == null) {
+			Method targetMethod  = ReflectionUtil.findMethod(invoke.getTarget().getClass(), 
+					 invoke.getMethodName(),
+					invoke.getParameterTypes());
+			if(targetMethod != null) {
+				invoke.setAsync(false);
+				invoke.setTargetMethod(targetMethod);
+			}
+		}
+	}
+	
+
+	private void doInvoke(final Invoke invoke,
+			final ChannelHandlerContext ctx) {
+		try {
+			Object result = invokeFilterChain.invoke(invoke);
+			InvokeResult invokeResult = new InvokeResult(result,invoke.getId(), invoke.getSerializer());
+			ctx.writeAndFlush(invokeResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+		} catch (Throwable e) {
+			InvokeResult errorResult = new InvokeResult(new ServerErrorException(e.getMessage()), invoke.getId(),
+					invoke.getSerializer());
+			ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+		}
+	}
+	
+	private void doBegincInvoke(final Invoke invoke, final ChannelHandlerContext ctx ) {
+		ListenableFuture<Object> future = invokeFilterChain.beginInvoke(invoke);
+		future.addListener(new FutureListener<Object>() {
+			@Override
+			public void operationComplete(ListenableFuture<Object> future) {
+				try {
+					invokeFilterChain.endInvoke(invoke, future.result());
+				} catch (Throwable th) {
+					LOGGER.error("error happens when run server filter's endInvoke chain , msg->" + th.getMessage(), th);
+				}
+				
+				if(future.isSuccess()) {
+					InvokeResult invokeResult = new InvokeResult(future.result(),invoke.getId(), invoke.getSerializer());
+					ctx.writeAndFlush(invokeResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+				}
+				else {
+					InvokeResult errorResult = new InvokeResult(new ServerErrorException(future.cause().getMessage()), invoke.getId(),
+							invoke.getSerializer());
+					ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+				}
+			}
+		});
 	}
 	
 	@Override

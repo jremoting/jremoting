@@ -279,7 +279,7 @@ public class JRemotingProtocal implements Protocal {
 		case STATUS_SERVER_BUSY :
 			return new ServerBusyException();
 		case STATUS_SEVICE_UNAVAILABLE :
-			return new ServiceUnavailableException();
+			return new ServiceUnavailableException(errorMsg);
 
 		default:
 			return new RemotingException("UNKNOWN_ERROR");

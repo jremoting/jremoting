@@ -11,6 +11,7 @@
 		<constructor-arg name="version" value="1.0" />
 		<constructor-arg name="target" ref="testService" />
 		<constructor-arg name="rpcServer" ref="rpcServer" />
+		<property name="supportAsync" value="true"></property>
 	</bean>
 	
 	<bean id="testService" class="com.github.jremoting.core.test.TestServiceImpl"></bean>

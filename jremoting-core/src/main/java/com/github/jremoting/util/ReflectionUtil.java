@@ -57,11 +57,15 @@ public class ReflectionUtil {
 	}
 	
 	private static boolean isParameterTypeMatch(Class<?>[] actual ,Class<?>[] expected) {
-		if(actual == null && (expected == null|| expected.length == 0)) {
-			return true;
+		if(actual == null && expected != null) {
+			return false;
 		}
 		
-		if(actual != null && expected != null) {
+		if(actual != null && expected == null) {
+			return false;
+		}
+		
+		if(actual == null && expected == null) {
 			return true;
 		}
 		

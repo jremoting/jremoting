@@ -6,4 +6,5 @@ public interface  ServiceProvider   {
 	 Object getTarget();
 	 String getServiceName();
 	 Executor getExecutor();
+	 boolean isSupportAsync();
 }

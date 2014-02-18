@@ -119,39 +119,42 @@ public class DefaultMessageFuture implements MessageFuture {
 					//run invoke filters's enInvoke first then run user callback 
 					DefaultMessageFuture.this.invoke.getInvokeChain().endInvoke(invoke, result);
 				} catch (Throwable th) {
-					LOGGER.error("error happens when run endInvoke chain , msg->" + th.getMessage(), th);
+					LOGGER.error("error happens when run client filter's endInvoke chain , msg->" + th.getMessage(), th);
 				}
-				
-				
-				if(!isDone()) {
-					return;
+
+				if(isDone()) {
+					notifyListeners();
 				}
-				
-				//if  result was set then notify listeners
-				for (final FutureListener<Object> listener : listeners.keySet()) {
-					Executor executor = listeners.get(listener);
-					if(executor == null) {
+			}
+
+		});
+	}
+	
+
+	private void notifyListeners() {
+		//if  result was set then notify listeners
+		for (final FutureListener<Object> listener : listeners.keySet()) {
+			Executor executor = listeners.get(listener);
+			if(executor == null) {
+				try {
+					listener.operationComplete(DefaultMessageFuture.this);
+				} catch (Throwable th) {
+					LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
+				}
+			}
+			else {
+				executor.execute(new Runnable() {
+					@Override
+					public void run() {
 						try {
 							listener.operationComplete(DefaultMessageFuture.this);
 						} catch (Throwable th) {
 							LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
 						}
 					}
-					else {
-						executor.execute(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									listener.operationComplete(DefaultMessageFuture.this);
-								} catch (Throwable th) {
-									LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
-								}
-							}
-						});
-					}
-				}
+				});
 			}
-		});
+		}
 	}
 
 	public Invoke getInvoke() {
@@ -163,7 +166,7 @@ public class DefaultMessageFuture implements MessageFuture {
 		if(listener == null) {
 			return;
 		}
-		
+				
 		FutureListener<Object> futureListener = new FutureListener<Object>() {
 			@Override
 			public void operationComplete(ListenableFuture<Object> future) {
@@ -175,13 +178,36 @@ public class DefaultMessageFuture implements MessageFuture {
 	}
 	
 	@Override
-	public void addListener(FutureListener<Object> listener, Executor executor) {
-		this.listeners.put(listener, executor);
+	public void addListener(final FutureListener<Object> listener, Executor executor) {
+		if(isDone()) {
+			executor.execute(new Runnable() {
+				
+				@Override
+				public void run() {
+					listener.operationComplete(DefaultMessageFuture.this);
+				}
+			});
+		}
+		else {
+			this.listeners.put(listener, executor);
+		}
+		
 	}
 
 	@Override
-	public void addListener(FutureListener<Object> listener) {
-		this.listeners.put(listener, null);
+	public void addListener(final FutureListener<Object> listener) {
+		if(isDone()) {
+			invoke.getAsyncInvokeExecutor().execute(new Runnable() {
+				@Override
+				public void run() {
+					listener.operationComplete(DefaultMessageFuture.this);
+				}
+			});
+		}
+		else {
+			this.listeners.put(listener, null);
+		}
+	
 	}
 
 	@Override
