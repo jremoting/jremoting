@@ -1,5 +1,7 @@
 package com.github.jremoting.remoting;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -11,6 +13,8 @@ import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
+import com.github.jremoting.util.concurrent.FutureListener;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class DefaultMessageFuture implements MessageFuture {
 	
@@ -23,8 +27,7 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	private final long startTime = System.currentTimeMillis();
 	
-	private volatile Runnable listener;
-	private volatile Executor executor;
+	private final Map<FutureListener<Object>, Executor> listeners = new HashMap<FutureListener<Object>, Executor>();
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMessageFuture.class);
 	
@@ -33,6 +36,7 @@ public class DefaultMessageFuture implements MessageFuture {
 	public DefaultMessageFuture(Invoke invoke) {
 		this.invoke = invoke;
 		this.invoke.setResultFuture(this);
+		this.addRunnableListener(invoke.getCallback(), invoke.getCallbackExecutor());
 	}
 	
 	public boolean isTimeout() {
@@ -92,14 +96,7 @@ public class DefaultMessageFuture implements MessageFuture {
 		return result != null;
 	}
 
-	@Override
-	public void setListener(Runnable listener, Executor executor) {
-		if(executor != null) {
-			this.executor = executor;
-		}
-		
-		this.listener = listener;
-	}
+
 
 	public void setResult(Object result) {
 		this.result = (result == null? NULL : result);
@@ -112,14 +109,10 @@ public class DefaultMessageFuture implements MessageFuture {
 			this.setResult(result);
 			return;
 		}
+		
+		//this method is called from netty io thread , callback will use other thread
 
-		//use user executor if not set then use default executor
-		Executor callbackExecutor = this.executor;
-		if (callbackExecutor == null) {
-			callbackExecutor = invoke.getCallbackExecutor();
-		}
-
-		callbackExecutor.execute(new Runnable() {
+		invoke.getAsyncInvokeExecutor().execute(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -129,13 +122,33 @@ public class DefaultMessageFuture implements MessageFuture {
 					LOGGER.error("error happens when run endInvoke chain , msg->" + th.getMessage(), th);
 				}
 				
-				try {
-					setResult(result);
-					if(listener != null) {
-						listener.run();
+				
+				if(!isDone()) {
+					return;
+				}
+				
+				//if  result was set then notify listeners
+				for (final FutureListener<Object> listener : listeners.keySet()) {
+					Executor executor = listeners.get(listener);
+					if(executor == null) {
+						try {
+							listener.operationComplete(DefaultMessageFuture.this);
+						} catch (Throwable th) {
+							LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
+						}
 					}
-				} catch (Throwable th) {
-					LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
+					else {
+						executor.execute(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									listener.operationComplete(DefaultMessageFuture.this);
+								} catch (Throwable th) {
+									LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
+								}
+							}
+						});
+					}
 				}
 			}
 		});
@@ -143,6 +156,47 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	public Invoke getInvoke() {
 		return invoke;
+	}
+
+	
+	private void addRunnableListener(final Runnable listener, Executor executor) {
+		if(listener == null) {
+			return;
+		}
+		
+		FutureListener<Object> futureListener = new FutureListener<Object>() {
+			@Override
+			public void operationComplete(ListenableFuture<Object> future) {
+				listener.run();
+			}
+		};
+		
+		this.listeners.put(futureListener, executor);
+	}
+	
+	@Override
+	public void addListener(FutureListener<Object> listener, Executor executor) {
+		this.listeners.put(listener, executor);
+	}
+
+	@Override
+	public void addListener(FutureListener<Object> listener) {
+		this.listeners.put(listener, null);
+	}
+
+	@Override
+	public boolean isSuccess() {
+		return this.isDone() && !(this.result instanceof Throwable);
+	}
+
+	@Override
+	public Throwable cause() {
+		return isSuccess() ? null : (Throwable)result;
+	}
+
+	@Override
+	public Object result() {
+		return result;
 	}
 
 }

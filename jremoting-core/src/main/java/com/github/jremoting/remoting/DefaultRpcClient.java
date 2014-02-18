@@ -23,17 +23,17 @@ public class DefaultRpcClient implements RpcClient {
 	private final ClientInvokeFilterChain invokeFilterChain;
 	private final ServiceRegistry registry;
 	private final MessageChannel messageChannel;
-	private final ExecutorService callbackExecutor;
+	private final ExecutorService asyncInvokeExecutor;
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	private final static AtomicLong NEXT_MSG_ID = new AtomicLong(0);
 	
-	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,ExecutorService callbackExecutor  ,EventExecutor eventExecutor, 
+	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,ExecutorService asyncInvokeExecutor  ,EventExecutor eventExecutor, 
 			List<InvokeFilter> invokeFilters) {
 		this.defaultSerializer = defaultSerializer;
 		this.messageChannel = new DefaultMessageChannel(eventExecutor.getChildGroup(), protocal);
 		this.invokeFilterChain = new ClientInvokeFilterChain(this.messageChannel , invokeFilters);
 		this.registry = protocal.getRegistry();
-		this.callbackExecutor = callbackExecutor;
+		this.asyncInvokeExecutor = asyncInvokeExecutor;
 	}
 	
 	@Override
@@ -47,10 +47,9 @@ public class DefaultRpcClient implements RpcClient {
 		if(invoke.getRegistry() == null) {
 			invoke.setRegistry(registry);
 		}
-		if(invoke.getCallbackExecutor() == null) {
-			invoke.setCallbackExecutor(callbackExecutor);
-		}
 		
+		invoke.setAsyncInvokeExecutor(asyncInvokeExecutor);
+
 		if(invoke.isAsync()) {
 			return this.invokeFilterChain.beginInvoke(invoke);
 		}
@@ -78,7 +77,7 @@ public class DefaultRpcClient implements RpcClient {
 					DefaultRpcClient.this.registry.close();
 				}
 				DefaultRpcClient.this.messageChannel.close();
-				DefaultRpcClient.this.callbackExecutor.shutdown();
+				DefaultRpcClient.this.asyncInvokeExecutor.shutdown();
 			}
 		});
 	}

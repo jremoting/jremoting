@@ -22,6 +22,9 @@ public class Invoke extends Message {
 	private boolean isAsync = false;
 	private Runnable callback;
 	private Executor callbackExecutor;
+	
+
+	private Executor asyncInvokeExecutor;
 	private MessageFuture resultFuture;
 	private Map<String, Object> asyncContexts;
 	private InvokeFilter invokeChain;
@@ -108,12 +111,20 @@ public class Invoke extends Message {
 		return parameterTypeNames;
 	}
 
+	public Executor getAsyncInvokeExecutor() {
+		return asyncInvokeExecutor;
+	}
+
 	public Executor getCallbackExecutor() {
 		return callbackExecutor;
 	}
-
 	public void setCallbackExecutor(Executor callbackExecutor) {
 		this.callbackExecutor = callbackExecutor;
+	}
+	
+	
+	public void setAsyncInvokeExecutor(Executor asyncInvokeExecutor) {
+		this.asyncInvokeExecutor = asyncInvokeExecutor;
 	}
 
 	public Runnable getCallback() {

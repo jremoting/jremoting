@@ -32,7 +32,7 @@
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="defaultSerializer" ref="hessianSerializer" />
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
-		<constructor-arg name="callbackExecutor" ref="executor" />
+		<constructor-arg name="asyncInvokeExecutor" ref="executor" />
 		<constructor-arg name="invokeFilters">
 			<list>
 				<bean class="com.github.jremoting.invoke.ClusterInvokeFilter" />
