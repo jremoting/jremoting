@@ -1,6 +1,5 @@
 package com.github.jremoting.core;
 
-import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
@@ -32,7 +31,6 @@ public class GenericService  {
 	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args) {
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
-		invoke.initAsyncContexts(new HashMap<String, Object>());
 		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 	
@@ -41,7 +39,6 @@ public class GenericService  {
 		
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
-		invoke.initAsyncContexts(new HashMap<String, Object>());
 		invoke.setCallback(callback);
 		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
@@ -50,7 +47,6 @@ public class GenericService  {
 			,Executor executor ,Runnable callback) {
 		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
 		invoke.setAsync(true);
-		invoke.initAsyncContexts(new HashMap<String, Object>());
 		invoke.setCallback(callback);
 		invoke.setCallbackExecutor(executor);
 		

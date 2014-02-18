@@ -1,5 +1,6 @@
 package com.github.jremoting.core;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -162,15 +163,14 @@ public class Invoke extends Message {
 	}
 
 	public Object getAsyncContext(String key) {
+		if(asyncContexts== null) {
+			asyncContexts = new HashMap<String, Object>();
+		}
 		return asyncContexts.get(key);
 	}
 	
 	public void setAsyncContext(String key, Object context) {
 		this.asyncContexts.put(key, context);
-	}
-
-	public void initAsyncContexts(Map<String, Object> asyncContexts) {
-		this.asyncContexts = asyncContexts;
 	}
 
 	public InvokeFilter getInvokeChain() {

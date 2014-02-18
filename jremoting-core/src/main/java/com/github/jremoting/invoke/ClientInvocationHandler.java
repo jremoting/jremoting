@@ -2,7 +2,6 @@ package com.github.jremoting.invoke;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 import com.github.jremoting.core.Invoke;
@@ -110,7 +109,6 @@ public class ClientInvocationHandler implements InvocationHandler {
 					newParameterTypes);
 		}
 		invoke.setAsync(true);
-		invoke.initAsyncContexts(new HashMap<String, Object>());
 		invoke.setCallback(callback);
 		invoke.setCallbackExecutor(methodCallbackExecutor);
 		return invoke;
