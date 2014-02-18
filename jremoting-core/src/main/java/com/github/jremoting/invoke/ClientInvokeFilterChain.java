@@ -54,23 +54,16 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 		@Override
 		public void endInvoke(Invoke invoke, Object result) {
 			invoke.getResultFuture().setResult(result);
-			System.out.println("head invoke filter's endInvoke is called!");
 		}
 	}
 	private static class ClientTailInvokeFilter extends AbstractInvokeFilter {
-		
-		private static final long DEFAULT_TIMEOUT = 60*1000*5; //default timeout 5 mins
-		
+				
 		public ClientTailInvokeFilter(MessageChannel messageChannel) {
 			this.messageChannel = messageChannel;
 		}
 		private final MessageChannel messageChannel;
 		@Override
 		public Object invoke(Invoke invoke) {
-			
-			if(invoke.getTimeout() <= 0) {
-				invoke.setTimeout(DEFAULT_TIMEOUT);
-			}
 			
 			MessageFuture future = messageChannel.send(invoke);
 			
@@ -89,19 +82,7 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 		
 		@Override
 		public ListenableFuture<Object> beginInvoke(Invoke invoke) {
-			
-			if(invoke.getTimeout() <= 0) {
-				invoke.setTimeout(DEFAULT_TIMEOUT);
-			}
-			
-			MessageFuture future = messageChannel.send(invoke);
-			//one way message return null
-			if(future == null) {
-				return null;
-			}
-
-			return future;
-
+			return messageChannel.send(invoke);
 		}
 	}
 }

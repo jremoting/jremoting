@@ -8,6 +8,7 @@ public abstract class Message {
 	private String remoteAddress;
 	private long id;
 	private long timeout;
+	private static final long DEFAULT_TIMEOUT = 60*1000*5; //default timeout 5 mins
 	
 	public Message(boolean isTwoWay , Serializer serializer) {
 		this.isTwoWay = isTwoWay;
@@ -43,7 +44,7 @@ public abstract class Message {
 	}
 
 	public long getTimeout() {
-		return timeout;
+		return  timeout == 0 ? DEFAULT_TIMEOUT : timeout;
 	}
 
 	public void setTimeout(long timeout) {
