@@ -85,10 +85,10 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 					public void run() {
 						
 						if(invoke.isAsync())  {
-							doBegincInvoke(invoke, ctx);
+							doAsyncInvoke(invoke, ctx);
 						}
 						else {
-							doInvoke(invoke, ctx);
+							doSyncInvoke(invoke, ctx);
 						}
 					}
 				});
@@ -130,7 +130,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 	}
 	
 
-	private void doInvoke(final Invoke invoke,
+	private void doSyncInvoke(final Invoke invoke,
 			final ChannelHandlerContext ctx) {
 		try {
 			Object result = invokeFilterChain.invoke(invoke);
@@ -143,7 +143,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 		}
 	}
 	
-	private void doBegincInvoke(final Invoke invoke, final ChannelHandlerContext ctx ) {
+	private void doAsyncInvoke(final Invoke invoke, final ChannelHandlerContext ctx ) {
 		ListenableFuture<Object> future = invokeFilterChain.beginInvoke(invoke);
 		future.addListener(new FutureListener<Object>() {
 			@Override
