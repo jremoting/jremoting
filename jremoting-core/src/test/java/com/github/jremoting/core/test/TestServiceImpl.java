@@ -2,6 +2,8 @@ package com.github.jremoting.core.test;
 
 import java.util.Date;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+
 import com.github.jremoting.util.concurrent.FutureCallback;
 import com.github.jremoting.util.concurrent.Executors;
 
@@ -17,6 +19,21 @@ public class TestServiceImpl implements TestService {
 	
 	static Executor executor = Executors.newExecutor(1, 1, 44);
 	
+	
+	public Future<HelloOutput> $hello(HelloInput input, int id, final Runnable callback) {
+		
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				HelloOutput output =  new HelloOutput();
+				output.setMsg("server async result");
+				callback.run();
+			}
+		});
+		
+		return null;//TODO return real future
+	}
+
 	public void $hello(HelloInput input, int id, final FutureCallback<HelloOutput> futureCallback) {
 		
 		executor.execute(new Runnable() {

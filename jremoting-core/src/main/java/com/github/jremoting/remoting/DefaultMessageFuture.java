@@ -135,25 +135,20 @@ public class DefaultMessageFuture implements MessageFuture {
 		//if  result was set then notify listeners
 		for (final FutureListener<Object> listener : listeners.keySet()) {
 			Executor executor = listeners.get(listener);
-			if(executor == null) {
-				try {
-					listener.operationComplete(DefaultMessageFuture.this);
-				} catch (Throwable th) {
-					LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
-				}
-			}
-			else {
-				executor.execute(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							listener.operationComplete(DefaultMessageFuture.this);
-						} catch (Throwable th) {
-							LOGGER.error("error happens when run user's callback , msg->" + th.getMessage(), th);
-						}
+			
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						listener.operationComplete(DefaultMessageFuture.this);
+					} catch (Throwable th) {
+						LOGGER.error(
+								"error happens when run user's callback , msg->"
+										+ th.getMessage(), th);
 					}
-				});
-			}
+				}
+			});
+			
 		}
 	}
 
@@ -174,11 +169,24 @@ public class DefaultMessageFuture implements MessageFuture {
 			}
 		};
 		
-		this.listeners.put(futureListener, executor);
+		if(executor == null) {
+			this.listeners.put(futureListener, invoke.getAsyncInvokeExecutor());
+		}
+		else {
+			this.listeners.put(futureListener, executor);
+		}
+		
 	}
 	
 	@Override
 	public void addListener(final FutureListener<Object> listener, Executor executor) {
+		if(listener == null) {
+			throw new NullPointerException("listener can not be null.");
+		}
+		if(executor == null) {
+			throw new NullPointerException("executor can not be null.");
+		}
+		
 		if(isDone()) {
 			executor.execute(new Runnable() {
 				
@@ -196,6 +204,11 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	@Override
 	public void addListener(final FutureListener<Object> listener) {
+		
+		if(listener == null) {
+			throw new NullPointerException("listener can not be null.");
+		}
+		
 		if(isDone()) {
 			invoke.getAsyncInvokeExecutor().execute(new Runnable() {
 				@Override
@@ -205,7 +218,7 @@ public class DefaultMessageFuture implements MessageFuture {
 			});
 		}
 		else {
-			this.listeners.put(listener, null);
+			this.listeners.put(listener, invoke.getAsyncInvokeExecutor());
 		}
 	
 	}
