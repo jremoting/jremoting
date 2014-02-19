@@ -1,7 +1,5 @@
 package com.github.jremoting.core;
 
-import java.util.concurrent.Executor;
-
 import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.util.NetUtil;
 import com.github.jremoting.util.concurrent.ListenableFuture;
@@ -23,33 +21,18 @@ public class GenericService  {
 	}
 	public Object invoke(String methodName, 
 			String[] parameterTypeNames, Object[] args) {
-		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
+		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer, args, parameterTypeNames);
+		invoke.setTimeout(timeout);
+		invoke.setRemoteAddress(address);
 		return rpcClient.invoke(invoke);
 	}
 
 	
 	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args) {
-		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
+		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer, args, parameterTypeNames);
+		invoke.setTimeout(timeout);
+		invoke.setRemoteAddress(address);
 		invoke.setAsync(true);
-		return (ListenableFuture<?>)rpcClient.invoke(invoke);
-	}
-	
-	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args,
-			Runnable callback) {
-		
-		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
-		invoke.setAsync(true);
-		invoke.setCallback(callback);
-		return (ListenableFuture<?>)rpcClient.invoke(invoke);
-	}
-	
-	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args
-			,Executor executor ,Runnable callback) {
-		Invoke invoke = createInvoke(methodName, parameterTypeNames, args);
-		invoke.setAsync(true);
-		invoke.setCallback(callback);
-		invoke.setCallbackExecutor(executor);
-		
 		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 	
@@ -58,14 +41,6 @@ public class GenericService  {
 		return this;
 	}
 	
-	private Invoke createInvoke(String methodName, String[] parameterTypeNames,
-			Object[] args) {
-		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer, args, parameterTypeNames);
-		invoke.setTimeout(timeout);
-		invoke.setRemoteAddress(address);
-		return invoke;
-	}
-
 	public long getTimeout() {
 		return timeout;
 	}
