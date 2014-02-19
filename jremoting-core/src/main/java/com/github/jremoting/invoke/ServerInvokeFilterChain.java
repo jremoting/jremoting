@@ -33,7 +33,7 @@ public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
 	}
 	
 	@Override
-	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+	public Object beginInvoke(Invoke invoke) {
 		return this.head.beginInvoke(invoke);
 	}
 

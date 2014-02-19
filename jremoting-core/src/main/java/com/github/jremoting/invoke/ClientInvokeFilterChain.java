@@ -40,7 +40,7 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 	}
 	
 	@Override
-	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+	public Object beginInvoke(Invoke invoke) {
 		invoke.setInvokeChain(this);
 		return this.head.beginInvoke(invoke);
 	}

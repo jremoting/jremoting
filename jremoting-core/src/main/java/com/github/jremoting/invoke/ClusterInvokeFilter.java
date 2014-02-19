@@ -8,7 +8,6 @@ import com.github.jremoting.exception.FailoverableException;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
-import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	
@@ -76,7 +75,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	}
 	
 	@Override
-	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+	public Object beginInvoke(Invoke invoke) {
 		// if invoke already has remote address then skip registry for debug use
 		if (invoke.getRemoteAddress() != null) {
 			return getNext().beginInvoke(invoke);

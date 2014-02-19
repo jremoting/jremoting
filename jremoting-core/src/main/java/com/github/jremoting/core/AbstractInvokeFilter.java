@@ -1,7 +1,5 @@
 package com.github.jremoting.core;
 
-import com.github.jremoting.util.concurrent.ListenableFuture;
-
 public abstract  class AbstractInvokeFilter implements InvokeFilter {
 	
 	private  InvokeFilter next;
@@ -22,7 +20,7 @@ public abstract  class AbstractInvokeFilter implements InvokeFilter {
 	}
 
 	@Override
-	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+	public Object beginInvoke(Invoke invoke) {
 		return getNext().beginInvoke(invoke);
 	}
 

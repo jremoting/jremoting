@@ -3,7 +3,6 @@ package com.github.jremoting.invoke;
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.exception.RemotingException;
-import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class RetryInvokeFilter extends AbstractInvokeFilter {
 
@@ -35,7 +34,7 @@ public class RetryInvokeFilter extends AbstractInvokeFilter {
 	}
 	
 	@Override
-	public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+	public Object beginInvoke(Invoke invoke) {
 		
 		RetryAsyncInvokeContext context = (RetryAsyncInvokeContext) invoke.getAsyncContext(RetryAsyncInvokeContext.CONTEXT_KEY);
 		if(context == null) {

@@ -19,8 +19,7 @@ import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
 import com.github.jremoting.util.ReflectionUtil;
-import com.github.jremoting.util.concurrent.FutureListener;
-import com.github.jremoting.util.concurrent.ListenableFuture;
+import com.github.jremoting.util.concurrent.AsyncCallback;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFutureListener;
@@ -109,10 +108,15 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
 	private void findTargetMethod(final Invoke invoke, ServiceProvider provider) {
 		if(provider.isSupportAsync()) {
+			Class<?>[] asyncParameterTypes = new Class<?>[invoke.getParameterTypes().length + 1];
+			System.arraycopy(invoke.getParameterTypes(), 0, asyncParameterTypes, 0, invoke.getParameterTypes().length);
+			asyncParameterTypes[invoke.getParameterTypes().length] = AsyncCallback.class;
+			
 			Method targetMethod  = ReflectionUtil.findMethod(invoke.getTarget().getClass(), 
 					"$" + invoke.getMethodName(),
-					invoke.getParameterTypes());
-		     if(targetMethod != null && ListenableFuture.class.isAssignableFrom(targetMethod.getReturnType())) {
+					asyncParameterTypes);
+			
+		     if(targetMethod != null) {
 		    	 invoke.setAsync(true);
 		    	 invoke.setTargetMethod(targetMethod);
 		     }
@@ -144,27 +148,36 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 	}
 	
 	private void doAsyncInvoke(final Invoke invoke, final ChannelHandlerContext ctx ) {
-		ListenableFuture<Object> future = invokeFilterChain.beginInvoke(invoke);
-		future.addListener(new FutureListener<Object>() {
+		AsyncCallback<Object> callback = new AsyncCallback<Object>() {
+
 			@Override
-			public void operationComplete(ListenableFuture<Object> future) {
+			public void setResult(Object result) {
 				try {
-					invokeFilterChain.endInvoke(invoke, future.result());
+					invokeFilterChain.endInvoke(invoke, result);
 				} catch (Throwable th) {
 					LOGGER.error("error happens when run server filter's endInvoke chain , msg->" + th.getMessage(), th);
 				}
 				
-				if(future.isSuccess()) {
-					InvokeResult invokeResult = new InvokeResult(future.result(),invoke.getId(), invoke.getSerializer());
-					ctx.writeAndFlush(invokeResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
-				}
-				else {
-					InvokeResult errorResult = new InvokeResult(new ServerErrorException(future.cause().getMessage()), invoke.getId(),
+				if(result instanceof Throwable) {
+					Throwable error = (Throwable)result;
+					InvokeResult errorResult = new InvokeResult(new ServerErrorException(error.getMessage()), invoke.getId(),
 							invoke.getSerializer());
 					ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+				
+				}
+				else {
+					InvokeResult invokeResult = new InvokeResult(result,invoke.getId(), invoke.getSerializer());
+					ctx.writeAndFlush(invokeResult).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
 				}
 			}
-		});
+		};
+		
+		Object[] asyncArgs = new Object[invoke.getArgs().length + 1];
+		System.arraycopy(invoke.getArgs(), 0, asyncArgs, 0, invoke.getArgs().length);
+		asyncArgs[invoke.getArgs().length] = callback;
+
+		invoke.setArgs(asyncArgs);
+		invokeFilterChain.beginInvoke(invoke);
 	}
 	
 	@Override

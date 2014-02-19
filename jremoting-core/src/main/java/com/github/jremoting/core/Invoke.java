@@ -10,7 +10,7 @@ public class Invoke extends Message {
 	private final String version;
 	private final String methodName;
 	private final String interfaceName;
-	private final Object[] args;
+	private  Object[] args;
 	private final Class<?>[] parameterTypes;
 	
 	private final String[] parameterTypeNames;
@@ -69,6 +69,10 @@ public class Invoke extends Message {
 	
 	public Object[] getArgs() {
 		return args;
+	}
+	
+	public void setArgs(Object[] args) {
+		this.args =args;
 	}
 
 
@@ -137,6 +141,9 @@ public class Invoke extends Message {
 		return callback;
 	}
 
+	/*
+	 * callback must instance of Runnable or AsyncCallback
+	 * */
 	public void setCallback(Runnable callback) {
 		this.callback = callback;
 	}

@@ -1,7 +1,5 @@
 package com.github.jremoting.core;
 
-import com.github.jremoting.util.concurrent.ListenableFuture;
-
 
 public interface InvokeFilter {
 	
@@ -15,7 +13,7 @@ public interface InvokeFilter {
 
 	Object invoke(Invoke invoke);
 	
-	ListenableFuture<Object> beginInvoke(Invoke invoke);
+	Object beginInvoke(Invoke invoke);
 	
 	void endInvoke(Invoke invoke, Object result);
 	
