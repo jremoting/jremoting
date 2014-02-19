@@ -7,5 +7,9 @@ public class SerializeException extends RemotingException {
 	public SerializeException(String msg, Throwable throwable) {
 		super(msg, throwable);
 	}
+	
+	public SerializeException(String msg) {
+		super(msg);
+	}
 
 }

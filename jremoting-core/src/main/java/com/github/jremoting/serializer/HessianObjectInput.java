@@ -36,6 +36,15 @@ public class HessianObjectInput implements ObjectInput {
 		}
 		
 	}
+	
+	public Object readObject() {
+		try {
+			Object result = input.readObject();
+			return result;
+		} catch (IOException e) {
+			throw new SerializeException("hessian read obj failed", e);
+		}
+	}
 
 	@Override
 	public int readInt() {

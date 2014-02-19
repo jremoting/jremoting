@@ -10,6 +10,7 @@
 	<bean id="registry" class="com.github.jremoting.registry.DefaultServiceRegistry">
 		<constructor-arg name="zookeeperConnectionString" value="127.0.0.1:2181" />
 	</bean>
+	
 	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
 		<constructor-arg name="registry" ref="registry" />
 		<constructor-arg name="serializers">

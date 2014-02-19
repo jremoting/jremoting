@@ -7,9 +7,42 @@
 	<import resource="classpath:jremoting-context.xml"/>
 	
 	<bean id="testService" class="com.github.jremoting.spring.JRemotingConsumerBean" init-method="start">
+	
 		<constructor-arg name="interfaceName" value="com.github.jremoting.core.test.TestService" />
 		<constructor-arg name="version" value="1.0" />
-		<constructor-arg name="rpcClient" ref="rpcClient" />
+		<constructor-arg name="appConfig" ref="appConfig" />
+		
 		<property name="asyncInterfaceName" value="com.github.jremoting.core.test.AsyncTestService"></property>
+		<property name="serviceConfig">
+			<map>
+				<entry key="retry" value="3"></entry>
+				<entry key="timeout" value="3000"></entry>
+			</map>
+		</property>
+		
+		<property name="methodConfig">
+			<map>
+				<entry key="get*">
+					<map>
+						<entry key="retry" value="3"></entry>
+						<entry key="timeout" value="3000"></entry>
+					</map>
+				</entry>
+				<entry key="void hello(String,HelloInput)">
+					<map>
+						<entry key="timeout" value="3000"></entry>
+					</map>
+				</entry>
+			</map>
+		</property>
 	</bean>
+
+	<bean id="appConfig" class="com.github.jremoting.spring.JRemotingApplicationBean">
+		<constructor-arg name="appName" value="JremotingClient" />
+		<property name="rpcClient" ref="rpcClient" />
+		<property name="developer" value="kfhanjie,xxx"/>
+		<property name="tester" value="kfhanjie" />
+		<property name="docUrl" value="http://docs.xxxx.com/xxx/index.html" />
+	</bean>
+	
 </beans>

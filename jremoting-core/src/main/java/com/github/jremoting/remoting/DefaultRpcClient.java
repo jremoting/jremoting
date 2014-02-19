@@ -65,7 +65,10 @@ public class DefaultRpcClient implements RpcClient {
 			throw new IllegalArgumentException("can only register consumer info");
 		}	
 		this.start();
-		this.registry.registerParticipant(consumerInfo);
+		if(this.registry != null) {
+			this.registry.registerParticipant(consumerInfo);
+		}
+		
 	}
 
 	@Override

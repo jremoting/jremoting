@@ -5,7 +5,7 @@ public class ServiceParticipantInfo {
 	public static enum ParticipantType {
 		PROVIDER,CONSUMER
 	}
-	
+		
 	private  String address;
 	private  String serviceName;
 	private  ParticipantType type;
@@ -57,4 +57,5 @@ public class ServiceParticipantInfo {
 		
 		return false;
 	}
+
 }
