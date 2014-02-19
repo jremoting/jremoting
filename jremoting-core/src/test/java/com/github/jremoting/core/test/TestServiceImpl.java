@@ -2,7 +2,7 @@ package com.github.jremoting.core.test;
 
 import java.util.Date;
 import java.util.concurrent.Executor;
-import com.github.jremoting.util.concurrent.AsyncCallback;
+import com.github.jremoting.util.concurrent.FutureCallback;
 import com.github.jremoting.util.concurrent.Executors;
 
 public class TestServiceImpl implements TestService {
@@ -17,14 +17,14 @@ public class TestServiceImpl implements TestService {
 	
 	static Executor executor = Executors.newExecutor(1, 1, 44);
 	
-	public void $hello(HelloInput input, int id, final AsyncCallback<HelloOutput> asyncCallback) {
+	public void $hello(HelloInput input, int id, final FutureCallback<HelloOutput> futureCallback) {
 		
 		executor.execute(new Runnable() {
 			@Override
 			public void run() {
 				HelloOutput output =  new HelloOutput();
 				output.setMsg("server async result");
-				asyncCallback.setResult(output);
+				futureCallback.onSuccess(output);
 			}
 		});
 	
