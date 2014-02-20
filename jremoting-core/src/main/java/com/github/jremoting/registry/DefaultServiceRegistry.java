@@ -39,13 +39,13 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	private  CuratorFramework client; 
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	
-	protected  ServicePathCodec codec;
+	protected  ServicePathCodec pathCodec;
 	private final String zookeeperConnectionString;
 	
 	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultServiceRegistry.class);
 	
 	public DefaultServiceRegistry(String zookeeperConnectionString) {
-		this.codec = new ServicePathCodec();
+		this.pathCodec = new ServicePathCodec();
 		this.zookeeperConnectionString = zookeeperConnectionString;
 	}
 	
@@ -88,7 +88,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		this.publish(participantInfo);
 		if (participantInfo.getType() == ParticipantType.CONSUMER) {
 			this.initSubscribeLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
-			this.subscribe(codec.toProvidersDir(participantInfo.getServiceName()));
+			this.subscribe(pathCodec.toProvidersDir(participantInfo.getServiceName()));
 		}
 	}
 
@@ -108,7 +108,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		this.client = CuratorFrameworkFactory.builder()
 				.connectString(zookeeperConnectionString)
 				.sessionTimeoutMs(5 * 1000).connectionTimeoutMs(5 * 1000)
-				.namespace(codec.getRootPath()).retryPolicy(retryPolicy).build();
+				.namespace(pathCodec.getRootPath()).retryPolicy(retryPolicy).build();
 		//close connection when process exit , let other consumers see this process die immediately
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
@@ -134,7 +134,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 
 	private void refreshCachedProviders(String changedParentPath, List<String> providerFileNames) {
-		Map<String, List<ServiceParticipantInfo>> changedProviders = codec.parseChangedProviderPath(changedParentPath, providerFileNames);
+		Map<String, List<ServiceParticipantInfo>> changedProviders = pathCodec.parseChangedProviderPath(changedParentPath, providerFileNames);
 		
 		for (String serviceName : changedProviders.keySet()) {
 			List<ServiceParticipantInfo> providers = changedProviders.get(serviceName);
@@ -156,7 +156,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 	private void initServicePath(ServiceParticipantInfo participantInfo)  {
 		try {
-			String[] dirs = codec.getServiceDirs(participantInfo.getServiceName());
+			String[] dirs = pathCodec.getServiceDirs(participantInfo.getServiceName());
 			for (int i = 0; i < dirs.length; i++) {
 				this.client.create().inBackground().forPath(dirs[i]);
 				
@@ -170,7 +170,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	private void publish(ServiceParticipantInfo participantInfo)  {
 		
 		try {
-			String  participantPath = codec.toServicePath(participantInfo);
+			String  participantPath = pathCodec.toServicePath(participantInfo);
 			this.client.delete().inBackground().forPath(participantPath); //delete path that previous session created  
 			this.client.create().withMode(CreateMode.EPHEMERAL).inBackground().forPath(participantPath);
 			LOGGER.info("publish participant to path:" + participantPath);
@@ -223,7 +223,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	private void recover() throws Exception   {
 		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
 			if(participantInfo.getType() == ParticipantType.CONSUMER) {
-				subscribe(codec.toProvidersDir(participantInfo.getServiceName()));
+				subscribe(pathCodec.toProvidersDir(participantInfo.getServiceName()));
 			}
 			publish(participantInfo);
 		}

@@ -16,7 +16,7 @@ public class DubboServiceRegistry extends DefaultServiceRegistry {
 
 	public DubboServiceRegistry(String zookeeperConnectionString) {
 		super(zookeeperConnectionString);
-		this.codec = new DubboServicePathCodec();
+		this.pathCodec = new DubboServicePathCodec();
 	}
 	
 	private static class DubboServicePathCodec extends ServicePathCodec {
