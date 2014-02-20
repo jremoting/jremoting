@@ -32,7 +32,7 @@ public class JRemotingProtocal implements Protocal {
 	// message flag.
 	protected static final int FLAG_REQUEST = 0x80; // 10000000
 	protected static final int FLAG_TWOWAY = 0x40; // 01000000
-	protected static final int FLAG_EVENT = 0x20; // 00100000
+	protected static final int FLAG_HEARTBEAT = 0x20; // 00100000
 	protected static final int SERIALIZATION_MASK = 0x1f; // 00011111
     
     private static final int  STATUS_OK = 20;
@@ -44,7 +44,8 @@ public class JRemotingProtocal implements Protocal {
     
     private static final String NULL = "NULL";
     private final ServiceRegistry registry;
-	private static Class<?>[] EMPTY_TYPE_ARRAY = new Class<?>[0];
+	private static final Class<?>[] EMPTY_TYPE_ARRAY = new Class<?>[0];
+    public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
 	private final Serializer[] serializers;
 	
@@ -65,7 +66,7 @@ public class JRemotingProtocal implements Protocal {
 			
 			int flag = (isRequest ? FLAG_REQUEST : 0)
 					| (isTwoWay ? FLAG_TWOWAY : 0) 
-					| (isHeartbeatMessage ? FLAG_EVENT : 0)
+					| (isHeartbeatMessage ? FLAG_HEARTBEAT : 0)
 					| serializeId;
 			
 			int status = isErrorMsg ? getStatus((InvokeResult)msg) : STATUS_OK;
@@ -166,7 +167,7 @@ public class JRemotingProtocal implements Protocal {
 				return Message.NEED_MORE;
 			}
 			
-			boolean isHeartbeat = (flag & FLAG_EVENT) > 0;	
+			boolean isHeartbeat = (flag & FLAG_HEARTBEAT) > 0;	
 			boolean isRequest = (flag & FLAG_REQUEST) > 0;
 			boolean isTwoWay = (flag & FLAG_TWOWAY) > 0 ;
 			int serializerId = (flag & SERIALIZATION_MASK);
@@ -228,7 +229,7 @@ public class JRemotingProtocal implements Protocal {
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(interfaceName, version, methodName,serializer, null, EMPTY_TYPE_ARRAY);
+			Invoke invoke = new Invoke(interfaceName, version, methodName,serializer, EMPTY_OBJECT_ARRAY, EMPTY_TYPE_ARRAY);
 			invoke.setId(msgId);
 			return invoke;
 		}
