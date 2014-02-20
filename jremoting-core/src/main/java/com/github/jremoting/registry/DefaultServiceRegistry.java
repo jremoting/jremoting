@@ -1,6 +1,5 @@
 package com.github.jremoting.registry;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,17 +36,17 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	private final ConcurrentHashMap<String, CountDownLatch> initSubscribeLatches = new ConcurrentHashMap<String, CountDownLatch>();
 	private final List<ServiceParticipantInfo> localParticipantInfos = new CopyOnWriteArrayList<ServiceParticipantInfo>();
 	
-	private final CuratorFramework client; 
+	private  CuratorFramework client; 
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
+	
+	protected  ServicePathCodec codec;
+	private final String zookeeperConnectionString;
 	
 	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultServiceRegistry.class);
 	
 	public DefaultServiceRegistry(String zookeeperConnectionString) {
-		RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
-		this.client = CuratorFrameworkFactory.builder()
-				.connectString(zookeeperConnectionString)
-				.sessionTimeoutMs(5 * 1000).connectionTimeoutMs(5 * 1000)
-				.namespace("jremoting").retryPolicy(retryPolicy).build();
+		this.codec = new ServicePathCodec();
+		this.zookeeperConnectionString = zookeeperConnectionString;
 	}
 	
 	
@@ -89,7 +88,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		this.publish(participantInfo);
 		if (participantInfo.getType() == ParticipantType.CONSUMER) {
 			this.initSubscribeLatches.put(participantInfo.getServiceName(), new CountDownLatch(1));
-			this.subscribe(getProviderPath(participantInfo.getServiceName()));
+			this.subscribe(codec.toProvidersDir(participantInfo.getServiceName()));
 		}
 	}
 
@@ -105,6 +104,11 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 
 	private void doStart() {
+		RetryPolicy retryPolicy = new RetryNTimes(Integer.MAX_VALUE, 1000);
+		this.client = CuratorFrameworkFactory.builder()
+				.connectString(zookeeperConnectionString)
+				.sessionTimeoutMs(5 * 1000).connectionTimeoutMs(5 * 1000)
+				.namespace(codec.getRootPath()).retryPolicy(retryPolicy).build();
 		//close connection when process exit , let other consumers see this process die immediately
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
@@ -119,13 +123,6 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		this.client.start();
 	}
 	
-
-
-
-	private String getProviderPath(String serviceName) {
-		String providersPath = String.format("/%s/providers", serviceName);
-		return providersPath;
-	}
 	
 	private void subscribe(String changedProvidersPath) {
 		try {
@@ -136,29 +133,34 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 	}
 
 
-	private void refreshCachedProviders(String serviceName, List<String> providerJsons) {
-		List<ServiceParticipantInfo> providers = new ArrayList<ServiceParticipantInfo>();
-		for (String json : providerJsons) {
-			providers.add(JSON.parseObject(json, ServiceParticipantInfo.class));
-		}
-		this.cachedProviderInfos.put(serviceName, providers);
-		//if there are consumer threads blocked to wait init subscribe  then wake up them
-		if(this.initSubscribeLatches.size() > 0) {
-			CountDownLatch subscribeLatch = this.initSubscribeLatches.remove(serviceName);
-			if(subscribeLatch != null) {
-				subscribeLatch.countDown();
+	private void refreshCachedProviders(String changedParentPath, List<String> providerFileNames) {
+		Map<String, List<ServiceParticipantInfo>> changedProviders = codec.parseChangedProviderPath(changedParentPath, providerFileNames);
+		
+		for (String serviceName : changedProviders.keySet()) {
+			List<ServiceParticipantInfo> providers = changedProviders.get(serviceName);
+			
+			this.cachedProviderInfos.put(serviceName, providers);
+			//if there are consumer threads blocked to wait init subscribe  then wake up them
+			if(this.initSubscribeLatches.size() > 0) {
+				CountDownLatch subscribeLatch = this.initSubscribeLatches.remove(serviceName);
+				if(subscribeLatch != null) {
+					subscribeLatch.countDown();
+				}
 			}
+			LOGGER.info("received providers for service:" + serviceName);
+			LOGGER.info("providers:" + JSON.toJSONString(providers));
 		}
-		LOGGER.info("received providers for service:" + serviceName);
-		LOGGER.info("providers:" + JSON.toJSONString(providers));
+		
 	}
 	
 
 	private void initServicePath(ServiceParticipantInfo participantInfo)  {
 		try {
-			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName());
-			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/providers");
-			this.client.create().inBackground().forPath("/" + participantInfo.getServiceName() + "/consumers");
+			String[] dirs = codec.getServiceDirs(participantInfo.getServiceName());
+			for (int i = 0; i < dirs.length; i++) {
+				this.client.create().inBackground().forPath(dirs[i]);
+				
+			}
 		} catch (Exception e) {
 			throw new RegistryExcpetion(e.getMessage(), e);
 		}
@@ -166,17 +168,9 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 
 
 	private void publish(ServiceParticipantInfo participantInfo)  {
-		String  participantPath = null;
-		if(participantInfo.getType() == ParticipantType.PROVIDER) {
-			participantPath = String.format("/%s/providers/%s", 
-					participantInfo.getServiceName(),JSON.toJSONString(participantInfo));
-		}
-		else {
-			participantPath = String.format("/%s/consumers/%s", 
-					participantInfo.getServiceName(),JSON.toJSONString(participantInfo));
-		}
 		
 		try {
+			String  participantPath = codec.toServicePath(participantInfo);
 			this.client.delete().inBackground().forPath(participantPath); //delete path that previous session created  
 			this.client.create().withMode(CreateMode.EPHEMERAL).inBackground().forPath(participantPath);
 			LOGGER.info("publish participant to path:" + participantPath);
@@ -211,7 +205,7 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 			break;
 		case CHILDREN:
 			if(event.getPath().endsWith("/providers")) {
-				refreshCachedProviders(parseServiveName(event.getPath()), event.getChildren());
+				refreshCachedProviders(event.getPath(), event.getChildren());
 			}
 			break;
 		default:
@@ -223,18 +217,13 @@ public class DefaultServiceRegistry implements ServiceRegistry,
 		}
 	}
 	
-	private String parseServiveName(String path) {
-		// path = /serviceName/providers
-		return path.substring(1, path.indexOf("/providers"));
-	}
-
 
 	private ConnectionState currentState;
 	
 	private void recover() throws Exception   {
 		for (ServiceParticipantInfo participantInfo: this.localParticipantInfos) {
 			if(participantInfo.getType() == ParticipantType.CONSUMER) {
-				subscribe(getProviderPath(participantInfo.getServiceName()));
+				subscribe(codec.toProvidersDir(participantInfo.getServiceName()));
 			}
 			publish(participantInfo);
 		}

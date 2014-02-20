@@ -28,11 +28,12 @@ public class DubboProtocal implements Protocal {
     // magic header.
     protected static final short    MAGIC              = (short) 0xdabb;
     // message flag.
-    protected static final byte     FLAG_REQUEST       = (byte) 0x80; //10000000
+    protected static final int     FLAG_REQUEST       =  0x80; //10000000
 
-    protected static final byte     FLAG_TWOWAY        = (byte) 0x40; //01000000
+    protected static final int     FLAG_TWOWAY        =  0x40; //01000000
 
-    protected static final byte     FLAG_EVENT     = (byte) 0x20;	  //00100000
+    protected static final int     FLAG_EVENT     = 0x20;	  //00100000
+    
 
     protected static final int      SERIALIZATION_MASK = 0x1f;		  //00011111
 
@@ -49,6 +50,11 @@ public class DubboProtocal implements Protocal {
     public static final byte SERVER_ERROR      = 80;
     //Attachments
     private static final Map<String, String> ATTACHMENTS = new HashMap<String, String>();
+    
+    private final ServiceRegistry registry;
+    public DubboProtocal(ServiceRegistry registry) {
+    	this.registry = registry;
+    }
 
 	@Override
 	public void encode(Message msg, ByteBuffer buffer) throws ProtocalException {
@@ -159,7 +165,7 @@ public class DubboProtocal implements Protocal {
 			boolean isHeartbeat = (flag & FLAG_EVENT) > 0;	
 			boolean isRequest = (flag & FLAG_REQUEST) > 0;
 			boolean isTwoWay = (flag & FLAG_TWOWAY) > 0 ;
-			boolean isErrorMsg = (status != OK);
+			boolean isErrorMsg = (!isRequest && status != OK);
 					
 			HessianObjectInput input = (HessianObjectInput) hessionSerializer.createObjectInput(new ByteBufferInputStream(buffer, bodyLength));
 			Message msg = null;
@@ -241,8 +247,7 @@ public class DubboProtocal implements Protocal {
 
 	@Override
 	public ServiceRegistry getRegistry() {
-		// TODO Auto-generated method stub
-		return null;
+		return registry;
 	}
 
 }
