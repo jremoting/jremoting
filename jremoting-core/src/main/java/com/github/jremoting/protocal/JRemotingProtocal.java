@@ -127,6 +127,7 @@ public class JRemotingProtocal implements Protocal {
 		int argLength = invoke.getArgs() == null ? 0 : invoke.getArgs().length;
 		output.writeString(invoke.getInterfaceName());
 		output.writeString(invoke.getVersion());
+		output.writeString(invoke.getGroup());
 		output.writeString(invoke.getMethodName());
 		output.writeInt(argLength);
 
@@ -224,12 +225,13 @@ public class JRemotingProtocal implements Protocal {
 		
 		String interfaceName = input.readString();
 		String version =  input.readString();
+		String group = input.readString();
 		String methodName =  input.readString();
 		int argsLength = input.readInt();
 		
 		
 		if(argsLength == 0) {
-			Invoke invoke = new Invoke(interfaceName, version, methodName,serializer, EMPTY_OBJECT_ARRAY, EMPTY_TYPE_ARRAY);
+			Invoke invoke = new Invoke(interfaceName,version,group,methodName,serializer, EMPTY_OBJECT_ARRAY, EMPTY_TYPE_ARRAY);
 			invoke.setId(msgId);
 			return invoke;
 		}
@@ -243,7 +245,7 @@ public class JRemotingProtocal implements Protocal {
 			args[i] = input.readObject(parameterTypes[i]);
 		}
 
-		Invoke invoke = new Invoke(interfaceName, version, methodName, serializer,args , parameterTypes);
+		Invoke invoke = new Invoke(interfaceName, version, group,methodName, serializer,args , parameterTypes);
 		invoke.setId(msgId);
 		return invoke;
 	}

@@ -61,13 +61,16 @@ public class NettyClientHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
    
-        if(msg instanceof DefaultMessageFuture) {
-        
-        	DefaultMessageFuture future = (DefaultMessageFuture)msg;
-        	final Invoke invoke  = future.getInvoke();
+        if(msg instanceof Invoke) {
+    
+        	final Invoke invoke  = (Invoke)msg;
 		
-			futures.put(invoke.getId(), future);
-
+        	if(invoke.getInvokeCount() == 0) {
+        		futures.put(invoke.getId(), (DefaultMessageFuture)invoke.getResultFuture());
+        	}
+        	
+        	invoke.incrementInvokeCount();
+        	
 			//schedule timeout task
 			ctx.executor().schedule(new Runnable() {
 				@Override
@@ -81,15 +84,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 
 			//write msg if failed notify caller and close channel
         	ctx.writeAndFlush(invoke, promise).addListener(new WriteChannelFutureListener(invoke.getId()));
-        	
         }
-        else if(msg instanceof Invoke) {
-        	Invoke invoke = (Invoke)msg;
-        	ctx.writeAndFlush(msg, promise).addListener(new WriteChannelFutureListener(invoke.getId()));
-        }
-        else {
-        	ctx.write(msg,promise);
-		}
     }
     
     @Override

@@ -7,12 +7,13 @@ import com.github.jremoting.util.concurrent.ListenableFuture;
 public class ServiceConsumer extends ServiceParticipant {
 	
 	private Serializer serializer;
-	private String asyncInterfaceName;
 	
 	private final CountDownLatch initLatch = new CountDownLatch(1);
 	
 	private boolean init = false;
 	private final RpcClient rpcClient;
+	
+	private String remoteAddress;
 	
 	
 	public ServiceConsumer(String interfaceName, String version, RpcClient rpcClient) {
@@ -31,20 +32,22 @@ public class ServiceConsumer extends ServiceParticipant {
 	
 	public Object invoke(String methodName, 
 			String[] parameterTypeNames, Object[] args) {
-		Invoke invoke = new Invoke(this.getInterfaceName(), this.getVersion(), methodName, this.getSerializer(),
+		Invoke invoke = new Invoke(this.getInterfaceName(), this.getVersion(),this.getGroup(), methodName, this.getSerializer(),
 				args, parameterTypeNames);
 		invoke.setTimeout(this.getTimeout());
-		invoke.setRemoteAddress(this.getAddress());
+		invoke.setRemoteAddress(this.remoteAddress);
+		invoke.setConsumer(this);
 		return rpcClient.invoke(invoke);
 	}
 
 	
 	public ListenableFuture<?> $invoke(String methodName, String[] parameterTypeNames, Object[] args) {
-		Invoke invoke = new Invoke(this.getInterfaceName(), this.getVersion(), methodName, this.getSerializer(),
+		Invoke invoke = new Invoke(this.getInterfaceName(), this.getVersion(),this.getGroup(), methodName, this.getSerializer(),
 				args, parameterTypeNames);
 		invoke.setTimeout(this.getTimeout());
-		invoke.setRemoteAddress(this.getAddress());
+		invoke.setRemoteAddress(this.remoteAddress);
 		invoke.setAsync(true);
+		invoke.setConsumer(this);
 		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 
@@ -71,11 +74,11 @@ public class ServiceConsumer extends ServiceParticipant {
 		return rpcClient;
 	}
 
-	public String getAsyncInterfaceName() {
-		return asyncInterfaceName;
+	public String getRemoteAddress() {
+		return remoteAddress;
 	}
 
-	public void setAsyncInterfaceName(String asyncInterfaceName) {
-		this.asyncInterfaceName = asyncInterfaceName;
+	public void setRemoteAddress(String remoteAddress) {
+		this.remoteAddress = remoteAddress;
 	}
 }

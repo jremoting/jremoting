@@ -62,9 +62,6 @@ public class DefaultRpcClient implements RpcClient {
 			invoke.setResultFuture(future);
 			return this.invokeFilterChain.invoke(invoke);
 		}
-		
-	
-		
 	}
 
 	@Override

@@ -9,8 +9,6 @@ public abstract class ServiceParticipant {
 	private String group;
 	
 	private String address;
-	private String serviceName;
-
 	private long timeout;
 	private int retry;
 	private int failover;
@@ -24,7 +22,6 @@ public abstract class ServiceParticipant {
 		else {
 			this.group = group;
 		}
-		this.serviceName = this.interfaceName + ":" + this.version;
 	}
 
 	
@@ -32,16 +29,11 @@ public abstract class ServiceParticipant {
 		return address;
 	}
 	public String getServiceName() {
-		return serviceName;
+		return this.interfaceName + ":" + this.version + ":" + this.group;
 	}
-
 	
 	public void setAddress(String address) {
 		this.address = address;
-	}
-
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
 	}
 	
 	public String getGroup() {

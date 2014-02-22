@@ -15,6 +15,7 @@ import com.github.jremoting.util.ReflectionUtil;
 public class JRemotingConsumerBean  implements FactoryBean {
 	
 	private ServiceConsumer consumer;
+	private String asyncInterfaceName;
 	
 	public JRemotingConsumerBean(String interfaceName, String version,
 			RpcClient rpcClient) {
@@ -23,7 +24,7 @@ public class JRemotingConsumerBean  implements FactoryBean {
 
 	@Override
 	public Object getObject() throws Exception {
-		if(this.consumer.getAsyncInterfaceName() == null) {
+		if(this.asyncInterfaceName == null) {
 			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
 					ReflectionUtil.findClass(this.consumer.getInterfaceName())}, 
 					new ClientInvocationHandler(this.consumer));
@@ -31,10 +32,9 @@ public class JRemotingConsumerBean  implements FactoryBean {
 		else {
 			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
 				ReflectionUtil.findClass(this.consumer.getInterfaceName()), 
-				ReflectionUtil.findClass(this.consumer.getAsyncInterfaceName())}, 
+				ReflectionUtil.findClass(asyncInterfaceName)}, 
 				new ClientInvocationHandler(this.consumer));
 		}
-	
 	}
 	
 	@Override
@@ -51,6 +51,10 @@ public class JRemotingConsumerBean  implements FactoryBean {
 	}
 
 	public void setAsyncInterfaceName(String asyncInterfaceName) {
-		this.consumer.setAsyncInterfaceName(asyncInterfaceName);
+		this.asyncInterfaceName = asyncInterfaceName;
+	}
+	
+	public void setRemoteAddress(String remoteAddress) {
+		this.consumer.setRemoteAddress(remoteAddress);
 	}
 }

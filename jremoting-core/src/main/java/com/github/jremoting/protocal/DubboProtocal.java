@@ -8,6 +8,7 @@ import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
+import com.github.jremoting.core.ServiceParticipant;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.exception.SerializeException;
@@ -48,9 +49,7 @@ public class DubboProtocal implements Protocal {
     public static final byte OK                = 20;
 
     public static final byte SERVER_ERROR      = 80;
-    //Attachments
-    private static final Map<String, String> ATTACHMENTS = new HashMap<String, String>();
-    
+        
     private final ServiceRegistry registry;
     public DubboProtocal(ServiceRegistry registry) {
     	this.registry = registry;
@@ -106,7 +105,12 @@ public class DubboProtocal implements Protocal {
 						output.writeObject(invoke.getArgs()[i]);
 					}
 				}
-				output.writeObject(ATTACHMENTS);
+				HashMap<String, String> attachments = new HashMap<String, String>();
+				if(!ServiceParticipant.DEFAULT_GROUP.equals(invoke.getGroup())) {
+					attachments.put("group", invoke.getGroup());
+				}
+				
+				output.writeObject(attachments);
 			}
 			else {
 				
@@ -206,11 +210,15 @@ public class DubboProtocal implements Protocal {
 						args[i] = input.readObject(parameterTypes[i]);
 					}
 				}
-				@SuppressWarnings({ "unused", "unchecked" })
-				Map<String, String> attachment = (Map<String, String>) input
-						.readObject(HashMap.class);
-
-				Invoke invoke = new Invoke(interfaceName, version, methodName,
+				
+				@SuppressWarnings("unchecked")
+				Map<String, String> attachment = (Map<String, String>) input.readObject(HashMap.class);
+				String group = attachment.get("group");
+				
+				if(group == null) {
+					group = ServiceParticipant.DEFAULT_GROUP;
+				}
+				Invoke invoke = new Invoke(interfaceName, version, group,methodName,
 						hessionSerializer, args, parameterTypes);
 				invoke.setId(msgId);
 

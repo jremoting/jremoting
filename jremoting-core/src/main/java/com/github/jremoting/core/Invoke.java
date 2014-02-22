@@ -11,6 +11,10 @@ public class Invoke extends Message {
 	private final String version;
 	private final String methodName;
 	private final String interfaceName;
+	private final String group;
+	
+
+
 	private  Object[] args;
 	private final Class<?>[] parameterTypes;
 	private final String[] parameterTypeNames;
@@ -21,6 +25,7 @@ public class Invoke extends Message {
 	private ServiceConsumer consumer;
 	private ServiceRegistry registry;
 	private ServiceProvider provider;
+	private int invokeCount;
 	
 	
 	//client async invoke field
@@ -35,24 +40,26 @@ public class Invoke extends Message {
 	private Object target;
 	private Method targetMethod;
 
-	public Invoke(String interfaceName, String version,String methodName ,
+	public Invoke(String interfaceName, String version, String group,String methodName ,
 			Serializer serializer, Object[] args, Class<?>[] parameterTypes) {
 		super(true, serializer);
 		this.args = args;
 		this.interfaceName = interfaceName;
 		this.version = version;
 		this.methodName = methodName;
+		this.group = group;
 		this.parameterTypes = parameterTypes;
 		
 		this.parameterTypeNames = new String[this.parameterTypes.length];
 		for (int i = 0; i < this.parameterTypeNames.length; i++) {
 			this.parameterTypeNames[i] = this.parameterTypes[i].getName();
 		}
+		this.serviceName = this.interfaceName + ":" + this.version + ":" + this.group;
 
-		this.serviceName = this.interfaceName + ":" + this.version;
+
 	}
 	
-	public Invoke(String interfaceName, String version,String methodName ,
+	public Invoke(String interfaceName, String version,String group, String methodName ,
 			Serializer serializer, Object[] args, String[] parameterTypeNames) {
 		super(true, serializer);
 		this.args = args;
@@ -60,8 +67,9 @@ public class Invoke extends Message {
 		this.version = version;
 		this.methodName = methodName;
 		this.parameterTypeNames = parameterTypeNames;
-		this.serviceName = this.interfaceName + ":" + this.version;
 		this.parameterTypes = null;
+		this.group = group;
+		this.serviceName = this.interfaceName + ":" + this.version + ":" + this.group;
 	}
 	
 	
@@ -83,6 +91,9 @@ public class Invoke extends Message {
 		return version;
 	}
 
+	public String getGroup() {
+		return group;
+	}
 	
 	public String getMethodName() {
 		return methodName;
@@ -191,6 +202,14 @@ public class Invoke extends Message {
 
 	public void setProvider(ServiceProvider provider) {
 		this.provider = provider;
+	}
+
+	public int getInvokeCount() {
+		return invokeCount;
+	}
+
+	public void incrementInvokeCount() {
+		this.invokeCount++;
 	}
 	
 }

@@ -44,15 +44,8 @@ public class DefaultMessageChannel implements MessageChannel  {
 		if (channel == null || !channel.isActive()) {
 			channel = connect(address);
 		}
-		
-		// first invoke write future to channel
-		if (invoke.getResultFuture() == null) {
-			channel.writeAndFlush(invoke.getResultFuture());
-		} else {
-			channel.writeAndFlush(invoke);
-		}
 
-		
+		channel.writeAndFlush(invoke);
 	}
 	
 	private Channel connect(String remoteAddress) {
