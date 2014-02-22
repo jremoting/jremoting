@@ -17,9 +17,9 @@ import com.github.jremoting.route.RouteStrategy;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 
-public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryListener {
+public class DefaultServiceRegistry implements ServiceRegistry, RepositoryListener {
 	
-	private final static Logger LOGGER = LoggerFactory.getLogger(InMemoryServiceRegistry.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultServiceRegistry.class);
 	
 	private ConcurrentHashMap<String, ServiceProvider> localProviders = new ConcurrentHashMap<String, ServiceProvider>();
 	private ConcurrentHashMap<String, ServiceConsumer> localConsumers = new ConcurrentHashMap<String, ServiceConsumer>();
@@ -32,16 +32,16 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 	private ConcurrentHashMap<String, Object> serviceLevelWriteLocks = new ConcurrentHashMap<String, Object>();
 	
 	
-	private RemoteRegistry remoteRegistry;
+	private Repository repository;
 	
 	private String appName;
 	private String localIp;
 
-	public InMemoryServiceRegistry(String appName, String localIp,
-			ServiceRegistry remoteServiceRegistry, RemoteRegistry remoteRegistry) {
+	public DefaultServiceRegistry(String appName, String localIp,
+			ServiceRegistry remoteServiceRegistry, Repository repository) {
 		this.appName = appName;
 		this.localIp = localIp;
-		this.remoteRegistry = remoteRegistry;
+		this.repository = repository;
 	}
 	
 	@Override
@@ -82,7 +82,7 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 	}
 
 	private void doPublish(ServiceProvider provider) {
-		List<GroupRule> groupRules = remoteRegistry.getGroupRules(appName, provider.getServiceName());
+		List<GroupRule> groupRules = repository.getGroupRules(appName, provider.getServiceName());
 		
 		if(groupRules != null && groupRules.size() > 0) {
 			GroupStrategy groupStrategy = new GroupStrategy(groupRules, localIp);
@@ -90,10 +90,10 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 			provider.setGroup(newGroup);
 		}
 
-		remoteRegistry.subscribeConfig(provider.getServiceName());
+		repository.subscribeConfig(provider.getServiceName());
 		
-		remoteRegistry.unpublish(provider);
-		remoteRegistry.publish(provider);
+		repository.unpublish(provider);
+		repository.publish(provider);
 	}
 
 
@@ -110,7 +110,7 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 
 	private void doSubscribe(ServiceConsumer consumer) {
 		
-		List<GroupRule> groupRules = remoteRegistry.getGroupRules(appName, consumer.getServiceName());
+		List<GroupRule> groupRules = repository.getGroupRules(appName, consumer.getServiceName());
 		
 		if(groupRules != null && groupRules.size() > 0) {
 			GroupStrategy groupStrategy = new GroupStrategy(groupRules, localIp);
@@ -119,11 +119,11 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 		}
 	
 		
-		remoteRegistry.subscribeRouteRules(appName, consumer.getServiceName());
-		remoteRegistry.subscribeConfig(consumer.getServiceName());
+		repository.subscribeRouteRules(appName, consumer.getServiceName());
+		repository.subscribeConfig(consumer.getServiceName());
 		
-		remoteRegistry.unsubscribe(consumer);
-		remoteRegistry.subscribe(consumer);
+		repository.unsubscribe(consumer);
+		repository.subscribe(consumer);
 	}
 	@Override
 	public ServiceConfig getConfig(String serviceName, String key) {
@@ -138,18 +138,18 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 	
 	@Override
 	public void start() {
-		this.remoteRegistry.start();
+		this.repository.start();
 	}
 
 	@Override
 	public void close() {
 		for (ServiceConsumer consumer : localConsumers.values()) {
-			remoteRegistry.unsubscribe(consumer);
+			repository.unsubscribe(consumer);
 		}
 		for (ServiceProvider provider: localProviders.values()) {
-			remoteRegistry.unpublish(provider);
+			repository.unpublish(provider);
 		}
-		this.remoteRegistry.close();
+		this.repository.close();
 	}
 
 	public void onGroupRuleChanged(String serviceName, List<GroupRule> newGroupRules) {
@@ -158,17 +158,17 @@ public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryL
 		for (ServiceConsumer consumer : localConsumers.values()) {
 			String newGroup = newGroupStrategy.getNewGroup(consumer);
 			if(!newGroup.equals(consumer.getGroup())) {
-				remoteRegistry.unsubscribe(consumer);
+				repository.unsubscribe(consumer);
 				consumer.setGroup(newGroup);
-				remoteRegistry.subscribe(consumer);
+				repository.subscribe(consumer);
 			}
 		}
 		for (ServiceProvider provider: localProviders.values()) {
 			String newGroup = newGroupStrategy.getNewGroup(provider);
 			if(!newGroup.equals(provider.getGroup())) {
-				remoteRegistry.unpublish(provider);
+				repository.unpublish(provider);
 				provider.setGroup(newGroup);
-				remoteRegistry.publish(provider);
+				repository.publish(provider);
 			}
 		}
 	}

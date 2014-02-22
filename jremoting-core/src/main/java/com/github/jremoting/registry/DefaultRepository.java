@@ -25,7 +25,7 @@ import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 
-public class DefaultRemoteRegistry implements RemoteRegistry,
+public class DefaultRepository implements Repository,
 		CuratorListener, ConnectionStateListener, UnhandledErrorListener {
 
 
@@ -33,16 +33,16 @@ public class DefaultRemoteRegistry implements RemoteRegistry,
 	protected  final ServicePathCodec pathCodec;
 	private final String zookeeperConnectionString;
 	private  CuratorFramework client; 
-	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRegistry.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultRepository.class);
 	
-	private List<RemoteRegistryListener> remoteRegistryListeners = new CopyOnWriteArrayList<RemoteRegistryListener>();
+	private List<RepositoryListener> remoteRegistryListeners = new CopyOnWriteArrayList<RepositoryListener>();
 
 
 	ConcurrentHashMap<String, ServiceParticipant> initedParticipants = new ConcurrentHashMap<String, ServiceParticipant>();
 	
-	private InMemoryServiceRegistry localServiceRegistry;
+	private DefaultServiceRegistry localServiceRegistry;
 
-	public DefaultRemoteRegistry(String zookeeperConnectionString,ServicePathCodec pathCodec) {
+	public DefaultRepository(String zookeeperConnectionString,ServicePathCodec pathCodec) {
 		this.zookeeperConnectionString = zookeeperConnectionString;
 		this.pathCodec = pathCodec;
 	}
@@ -188,7 +188,7 @@ public class DefaultRemoteRegistry implements RemoteRegistry,
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
 			public void run() {
-				DefaultRemoteRegistry.this.close();
+				DefaultRepository.this.close();
 			}
 		}));
 		
@@ -203,7 +203,7 @@ public class DefaultRemoteRegistry implements RemoteRegistry,
 		lifeCycleSupport.close(new Runnable() {
 			@Override
 			public void run() {
-				DefaultRemoteRegistry.this.client.close();
+				DefaultRepository.this.client.close();
 			}
 		});
 	}
@@ -226,7 +226,7 @@ public class DefaultRemoteRegistry implements RemoteRegistry,
 	}
 
 	@Override
-	public void addListener(RemoteRegistryListener listener) {
+	public void addListener(RepositoryListener listener) {
 		remoteRegistryListeners.add(listener);
 	}
 }

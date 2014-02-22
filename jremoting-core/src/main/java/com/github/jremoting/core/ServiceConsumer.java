@@ -59,8 +59,10 @@ public class ServiceConsumer extends ServiceParticipant {
 	}
 	
 	public void setFirstSubscribeFinished() {
-		init = true;
-		initLatch.countDown();
+		if(!init) {
+			init = true;
+			initLatch.countDown();
+		}
 	}
 
 	public Serializer getSerializer() {

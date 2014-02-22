@@ -6,7 +6,7 @@ import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.group.GroupRule;
 
-public interface RemoteRegistry {
+public interface Repository {
 	void start();
 	void close();
 	void publish(ServiceProvider provider);
@@ -16,5 +16,5 @@ public interface RemoteRegistry {
 	void subscribeConfig(String serviceName);
 	void subscribeRouteRules(String appName, String serviceName);
 	List<GroupRule> getGroupRules(String appName, String serviceName);
-	void addListener(RemoteRegistryListener listener);
+	void addListener(RepositoryListener listener);
 }
