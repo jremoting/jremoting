@@ -17,10 +17,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcServer;
-import com.github.jremoting.core.ServiceParticipantInfo;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.core.ServiceRegistry;
-import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
 import com.github.jremoting.util.LifeCycleSupport;
@@ -55,7 +53,7 @@ public class DefaultRpcServer implements RpcServer {
 		this.protocal = protocal;
 		this.invokeFilterChain = new ServerInvokeFilterChain(invokeFilters);
 		this.registry = protocal.getRegistry();
-		this.serverAddress = NetUtil.getLocalHost() + ":" + port;
+		this.serverAddress = NetUtil.getLocalIp() + ":" + port;
 	}
 
 	@Override
@@ -125,10 +123,10 @@ public class DefaultRpcServer implements RpcServer {
 	@Override
 	public void register(ServiceProvider provider) {
 		this.providers.put(provider.getServiceName(), provider);
+		provider.setAddress(serverAddress);
 		this.start();
 		if(this.registry != null) {
-			this.registry.registerParticipant(new ServiceParticipantInfo(provider.getServiceName(),
-				this.serverAddress, ParticipantType.PROVIDER));
+			this.registry.publish(provider);
 		}
 	}
 }

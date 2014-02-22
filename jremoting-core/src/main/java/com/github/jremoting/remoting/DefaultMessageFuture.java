@@ -14,7 +14,6 @@ import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.concurrent.FutureListener;
-import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class DefaultMessageFuture implements MessageFuture {
 	
@@ -35,8 +34,6 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	public DefaultMessageFuture(Invoke invoke) {
 		this.invoke = invoke;
-		this.invoke.setResultFuture(this);
-		this.addRunnableListener(invoke.getCallback(), invoke.getCallbackExecutor());
 	}
 	
 	public boolean isTimeout() {
@@ -154,28 +151,6 @@ public class DefaultMessageFuture implements MessageFuture {
 
 	public Invoke getInvoke() {
 		return invoke;
-	}
-
-	
-	private void addRunnableListener(final Runnable listener, Executor executor) {
-		if(listener == null) {
-			return;
-		}
-				
-		FutureListener<Object> futureListener = new FutureListener<Object>() {
-			@Override
-			public void operationComplete(ListenableFuture<Object> future) {
-				listener.run();
-			}
-		};
-		
-		if(executor == null) {
-			this.listeners.put(futureListener, invoke.getAsyncInvokeExecutor());
-		}
-		else {
-			this.listeners.put(futureListener, executor);
-		}
-		
 	}
 	
 	@Override

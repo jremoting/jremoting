@@ -9,7 +9,6 @@ import java.util.concurrent.TimeoutException;
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
-import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.concurrent.ListenableFuture;
@@ -65,12 +64,15 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 		@Override
 		public Object invoke(Invoke invoke) {
 			
-			MessageFuture future = messageChannel.send(invoke);
+			messageChannel.send(invoke);
 			
 			try {
-				
-				return future.get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
-				
+				if(invoke.isTwoWay()) {
+					return invoke.getResultFuture().get(invoke.getTimeout(), TimeUnit.MILLISECONDS);
+				}
+				else {
+					return null;
+				}
 			} catch (InterruptedException e) {
 				throw new RemotingException(e);
 			} catch (ExecutionException e) {
@@ -82,7 +84,8 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 		
 		@Override
 		public ListenableFuture<Object> beginInvoke(Invoke invoke) {
-			return messageChannel.send(invoke);
+			messageChannel.send(invoke);
+			return invoke.getResultFuture();
 		}
 	}
 }

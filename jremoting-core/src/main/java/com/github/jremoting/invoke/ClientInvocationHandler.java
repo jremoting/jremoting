@@ -4,116 +4,105 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 
-import com.github.jremoting.core.Invoke;
-import com.github.jremoting.core.RpcClient;
-import com.github.jremoting.core.Serializer;
+import com.github.jremoting.core.ServiceConsumer;
+import com.github.jremoting.util.concurrent.FutureListener;
+import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class ClientInvocationHandler implements InvocationHandler {
 
-	private final RpcClient rpcClient;
-	private final Serializer serializer;
-	private final String serviceName;
-	private final String serviceVersion;
-	private final String remoteAddress;
-	private final long timeout;
+
+	private final ServiceConsumer consumer;
 	
-	
-	public ClientInvocationHandler(RpcClient rpcClient,
-			Serializer serializer,
-			String serviceName, 
-			String serviceVersion,
-			String remoteAddress,
-			long timeout) {
-		
-		this.rpcClient = rpcClient;
-		this.serializer = serializer;
-		this.serviceVersion =serviceVersion;
-		this.serviceName = serviceName;
-		this.remoteAddress = remoteAddress;
-		this.timeout = timeout;
+	public ClientInvocationHandler(ServiceConsumer consumer) {
+		this.consumer = consumer;
 	}
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
 			throws Throwable {
 		
-		Invoke invoke = null;
+		String realMethodName = null;
+		Class<?>[] realParameterTypes = null;
+		Object[] realArgs = null;
+		boolean isAsync = false;
+		Runnable callback = null;
+		Executor methodCallbackExecutor = null;
+		
 		//isAsync
 		if(method.getName().startsWith("$")) {
-			invoke = createAsynInvoke(method, args);
+			isAsync = true;
+			realMethodName = method.getName().replace("$", "");
+
+			if(args.length > 0 && args[args.length - 1] instanceof Runnable) {
+				callback = (Runnable) args[args.length - 1];
+			}
+			if(callback != null && args.length > 1 && args[args.length - 2] instanceof Executor) {
+				methodCallbackExecutor = (Executor)args[args.length - 2];
+			}
+			
+			if(callback == null && methodCallbackExecutor == null) {
+				  realParameterTypes = method.getParameterTypes();
+				  realArgs = args;
+			}
+			else if (callback != null && methodCallbackExecutor != null) {
+				realArgs = new Object[args.length -2];
+				realParameterTypes = new Class<?>[args.length - 2];
+				for (int i = 0; i < realParameterTypes.length; i++) {
+					realArgs[i] = args[i];
+					realParameterTypes[i] = method.getParameterTypes()[i];
+				}
+			}
+			else if(callback != null) {
+				realArgs = new Object[args.length -1];
+				realParameterTypes = new Class<?>[args.length - 1];
+				for (int i = 0; i < realArgs.length; i++) {
+					realArgs[i] = args[i];
+					realParameterTypes[i] = method.getParameterTypes()[i];
+				}
+			}
 		}
 		//sync invoke
 		else {
-			invoke = new Invoke(serviceName, 
-					serviceVersion,
-					method.getName(),
-					serializer,
-					args ,
-					method.getParameterTypes());
+			realParameterTypes = method.getParameterTypes();
+			realArgs = args;
+			realMethodName = method.getName();
 		}
 		
-		if(remoteAddress != null) {
-			invoke.setRemoteAddress(remoteAddress);
+		String[] parameterTypeNames = new String[realParameterTypes.length]; 
+		for (int i = 0; i < parameterTypeNames.length; i++) {
+			parameterTypeNames[i] = realParameterTypes[i].getName();
 		}
-		invoke.setTimeout(this.timeout);
-		
-		
-		return rpcClient.invoke(invoke);
-	}
-	private Invoke createAsynInvoke(Method method, Object[] args) {
-		Invoke invoke = null;
-		Runnable callback = null;
-		Executor methodCallbackExecutor = null;
-		String methodName = method.getName().replace("$", "");
-		
-		if(args.length > 0 && args[args.length - 1] instanceof Runnable) {
-			callback = (Runnable) args[args.length - 1];
-		}
-		if(callback != null && args.length > 1 && args[args.length - 2] instanceof Executor) {
-			methodCallbackExecutor = (Executor)args[args.length - 2];
-		}
-		
-		if(callback == null && methodCallbackExecutor == null) {
-			   invoke = new Invoke(serviceName, 
-						serviceVersion,
-						methodName,
-						serializer,
-						args ,
-						method.getParameterTypes());
-		}
-		else if (callback != null && methodCallbackExecutor != null) {
-			Object[] newArgs = new Object[args.length -2];
-			Class<?>[] newParameterTypes = new Class<?>[args.length - 2];
-			for (int i = 0; i < newArgs.length; i++) {
-				newArgs[i] = args[i];
-				newParameterTypes[i] = method.getParameterTypes()[i];
+	
+		if(isAsync) {
+			@SuppressWarnings("unchecked")
+			ListenableFuture<Object> future =  (ListenableFuture<Object>) this.consumer.$invoke(realMethodName,
+					parameterTypeNames, realArgs);
+			
+			final Runnable finalCallback = callback;
+			if (finalCallback != null) {
+				if (methodCallbackExecutor != null) {
+					future.addListener(new FutureListener<Object>() {
+						@Override
+						public void operationComplete(
+								ListenableFuture<Object> future) {
+							finalCallback.run();
+
+						}
+					}, methodCallbackExecutor);
+				} else {
+					future.addListener(new FutureListener<Object>() {
+						@Override
+						public void operationComplete(
+								ListenableFuture<Object> future) {
+							finalCallback.run();
+
+						}
+					});
+				}
 			}
-			invoke = new Invoke(serviceName, 
-					serviceVersion,
-					methodName,
-					serializer,
-					newArgs ,
-					newParameterTypes);
+			return future;
 		}
-		else if(callback != null) {
-			Object[] newArgs = new Object[args.length -1];
-			Class<?>[] newParameterTypes = new Class<?>[args.length - 1];
-			for (int i = 0; i < newArgs.length; i++) {
-				newArgs[i] = args[i];
-				newParameterTypes[i] = method.getParameterTypes()[i];
-			}
-			invoke = new Invoke(serviceName, 
-					serviceVersion,
-					methodName,
-					serializer,
-					newArgs ,
-					newParameterTypes);
+		else {
+			return this.consumer.invoke(realMethodName, parameterTypeNames, realArgs);
 		}
-		invoke.setAsync(true);
-		invoke.setCallback(callback);
-		invoke.setCallbackExecutor(methodCallbackExecutor);
-		return invoke;
-	}
-	public long getTimeout() {
-		return timeout;
 	}
 }

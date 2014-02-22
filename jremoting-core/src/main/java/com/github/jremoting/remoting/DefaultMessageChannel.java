@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.MessageChannel;
-import com.github.jremoting.core.MessageFuture;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.exception.ConnectionRefusedException;
 import com.github.jremoting.util.NetUtil;
@@ -36,7 +35,7 @@ public class DefaultMessageChannel implements MessageChannel  {
 	
 	
 	@Override
-	public MessageFuture send(Invoke invoke) {
+	public void send(Invoke invoke) {
 		
 		String address = invoke.getRemoteAddress();
 
@@ -46,22 +45,13 @@ public class DefaultMessageChannel implements MessageChannel  {
 			channel = connect(address);
 		}
 		
-		if(invoke.isTwoWay()) {
-			//only bind invoke with one future
-			if(invoke.getResultFuture() == null) {
-				DefaultMessageFuture future = new DefaultMessageFuture(invoke);
-			    channel.writeAndFlush(future);
-			    return future;
-			}
-			else {
-				channel.writeAndFlush(invoke);
-				return invoke.getResultFuture();
-			}
-		}
-		else {
+		// first invoke write future to channel
+		if (invoke.getResultFuture() == null) {
+			channel.writeAndFlush(invoke.getResultFuture());
+		} else {
 			channel.writeAndFlush(invoke);
-			return null;
 		}
+
 		
 	}
 	

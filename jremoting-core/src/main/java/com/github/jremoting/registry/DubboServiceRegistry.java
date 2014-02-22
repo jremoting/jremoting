@@ -8,16 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.jremoting.core.ServiceParticipantInfo;
-import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
+import com.github.jremoting.core.ServiceParticipant;
 import com.github.jremoting.exception.RegistryExcpetion;
 
-public class DubboServiceRegistry extends DefaultServiceRegistry {
+public class DubboServiceRegistry   {
 
-	public DubboServiceRegistry(String zookeeperConnectionString) {
-		super(zookeeperConnectionString);
-		this.pathCodec = new DubboServicePathCodec();
-	}
 	
 	private static class DubboServicePathCodec extends ServicePathCodec {
 
@@ -47,7 +42,7 @@ public class DubboServiceRegistry extends DefaultServiceRegistry {
 		private String dubboUrlFormat = "dubbo://%s/%s?anyhost=true&interface=%s&revision=%s&side=%s&version=%s";
 		
 		@Override
-		public String toServicePath(ServiceParticipantInfo participant) {
+		public String toServicePath(ServiceParticipant participant) {
 			String interfaceName = participant.getServiceName().substring(0,participant.getServiceName().indexOf(":"));
 			String version = participant.getServiceName().substring(participant.getServiceName().indexOf(":")+1, participant.getServiceName().length());
 			
@@ -63,9 +58,9 @@ public class DubboServiceRegistry extends DefaultServiceRegistry {
 		}
 		
 		@Override
-		public Map<String, List<ServiceParticipantInfo>> parseChangedProviderPath(String changedParentPath, List<String> providerFileNames) {
+		public Map<String, List<ServiceParticipant>> parseChangedProviderPath(String changedParentPath, List<String> providerFileNames) {
 			
-			HashMap<String, List<ServiceParticipantInfo>> participants = new HashMap<String, List<ServiceParticipantInfo>>();
+			HashMap<String, List<ServiceParticipant>> participants = new HashMap<String, List<ServiceParticipant>>();
 			
 			for (String fileName : providerFileNames) {
 				String url = decode(fileName);
@@ -88,12 +83,12 @@ public class DubboServiceRegistry extends DefaultServiceRegistry {
 				}
 				if(interfaceName != null && version != null) {
 					String serviceName =interfaceName + ":" + version ;
-					List<ServiceParticipantInfo> providers = participants.get(serviceName);
+					List<ServiceParticipant> providers = participants.get(serviceName);
 					if(providers == null) {
-						providers = new ArrayList<ServiceParticipantInfo>();
+						providers = new ArrayList<ServiceParticipant>();
 						participants.put(serviceName, providers);
 					}
-					providers.add(new ServiceParticipantInfo(serviceName, address, ParticipantType.PROVIDER));
+					providers.add(new ServiceParticipant(serviceName, address, ParticipantType.PROVIDER));
 				}
  			}
 		

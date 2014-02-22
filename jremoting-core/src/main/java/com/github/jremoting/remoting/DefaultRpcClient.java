@@ -10,8 +10,7 @@ import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.core.ServiceParticipantInfo;
-import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
+import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.ServiceRegistry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
 import com.github.jremoting.util.LifeCycleSupport;
@@ -50,23 +49,30 @@ public class DefaultRpcClient implements RpcClient {
 		
 		invoke.setAsyncInvokeExecutor(asyncInvokeExecutor);
 
+		
+		
 		if(invoke.isAsync()) {
-			return this.invokeFilterChain.beginInvoke(invoke);
+			DefaultMessageFuture future = new DefaultMessageFuture(invoke);
+			invoke.setResultFuture(future);
+			this.invokeFilterChain.beginInvoke(invoke);
+			return future;
 		}
 		else {
+			DefaultMessageFuture future = new DefaultMessageFuture(invoke);
+			invoke.setResultFuture(future);
 			return this.invokeFilterChain.invoke(invoke);
 		}
+		
+	
 		
 	}
 
 	@Override
-	public void register(ServiceParticipantInfo consumerInfo) {
-		if(consumerInfo.getType() != ParticipantType.CONSUMER) {
-			throw new IllegalArgumentException("can only register consumer info");
-		}	
+	public void register(ServiceConsumer consumer) {
+	
 		this.start();
 		if(this.registry != null) {
-			this.registry.registerParticipant(consumerInfo);
+			this.registry.subscribe(consumer);
 		}
 		
 	}

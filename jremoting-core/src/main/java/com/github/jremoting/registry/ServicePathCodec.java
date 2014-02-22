@@ -5,9 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.fastjson.JSON;
-import com.github.jremoting.core.ServiceParticipantInfo;
-import com.github.jremoting.core.ServiceParticipantInfo.ParticipantType;
+
+
+
+import com.github.jremoting.core.ServiceParticipant;
+import com.github.jremoting.core.ServiceProvider;
+import com.github.jremoting.util.JsonUtil;
 
 public class ServicePathCodec {
 	
@@ -23,12 +26,12 @@ public class ServicePathCodec {
 		};
 	}
 	
-	public String toServicePath(ServiceParticipantInfo participant) {
-		if(participant.getType() == ParticipantType.PROVIDER) {
-			return "/" + participant.getServiceName() + "/providers/" + JSON.toJSONString(participant);
+	public String toServicePath(ServiceParticipant participant) {
+		if(participant instanceof ServiceProvider) {
+			return "/" + participant.getServiceName() + "/providers/" + JsonUtil.toJson(participant);
 		}
 		else {
-			return "/" + participant.getServiceName() + "/consumers/" + JSON.toJSONString(participant); 
+			return "/" + participant.getServiceName() + "/consumers/" + JsonUtil.toJson(participant); 
 		}
 	}
 	
@@ -37,12 +40,12 @@ public class ServicePathCodec {
 		return providersPath;
 	}
 	
-	public Map<String, List<ServiceParticipantInfo>> parseChangedProviderPath(String changedParentPath, List<String> providerFileNames) {
-		HashMap<String, List<ServiceParticipantInfo>> participants = new HashMap<String, List<ServiceParticipantInfo>>();
+	public Map<String, List<ServiceParticipant>> parseChangedProviderPath(String changedParentPath, List<String> providerFileNames) {
+		HashMap<String, List<ServiceParticipant>> participants = new HashMap<String, List<ServiceParticipant>>();
 		String serviceName = parseServiveName(changedParentPath);
-		List<ServiceParticipantInfo> providers = new ArrayList<ServiceParticipantInfo>();
+		List<ServiceParticipant> providers = new ArrayList<ServiceParticipant>();
 		for (String json : providerFileNames) {
-			providers.add(JSON.parseObject(json, ServiceParticipantInfo.class));
+			providers.add(JsonUtil.fromJson(json, ServiceParticipant.class));
 		}
 		
 		participants.put(serviceName, providers);

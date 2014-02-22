@@ -7,31 +7,30 @@ import java.util.concurrent.Executor;
 
 
 public class Invoke extends Message {
+	//basic field will write to protocal body
 	private final String version;
 	private final String methodName;
 	private final String interfaceName;
 	private  Object[] args;
 	private final Class<?>[] parameterTypes;
-	
 	private final String[] parameterTypeNames;
-	private final String serviceName;
-
 	
+	
+	//run time field used
+	private final String serviceName;
+	private ServiceConsumer consumer;
 	private ServiceRegistry registry;
+	private ServiceProvider provider;
 	
 	
 	//client async invoke field
 	private boolean isAsync = false;
-	private Runnable callback;
-	private Executor callbackExecutor;
-	
 
 	private Executor asyncInvokeExecutor;
 	private MessageFuture resultFuture;
 	private Map<String, Object> asyncContexts;
 	private InvokeFilter invokeChain;
-	private int retry = 0;
-	
+
 	//server async invoke field
 	private Object target;
 	private Method targetMethod;
@@ -51,7 +50,6 @@ public class Invoke extends Message {
 		}
 
 		this.serviceName = this.interfaceName + ":" + this.version;
-
 	}
 	
 	public Invoke(String interfaceName, String version,String methodName ,
@@ -124,28 +122,10 @@ public class Invoke extends Message {
 	public Executor getAsyncInvokeExecutor() {
 		return asyncInvokeExecutor;
 	}
-
-	public Executor getCallbackExecutor() {
-		return callbackExecutor;
-	}
-	public void setCallbackExecutor(Executor callbackExecutor) {
-		this.callbackExecutor = callbackExecutor;
-	}
 	
 	
 	public void setAsyncInvokeExecutor(Executor asyncInvokeExecutor) {
 		this.asyncInvokeExecutor = asyncInvokeExecutor;
-	}
-
-	public Runnable getCallback() {
-		return callback;
-	}
-
-	/*
-	 * callback must instance of Runnable or AsyncCallback
-	 * */
-	public void setCallback(Runnable callback) {
-		this.callback = callback;
 	}
 	
 	public boolean isAsync() {
@@ -156,11 +136,7 @@ public class Invoke extends Message {
 	}
 
 	public int getRetry() {
-		return retry;
-	}
-
-	public void setRetry(int retry) {
-		this.retry = retry;
+		return consumer.getRetry();
 	}
 
 	public MessageFuture getResultFuture() {
@@ -199,6 +175,22 @@ public class Invoke extends Message {
 
 	public void setTargetMethod(Method targetMethod) {
 		this.targetMethod = targetMethod;
+	}
+
+	public ServiceConsumer getConsumer() {
+		return consumer;
+	}
+
+	public void setConsumer(ServiceConsumer consumer) {
+		this.consumer = consumer;
+	}
+
+	public ServiceProvider getProvider() {
+		return provider;
+	}
+
+	public void setProvider(ServiceProvider provider) {
+		this.provider = provider;
 	}
 	
 }

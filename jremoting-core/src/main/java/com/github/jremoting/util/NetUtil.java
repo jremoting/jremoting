@@ -44,7 +44,7 @@ public class NetUtil {
         return new InetSocketAddress(host, port);
     }
     
-    public static String getLocalHost() {
+    public static String getLocalIp() {
         InetAddress address = getLocalAddress();
         return address == null ? LOCALHOST : address.getHostAddress();
     }
