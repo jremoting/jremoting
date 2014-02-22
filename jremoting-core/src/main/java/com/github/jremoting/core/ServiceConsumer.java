@@ -26,8 +26,9 @@ public class ServiceConsumer extends ServiceParticipant {
 		this.rpcClient = rpcClient;
 	}
 	
-	public void start() {
+	public ServiceConsumer start() {
 		this.rpcClient.register(this);
+		return this;
 	}
 	
 	public Object invoke(String methodName, 

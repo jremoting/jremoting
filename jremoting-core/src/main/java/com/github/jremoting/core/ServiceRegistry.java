@@ -2,20 +2,14 @@ package com.github.jremoting.core;
 
 import java.util.List;
 
-
 public interface ServiceRegistry {
 	
 	List<ServiceProvider> getProviders(Invoke invoke);
-	
 	void start();
-	
 	void close();
-	
 	void publish(ServiceProvider provider);
-
 	void subscribe(ServiceConsumer consumer);
-	
-	
+
 	ServiceConfig getConfig(String serviceName, String key);
 	
 	public static class ServiceConfig {

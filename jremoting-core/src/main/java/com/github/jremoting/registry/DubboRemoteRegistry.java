@@ -10,8 +10,8 @@ import java.util.Map;
 
 import com.github.jremoting.core.ServiceParticipant;
 import com.github.jremoting.exception.RegistryExcpetion;
-
-public class DubboServiceRegistry   {
+/*
+public class DubboRemoteRegistry   {
 
 	
 	private static class DubboServicePathCodec extends ServicePathCodec {
@@ -116,4 +116,4 @@ public class DubboServiceRegistry   {
 		}
 	}
 
-}
+}*/

@@ -2,6 +2,7 @@ package com.github.jremoting.registry;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -15,8 +16,6 @@ import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher.Event.EventType;
 
-
-
 import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.ServiceParticipant;
 import com.github.jremoting.core.ServiceProvider;
@@ -26,7 +25,7 @@ import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 
-public class ZookeeperRemoteRegistry implements RemoteRegistry,
+public class DefaultRemoteRegistry implements RemoteRegistry,
 		CuratorListener, ConnectionStateListener, UnhandledErrorListener {
 
 
@@ -34,13 +33,16 @@ public class ZookeeperRemoteRegistry implements RemoteRegistry,
 	protected  final ServicePathCodec pathCodec;
 	private final String zookeeperConnectionString;
 	private  CuratorFramework client; 
-	private final static Logger LOGGER = LoggerFactory.getLogger(ZookeeperRemoteRegistry.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultRemoteRegistry.class);
+	
+	private List<RemoteRegistryListener> remoteRegistryListeners = new CopyOnWriteArrayList<RemoteRegistryListener>();
+
 
 	ConcurrentHashMap<String, ServiceParticipant> initedParticipants = new ConcurrentHashMap<String, ServiceParticipant>();
 	
-	private LocalServiceRegistry localServiceRegistry;
+	private InMemoryServiceRegistry localServiceRegistry;
 
-	public ZookeeperRemoteRegistry(String zookeeperConnectionString,ServicePathCodec pathCodec) {
+	public DefaultRemoteRegistry(String zookeeperConnectionString,ServicePathCodec pathCodec) {
 		this.zookeeperConnectionString = zookeeperConnectionString;
 		this.pathCodec = pathCodec;
 	}
@@ -186,7 +188,7 @@ public class ZookeeperRemoteRegistry implements RemoteRegistry,
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			@Override
 			public void run() {
-				ZookeeperRemoteRegistry.this.close();
+				DefaultRemoteRegistry.this.close();
 			}
 		}));
 		
@@ -201,7 +203,7 @@ public class ZookeeperRemoteRegistry implements RemoteRegistry,
 		lifeCycleSupport.close(new Runnable() {
 			@Override
 			public void run() {
-				ZookeeperRemoteRegistry.this.client.close();
+				DefaultRemoteRegistry.this.client.close();
 			}
 		});
 	}
@@ -220,7 +222,11 @@ public class ZookeeperRemoteRegistry implements RemoteRegistry,
 
 	@Override
 	public void subscribeRouteRules(String appName, String serviceName) {
-		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void addListener(RemoteRegistryListener listener) {
+		remoteRegistryListeners.add(listener);
 	}
 }

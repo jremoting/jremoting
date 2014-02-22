@@ -17,9 +17,9 @@ import com.github.jremoting.route.RouteStrategy;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 
-public class LocalServiceRegistry implements ServiceRegistry,RemoteRegistryListener {
+public class InMemoryServiceRegistry implements ServiceRegistry, RemoteRegistryListener {
 	
-	private final static Logger LOGGER = LoggerFactory.getLogger(LocalServiceRegistry.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(InMemoryServiceRegistry.class);
 	
 	private ConcurrentHashMap<String, ServiceProvider> localProviders = new ConcurrentHashMap<String, ServiceProvider>();
 	private ConcurrentHashMap<String, ServiceConsumer> localConsumers = new ConcurrentHashMap<String, ServiceConsumer>();
@@ -31,12 +31,14 @@ public class LocalServiceRegistry implements ServiceRegistry,RemoteRegistryListe
 	
 	private ConcurrentHashMap<String, Object> serviceLevelWriteLocks = new ConcurrentHashMap<String, Object>();
 	
+	
 	private RemoteRegistry remoteRegistry;
 	
 	private String appName;
 	private String localIp;
 
-	public LocalServiceRegistry(String appName, String localIp, RemoteRegistry remoteRegistry) {
+	public InMemoryServiceRegistry(String appName, String localIp,
+			ServiceRegistry remoteServiceRegistry, RemoteRegistry remoteRegistry) {
 		this.appName = appName;
 		this.localIp = localIp;
 		this.remoteRegistry = remoteRegistry;

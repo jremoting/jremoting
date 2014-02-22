@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.alibaba.fastjson.JSON;
-import com.github.jremoting.core.GenericService;
 import com.github.jremoting.core.RpcClient;
+import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.test.TestService.HelloInput;
 import com.github.jremoting.core.test.TestService.HelloOutput;
 import com.github.jremoting.util.concurrent.FutureListener;
@@ -23,14 +23,14 @@ public class JRemotingClientTest {
 		
 		RpcClient rpcClient = context.getBean(RpcClient.class);
 		
-		GenericService genericService =  new GenericService("com.github.jremoting.core.test.TestService", "1.0", rpcClient).start();
+		ServiceConsumer consumer =  new ServiceConsumer("com.github.jremoting.core.test.TestService", "1.0", rpcClient).start();
 		
 		HashMap<String, Object> genericInput = new HashMap<String, Object>();
 		genericInput.put("id", 1221);
 		genericInput.put("msg", "generic call!");
 		
 		//同步调用泛型调用
-		Object result = genericService.invoke("hello",
+		Object result = consumer.invoke("hello",
 				new String[]{"com.github.jremoting.core.test.TestService$HelloInput", "int"}, 
 				new Object[]{genericInput, 2112});
 	

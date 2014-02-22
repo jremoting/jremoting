@@ -23,7 +23,7 @@ public class JRemotingProtocalTest {
 		
 		final Invoke  invocation = new Invoke(
 				"com.github.jremoting.core.test.TestService",
-				"1.0", 
+				"1.0","default" ,
 				"hello",
 				serializer,
 				new Object[]{"xhan"},
@@ -51,7 +51,7 @@ public class JRemotingProtocalTest {
 		
 		final Invoke  invocation = new Invoke(
 				"com.github.jremoting.core.test.TestService",
-				"1.0", 
+				"1.0", "default" ,
 				"hello", serializer,
 				new Object[]{new HelloInput(),1,"4"},
 				new Class<?>[]{HelloInput.class,Integer.class, String.class}
