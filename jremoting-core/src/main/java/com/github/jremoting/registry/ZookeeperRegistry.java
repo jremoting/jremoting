@@ -2,7 +2,10 @@ package com.github.jremoting.registry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -13,6 +16,7 @@ import org.apache.curator.framework.api.UnhandledErrorListener;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.RetryNTimes;
+import org.apache.curator.utils.EnsurePath;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher.Event.EventType;
 
@@ -37,10 +41,14 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	private final static Logger LOGGER = LoggerFactory.getLogger(ZookeeperRegistry.class);
 	
 	
-	private List<ServiceProvider> publishedProviders = new CopyOnWriteArrayList<ServiceProvider>();
-	private List<ServiceConsumer> subcribedConsumers = new CopyOnWriteArrayList<ServiceConsumer>();
+	protected Set<ServiceProvider> publishedProviders = new CopyOnWriteArraySet<ServiceProvider>();
+	protected Set<ServiceConsumer> subcribedConsumers = new CopyOnWriteArraySet<ServiceConsumer>();
 	
-	private List<String> watchedFiles = new CopyOnWriteArrayList<String>();
+	private Set<String> watchedFiles = new CopyOnWriteArraySet<String>();
+	
+	ConcurrentHashMap<String, EnsurePath> ensurePaths = new ConcurrentHashMap<String, EnsurePath>();
+	
+	
 	
 
 	public ZookeeperRegistry(String zookeeperConnectionString) {
@@ -116,10 +124,13 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 
 	private void republish(ServiceProvider provider) {
 		String dir = pathManager.getProviderDir(provider);
-		String fileName = pathManager.encode(provider);
+		this.ensurePath(dir);
 		
+		String fileName = pathManager.encode(provider);
 		String filePath = dir + "/" + fileName;
+		
 		this.deleteFile(filePath);
+		
 		this.createEphemeralFile(filePath);
 	}
 
@@ -145,6 +156,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 
 	private void resubscribe(ServiceConsumer consumer) {
 		String dir = pathManager.getConsumerDir(consumer);
+		this.ensurePath(dir);
 		String fileName = pathManager.encode(consumer);
 		
 		String filePath = dir + "/" + fileName;
@@ -305,6 +317,21 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		
 		for (String watchedFile : watchedFiles) {
 			getDataAndWatchedInBackgroud(watchedFile);
+		}
+	}
+	
+	
+	private void ensurePath(String path) {
+		EnsurePath ensurePath = ensurePaths.get(path);
+		if(ensurePath == null) {
+			ensurePaths.putIfAbsent(path, new EnsurePath(path));
+			ensurePath = ensurePaths.get(path);
+		}
+		
+		try {
+			ensurePath.ensure(this.client.getZookeeperClient());
+		} catch (Exception e) {
+			throw new RegistryExcpetion("ensure path failed for path:" + path, e);
 		}
 	}
 
