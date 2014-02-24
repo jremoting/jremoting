@@ -14,7 +14,7 @@ public interface Registry {
 	void publish(ServiceProvider provider);
 	void unpublish(ServiceProvider provider);
 	void subscribe(ServiceConsumer consumer);
-	void unsubscribe(ServiceConsumer consumer);
+	void unsubscribe(ServiceConsumer consumer); 
 
 	void addListener(RegistryListener listener);
 }

@@ -16,7 +16,7 @@ public abstract class ServiceParticipant {
 	private String serviceName;
 	private String serviceId;
 	
-	public String getServiceId() {
+	public String getServiceId() { 
 		return serviceId;
 	}
 
