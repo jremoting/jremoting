@@ -4,6 +4,7 @@ package com.github.jremoting.registry;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Registry;
 import com.github.jremoting.core.ServiceProvider;

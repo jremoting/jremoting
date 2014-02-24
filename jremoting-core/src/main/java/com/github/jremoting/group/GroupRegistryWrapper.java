@@ -1,9 +1,9 @@
-package com.github.jremoting.registry;
+package com.github.jremoting.group;
 
+import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Registry;
 import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.ServiceProvider;
-import com.github.jremoting.group.GroupStrategy;
 
 public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	

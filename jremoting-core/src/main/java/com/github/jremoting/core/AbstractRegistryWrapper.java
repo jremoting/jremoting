@@ -1,14 +1,8 @@
-package com.github.jremoting.registry;
+package com.github.jremoting.core;
 
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-
-import com.github.jremoting.core.Invoke;
-import com.github.jremoting.core.Registry;
-import com.github.jremoting.core.RegistryListener;
-import com.github.jremoting.core.ServiceConsumer;
-import com.github.jremoting.core.ServiceProvider;
 
 public abstract class AbstractRegistryWrapper implements Registry , RegistryListener {
 	
