@@ -1,6 +1,7 @@
 package com.github.jremoting.core;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -29,6 +30,10 @@ public abstract class AbstractRegistryWrapper implements Registry , RegistryList
 	@Override
 	public List<ServiceProvider> getProviders(Invoke invoke) {
 		return this.wrappedRegistry.getProviders(invoke);
+	}
+	@Override
+	public Map<String, ServiceProvider> getLocalProviders() {
+		return this.wrappedRegistry.getLocalProviders();
 	}
 
 	@Override

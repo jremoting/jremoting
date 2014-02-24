@@ -2,13 +2,13 @@ package com.github.jremoting.remoting;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
+import com.github.jremoting.core.Registry;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.ServerBusyException;
 import com.github.jremoting.exception.ServerErrorException;
@@ -31,13 +31,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(NettyServerHandler.class);
 	private final ServerInvokeFilterChain invokeFilterChain;
 	private final Executor executor;
-	private final Map<String, ServiceProvider> providers;
+	private final Registry registry;
 	
 	public NettyServerHandler(Executor executor, ServerInvokeFilterChain invokeFilterChain,
-			Map<String, ServiceProvider> providers) {
+			 Registry registry) {
 		this.executor = executor;
 		this.invokeFilterChain = invokeFilterChain;
-		this.providers = providers;
+		this.registry = registry;
 	}
 	
 	@Override
@@ -53,7 +53,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
 		if(msg instanceof Invoke) {
 			final Invoke invoke = (Invoke)msg;
-			ServiceProvider provider = providers.get(invoke.getServiceId());
+			ServiceProvider provider = this.registry.getLocalProviders().get(invoke.getServiceId());
 			
 			if(provider == null) {
 				InvokeResult errorResult = new InvokeResult(new ServiceUnavailableException("no provider found"), invoke.getId(),

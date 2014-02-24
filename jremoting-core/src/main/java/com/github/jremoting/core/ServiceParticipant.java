@@ -4,8 +4,8 @@ public abstract class ServiceParticipant {
 
 	public static final String DEFAULT_GROUP = "default";
 	
-	private String interfaceName;
-	private String version;
+	private final String interfaceName;
+	private final String version;
 	private String group;
 	
 	private String address;
@@ -13,17 +13,9 @@ public abstract class ServiceParticipant {
 	private int retry;
 	private int failover;
 	
-	private String serviceName;
+	private final String serviceName;
 	private String serviceId;
 	
-	public String getServiceId() { 
-		return serviceId;
-	}
-
-
-	public void setServiceId(String serviceId) {
-		this.serviceId = serviceId;
-	}
 
 
 	public ServiceParticipant(String interfaceName, String version, String group) {
@@ -40,15 +32,19 @@ public abstract class ServiceParticipant {
 		this.serviceId = this.serviceName + ":" + this.group;
 	}
 
-	
-	public String getAddress() {
-		return address;
-	}
-	
 	public String getServiceName() {
 		return serviceName;
 	}
 	
+	public String getServiceId() { 
+		return serviceId;
+	}
+	
+	
+	public String getAddress() {
+		return address;
+	}
+
 	public void setAddress(String address) {
 		this.address = address;
 	}
@@ -59,6 +55,7 @@ public abstract class ServiceParticipant {
 
 	public void setGroup(String group) {
 		this.group = group;
+		this.serviceId = this.serviceName + ":" + this.group;
 	}
 
 	public long getTimeout() {
@@ -89,16 +86,8 @@ public abstract class ServiceParticipant {
 		return interfaceName;
 	}
 
-	public void setInterfaceName(String interfaceName) {
-		this.interfaceName = interfaceName;
-	}
-
 	public String getVersion() {
 		return version;
-	}
-
-	public void setVersion(String version) {
-		this.version = version;
 	}
 	
 	@Override

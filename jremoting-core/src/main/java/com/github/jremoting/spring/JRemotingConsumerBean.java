@@ -12,35 +12,35 @@ import com.github.jremoting.util.ReflectionUtil;
 
 
 @SuppressWarnings("rawtypes")
-public class JRemotingConsumerBean  implements FactoryBean {
+public class JRemotingConsumerBean extends ServiceConsumer  implements FactoryBean {
 	
-	private ServiceConsumer consumer;
-	private String asyncInterfaceName;
 	
 	public JRemotingConsumerBean(String interfaceName, String version,
 			RpcClient rpcClient) {
-		this.consumer = new ServiceConsumer(interfaceName, version, rpcClient);
+		super(interfaceName, version, rpcClient);
 	}
+
+	private String asyncInterfaceName;
 
 	@Override
 	public Object getObject() throws Exception {
 		if(this.asyncInterfaceName == null) {
 			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
-					ReflectionUtil.findClass(this.consumer.getInterfaceName())}, 
-					new ClientInvocationHandler(this.consumer));
+					ReflectionUtil.findClass(this.getInterfaceName())}, 
+					new ClientInvocationHandler(this));
 		}
 		else {
 			return Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class<?>[]{
-				ReflectionUtil.findClass(this.consumer.getInterfaceName()), 
+				ReflectionUtil.findClass(this.getInterfaceName()), 
 				ReflectionUtil.findClass(asyncInterfaceName)}, 
-				new ClientInvocationHandler(this.consumer));
+				new ClientInvocationHandler(this));
 		}
 	}
 	
 	@Override
 	public Class<?> getObjectType() {
 		try {
-			return this.getClass().getClassLoader().loadClass(this.consumer.getInterfaceName());
+			return this.getClass().getClassLoader().loadClass(this.getInterfaceName());
 		} catch (ClassNotFoundException e) {
 			throw new RemotingException(e);
 		}
@@ -52,9 +52,5 @@ public class JRemotingConsumerBean  implements FactoryBean {
 
 	public void setAsyncInterfaceName(String asyncInterfaceName) {
 		this.asyncInterfaceName = asyncInterfaceName;
-	}
-	
-	public void setRemoteAddress(String remoteAddress) {
-		this.consumer.setRemoteAddress(remoteAddress);
 	}
 }

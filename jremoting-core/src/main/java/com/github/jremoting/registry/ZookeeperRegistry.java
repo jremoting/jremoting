@@ -2,6 +2,7 @@ package com.github.jremoting.registry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -41,6 +42,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	private final static Logger LOGGER = LoggerFactory.getLogger(ZookeeperRegistry.class);
 	
 	
+	private Map<String, ServiceProvider> localProviders = new ConcurrentHashMap<String, ServiceProvider>();
 	protected Set<ServiceProvider> publishedProviders = new CopyOnWriteArraySet<ServiceProvider>();
 	protected Set<ServiceConsumer> subcribedConsumers = new CopyOnWriteArraySet<ServiceConsumer>();
 	
@@ -123,6 +125,9 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	}
 
 	private void republish(ServiceProvider provider) {
+
+		localProviders.put(provider.getServiceId(), provider);
+		
 		String dir = pathManager.getProviderDir(provider);
 		this.ensurePath(dir);
 		
@@ -132,6 +137,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		this.deleteFile(filePath);
 		
 		this.createEphemeralFile(filePath);
+		
 	}
 
 	@Override
@@ -322,6 +328,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	
 	
 	private void ensurePath(String path) {
+		path = "/" + pathManager.getNamespace() + path;
 		EnsurePath ensurePath = ensurePaths.get(path);
 		if(ensurePath == null) {
 			ensurePaths.putIfAbsent(path, new EnsurePath(path));
@@ -388,5 +395,10 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		} catch (Exception e) {
 			throw new RegistryExcpetion("get data failed for path:" + filePath, e);
 		}
+	}
+
+	@Override
+	public Map<String, ServiceProvider> getLocalProviders() {
+		return localProviders;
 	}
 }

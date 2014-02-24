@@ -3,15 +3,11 @@ package com.github.jremoting.spring;
 import com.github.jremoting.core.RpcServer;
 import com.github.jremoting.core.ServiceProvider;
 
-public class JRemotingProviderBean   {
+public class JRemotingProviderBean extends ServiceProvider   {
 
-	private ServiceProvider provider;
-	
-	public JRemotingProviderBean(String interfaceName,String version, Object target, RpcServer rpcServer ) {
-		this.provider = new ServiceProvider(interfaceName, version, rpcServer, target);
+	public JRemotingProviderBean(String interfaceName, String version,
+			RpcServer rpcServer, Object target) {
+		super(interfaceName, version, rpcServer, target);
 	}
-	
-	public void start() {
-		this.provider.start();
-	}
+
 }

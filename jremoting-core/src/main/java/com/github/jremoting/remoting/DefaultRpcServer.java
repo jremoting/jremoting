@@ -1,8 +1,6 @@
 package com.github.jremoting.remoting;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -40,7 +38,6 @@ public class DefaultRpcServer implements RpcServer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
-	private final Map<String, ServiceProvider> providers = new ConcurrentHashMap<String, ServiceProvider>();
 
 	public DefaultRpcServer(EventExecutor eventExecutor,
 			ExecutorService serviceExecutor,
@@ -77,7 +74,7 @@ public class DefaultRpcServer implements RpcServer {
 					public void initChannel(SocketChannel ch) throws Exception {
 						ch.pipeline().addLast(
 								new NettyMessageCodec(protocal),
-								new NettyServerHandler(serviceExecutor,invokeFilterChain, providers));
+								new NettyServerHandler(serviceExecutor,invokeFilterChain, registry));
 					}
 				});
 		
@@ -122,10 +119,10 @@ public class DefaultRpcServer implements RpcServer {
 
 	@Override
 	public void register(ServiceProvider provider) {
-		this.providers.put(provider.getServiceId(), provider);
 		provider.setAddress(serverAddress);
 		this.start();
 		if(this.registry != null) {
+			this.registry.start();
 			this.registry.publish(provider);
 		}
 	}

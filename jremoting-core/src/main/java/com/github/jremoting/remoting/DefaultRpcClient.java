@@ -14,6 +14,7 @@ import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.Registry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
 import com.github.jremoting.util.LifeCycleSupport;
+import com.github.jremoting.util.NetUtil;
 import com.github.jremoting.util.concurrent.EventExecutor;
 
 public class DefaultRpcClient implements RpcClient {
@@ -25,6 +26,7 @@ public class DefaultRpcClient implements RpcClient {
 	private final ExecutorService asyncInvokeExecutor;
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	private final static AtomicLong NEXT_MSG_ID = new AtomicLong(0);
+	private final String localIp = NetUtil.getLocalIp();
 	
 	public DefaultRpcClient(Protocal protocal, Serializer defaultSerializer,ExecutorService asyncInvokeExecutor  ,EventExecutor eventExecutor, 
 			List<InvokeFilter> invokeFilters) {
@@ -66,6 +68,7 @@ public class DefaultRpcClient implements RpcClient {
 	
 		this.start();
 		if(this.registry != null) {
+			consumer.setAddress(localIp);
 			this.registry.subscribe(consumer);
 		}
 		
