@@ -1,5 +1,6 @@
 package com.github.jremoting.registry;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -256,7 +257,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		
 		if(event.getPath().startsWith(pathManager.getGlobalConfigDir())) {
 			String fileName = pathManager.getGlobalConfigDir().replace(pathManager.getGlobalConfigDir(), "");
-			String newContent = this.getDataAndWatched(event.getPath());
+			String newContent = bytesToString(event.getData());
 			for(RegistryListener listener : listeners) {
 				listener.onGlobalConfigChanged(fileName, newContent);
 			}
@@ -265,7 +266,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 			String[] paths = event.getPath().split("/");
 			String appName = paths[1];
 			String fileName = paths[2];
-			String newContent = this.getDataAndWatched(event.getPath());
+			String newContent = bytesToString(event.getData());
 			for(RegistryListener listener : listeners) {
 				listener.onAppConfigChanged(appName, fileName, newContent);
 			}
@@ -274,7 +275,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 			String[] paths = event.getPath().split("/");
 			String serviceName = paths[1];
 			String fileName = paths[2];
-			String newContent = this.getDataAndWatched(event.getPath());
+			String newContent = bytesToString(event.getData());
 			for(RegistryListener listener : listeners) {
 				listener.onServiceConfigChanged(serviceName, fileName, newContent);
 			}
@@ -282,6 +283,14 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	}
 	
 	private ConnectionState currentState;
+	
+	private String bytesToString(byte[] data) {
+		try {
+			return new String(data,"utf-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RegistryExcpetion("should not happen" , e);
+		}
+	}
 
 	@Override
 	public void stateChanged(CuratorFramework client, ConnectionState newState) {
@@ -383,7 +392,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	private String getDataAndWatched(String filePath) {
 		 try {
 			byte[] data =  this.client.getData().watched().forPath(filePath);
-			return new String(data, "utf-8");
+			return bytesToString(data);
 		} catch (Exception e) {
 			throw new RegistryExcpetion("get data failed for path:" + filePath, e);
 		}
