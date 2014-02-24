@@ -8,7 +8,7 @@ import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.Serializer;
-import com.github.jremoting.core.ServiceRegistry;
+import com.github.jremoting.core.Registry;
 import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.exception.ServerBusyException;
@@ -43,13 +43,13 @@ public class JRemotingProtocal implements Protocal {
 	
     
     private static final String NULL = "NULL";
-    private final ServiceRegistry registry;
+    private final Registry registry;
 	private static final Class<?>[] EMPTY_TYPE_ARRAY = new Class<?>[0];
     public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
 	private final Serializer[] serializers;
 	
-	public JRemotingProtocal(Serializer[] serializers, ServiceRegistry registry) {
+	public JRemotingProtocal(Serializer[] serializers, Registry registry) {
 		this.serializers = SerializerUtil.reindex(serializers);
 		this.registry = registry;
 	}
@@ -251,7 +251,7 @@ public class JRemotingProtocal implements Protocal {
 	}
 
 	@Override
-	public ServiceRegistry getRegistry() {
+	public Registry getRegistry() {
 		return registry;
 	}
 	

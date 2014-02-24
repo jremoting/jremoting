@@ -29,7 +29,7 @@ public abstract class ServiceParticipant {
 		return address;
 	}
 	public String getServiceName() {
-		return this.interfaceName + ":" + this.version + ":" + this.group;
+		return this.interfaceName + ":" + this.version;
 	}
 	
 	public void setAddress(String address) {

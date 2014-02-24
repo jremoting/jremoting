@@ -6,5 +6,5 @@ import com.github.jremoting.io.ByteBuffer;
 public interface Protocal {
 	void encode(Message msg, ByteBuffer buffer) throws ProtocalException;
 	Message decode(ByteBuffer buffer) throws ProtocalException;
-	ServiceRegistry getRegistry();
+	Registry getRegistry();
 }

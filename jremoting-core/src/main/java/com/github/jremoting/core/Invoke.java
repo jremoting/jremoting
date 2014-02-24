@@ -23,7 +23,7 @@ public class Invoke extends Message {
 	//run time field used
 	private final String serviceName;
 	private ServiceConsumer consumer;
-	private ServiceRegistry registry;
+	private Registry registry;
 	private ServiceProvider provider;
 	private int invokeCount;
 	
@@ -54,7 +54,7 @@ public class Invoke extends Message {
 		for (int i = 0; i < this.parameterTypeNames.length; i++) {
 			this.parameterTypeNames[i] = this.parameterTypes[i].getName();
 		}
-		this.serviceName = this.interfaceName + ":" + this.version + ":" + this.group;
+		this.serviceName = this.interfaceName + ":" + this.version;
 
 
 	}
@@ -69,7 +69,7 @@ public class Invoke extends Message {
 		this.parameterTypeNames = parameterTypeNames;
 		this.parameterTypes = null;
 		this.group = group;
-		this.serviceName = this.interfaceName + ":" + this.version + ":" + this.group;
+		this.serviceName = this.interfaceName + ":" + this.version;
 	}
 	
 	
@@ -117,12 +117,12 @@ public class Invoke extends Message {
 	}
 
 
-	public ServiceRegistry getRegistry() {
+	public Registry getRegistry() {
 		return registry;
 	}
 
 
-	public void setRegistry(ServiceRegistry registry) {
+	public void setRegistry(Registry registry) {
 		this.registry = registry;
 	}
 
