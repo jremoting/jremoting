@@ -8,7 +8,7 @@ import com.github.jremoting.core.ServiceProvider;
 public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	
 	String appName;
-	String groupRuleKey = "group.rule";
+	String fileName = "group.rule";
 	String localIp = "";
 	
 
@@ -19,8 +19,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 
 	@Override
 	public void publish(ServiceProvider provider) {
-		String appConfig =  super.getAppConfig(appName, groupRuleKey); 
-		String serviceConfig = super.getServiceConfig(provider.getServiceName(), groupRuleKey);
+		String appConfig =  super.getAppConfig(appName, fileName); 
+		String serviceConfig = super.getServiceConfig(provider.getServiceName(), fileName);
 		
 		
 		GroupStrategy strategy = new GroupStrategy(appConfig, serviceConfig, localIp);
@@ -37,8 +37,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 
 	@Override
 	public void subscribe(ServiceConsumer consumer) {
-		String appConfig = super.getAppConfig(appName, groupRuleKey); 
-		String serviceConfig = super.getServiceConfig(consumer.getServiceName(), groupRuleKey);
+		String appConfig = super.getAppConfig(appName, fileName); 
+		String serviceConfig = super.getServiceConfig(consumer.getServiceName(), fileName);
 	
 		
 		GroupStrategy strategy = new GroupStrategy(appConfig, serviceConfig, localIp);
@@ -56,8 +56,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	@Override
 	public void onRecover() {
 		for (ServiceProvider provider : publishedProviders) {
-			String appGroupConfig =  super.getAppConfig(appName, groupRuleKey);
-			String serviceGroupConfig = super.getServiceConfig(provider.getServiceName(), groupRuleKey);
+			String appGroupConfig =  super.getAppConfig(appName, fileName);
+			String serviceGroupConfig = super.getServiceConfig(provider.getServiceName(), fileName);
 			
 			GroupStrategy strategy = new GroupStrategy(appGroupConfig, serviceGroupConfig, localIp);
 			String newGroup = strategy.getNewGroup(provider);
@@ -67,8 +67,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 		}
 		
 		for (ServiceConsumer consumer : subcribedConsumers) {
-			String appGroupConfig = super.getAppConfig(appName, groupRuleKey);
-			String serviceGroupConfig = super.getServiceConfig(consumer.getServiceName(), groupRuleKey);
+			String appGroupConfig = super.getAppConfig(appName, fileName);
+			String serviceGroupConfig = super.getServiceConfig(consumer.getServiceName(), fileName);
 			
 			GroupStrategy strategy = new GroupStrategy(appGroupConfig, serviceGroupConfig, localIp);
 			String newGroup = strategy.getNewGroup(consumer);
@@ -79,8 +79,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onAppConfigChanged(String appName, String key, String newValue) {
-		if(!groupRuleKey.equals(key)) {
+	public void onAppConfigChanged(String appName, String fileName, String newContent) {
+		if(!fileName.equals(fileName)) {
 			return;
 		}
 	
@@ -89,8 +89,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onServiceConfigChanged(String serviceName, String key, String newValue) {
-		if(!groupRuleKey.equals(key)) {
+	public void onServiceConfigChanged(String serviceName, String fileName, String newContent) {
+		if(!fileName.equals(fileName)) {
 			return;
 		}
 
@@ -100,8 +100,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	
 	private void republishIfGroupChanged() {
 		for (ServiceProvider provider : publishedProviders) {
-			String appGroupConfig = super.getAppConfig(appName, groupRuleKey);
-			String serviceGroupConfig = super.getServiceConfig(provider.getServiceName(), groupRuleKey);
+			String appGroupConfig = super.getAppConfig(appName, fileName);
+			String serviceGroupConfig = super.getServiceConfig(provider.getServiceName(), fileName);
 			
 			GroupStrategy strategy = new GroupStrategy(appGroupConfig, serviceGroupConfig, localIp);
 			String newGroup = strategy.getNewGroup(provider);
@@ -115,8 +115,8 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	
 	private void resubscribeIfGroupChanged(){
 		for (ServiceConsumer consumer : subcribedConsumers) {
-			String appGroupConfig = super.getAppConfig(appName, groupRuleKey);
-			String serviceGroupConfig = super.getServiceConfig(consumer.getServiceName(), groupRuleKey);
+			String appGroupConfig = super.getAppConfig(appName, fileName);
+			String serviceGroupConfig = super.getServiceConfig(consumer.getServiceName(), fileName);
 			
 			GroupStrategy strategy = new GroupStrategy(appGroupConfig, serviceGroupConfig, localIp);
 			String newGroup = strategy.getNewGroup(consumer);

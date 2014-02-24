@@ -11,9 +11,9 @@ public interface Registry {
 	
 	Map<String, ServiceProvider> getLocalProviders();
 	
-	String getGlobalConfig(String key);
-	String getAppConfig(String appName, String key);
-	String getServiceConfig(String serviceName, String key);
+	String getGlobalConfig(String fileName);
+	String getAppConfig(String appName, String fileName);
+	String getServiceConfig(String serviceName, String fileName);
 	
 	void publish(ServiceProvider provider);
 	void unpublish(ServiceProvider provider);

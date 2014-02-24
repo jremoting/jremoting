@@ -38,7 +38,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
 	private final String zookeeperConnectionString;
 	private final List<RegistryListener> listeners = new CopyOnWriteArrayList<RegistryListener>();
-	protected ZookeepRegistryPathManager pathManager;
+	protected RegistryPathManager pathManager;
 	private final static Logger LOGGER = LoggerFactory.getLogger(ZookeeperRegistry.class);
 	
 	
@@ -55,7 +55,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 
 	public ZookeeperRegistry(String zookeeperConnectionString) {
 		this.zookeeperConnectionString = zookeeperConnectionString;
-		pathManager = new ZookeepRegistryPathManager();
+		pathManager = new RegistryPathManager();
 	}
 
 	@Override
@@ -181,17 +181,17 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	}
 
 	@Override
-	public String getAppConfig(String appName, String key) {
+	public String getAppConfig(String appName, String fileName) {
 		String appDir = pathManager.getAppConfigDir() + appName;
-		String configFile = appDir + "/" + key;
+		String configFile = appDir + "/" + fileName;
 		watchedFiles.add(configFile);
 		return this.getDataAndWatched(configFile);
 	}
 
 	@Override
-	public String getServiceConfig(String serviceName, String key) {
+	public String getServiceConfig(String serviceName, String fileName) {
 		String serviceDir = pathManager.getServiceConfigDir() + serviceName;
-		String configFile = serviceDir + "/" + key;
+		String configFile = serviceDir + "/" + fileName;
 		watchedFiles.add(configFile);
 		return this.getDataAndWatched(configFile);
 	}
@@ -202,9 +202,9 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	}
 
 	@Override
-	public String getGlobalConfig(String key) {
+	public String getGlobalConfig(String fileName) {
 		String glocalDir = pathManager.getGlobalConfigDir();
-		String configFile = glocalDir + "/" + key;
+		String configFile = glocalDir + "/" + fileName;
 		watchedFiles.add(configFile);
 		return this.getDataAndWatched(configFile);
 	}
@@ -255,28 +255,28 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	private void handleDataChangedEvent(CuratorEvent event) {
 		
 		if(event.getPath().startsWith(pathManager.getGlobalConfigDir())) {
-			String key = pathManager.getGlobalConfigDir().replace(pathManager.getGlobalConfigDir(), "");
-			String newValue = this.getDataAndWatched(event.getPath());
+			String fileName = pathManager.getGlobalConfigDir().replace(pathManager.getGlobalConfigDir(), "");
+			String newContent = this.getDataAndWatched(event.getPath());
 			for(RegistryListener listener : listeners) {
-				listener.onGlobalConfigChanged(key, newValue);
+				listener.onGlobalConfigChanged(fileName, newContent);
 			}
 		}
 		if(event.getPath().startsWith(pathManager.getAppConfigDir())) {
 			String[] paths = event.getPath().split("/");
 			String appName = paths[1];
-			String key = paths[2];
-			String newValue = this.getDataAndWatched(event.getPath());
+			String fileName = paths[2];
+			String newContent = this.getDataAndWatched(event.getPath());
 			for(RegistryListener listener : listeners) {
-				listener.onAppConfigChanged(appName, key, newValue);
+				listener.onAppConfigChanged(appName, fileName, newContent);
 			}
 		}
 		if(event.getPath().startsWith(pathManager.getServiceConfigDir())) {
 			String[] paths = event.getPath().split("/");
 			String serviceName = paths[1];
-			String key = paths[2];
-			String newValue = this.getDataAndWatched(event.getPath());
+			String fileName = paths[2];
+			String newContent = this.getDataAndWatched(event.getPath());
 			for(RegistryListener listener : listeners) {
-				listener.onServiceConfigChanged(serviceName, key, newValue);
+				listener.onServiceConfigChanged(serviceName, fileName, newContent);
 			}
 		}
 	}

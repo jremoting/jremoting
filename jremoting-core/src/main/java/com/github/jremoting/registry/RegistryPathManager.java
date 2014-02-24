@@ -11,7 +11,7 @@ import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.RegistryExcpetion;
 import com.github.jremoting.util.URL;
 
-public class ZookeepRegistryPathManager {
+public class RegistryPathManager {
 	
 	public String getNamespace() {
 		return "jremoting";
