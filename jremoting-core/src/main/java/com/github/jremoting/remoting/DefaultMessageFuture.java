@@ -119,8 +119,10 @@ public class DefaultMessageFuture implements MessageFuture {
 					LOGGER.error("error happens when run client filter's endInvoke chain , msg->" + th.getMessage(), th);
 				}
 
-				if(isDone()) {
-					notifyListeners();
+				synchronized (DefaultMessageFuture.this) {
+					if (isDone()) {
+						notifyListeners();
+					}
 				}
 			}
 
@@ -162,19 +164,19 @@ public class DefaultMessageFuture implements MessageFuture {
 			throw new NullPointerException("executor can not be null.");
 		}
 		
-		if(isDone()) {
-			executor.execute(new Runnable() {
-				
-				@Override
-				public void run() {
-					listener.operationComplete(DefaultMessageFuture.this);
-				}
-			});
+		synchronized (this) {
+			if (isDone()) {
+				executor.execute(new Runnable() {
+
+					@Override
+					public void run() {
+						listener.operationComplete(DefaultMessageFuture.this);
+					}
+				});
+			} else {
+				this.listeners.put(listener, executor);
+			}
 		}
-		else {
-			this.listeners.put(listener, executor);
-		}
-		
 	}
 
 	@Override
@@ -184,16 +186,17 @@ public class DefaultMessageFuture implements MessageFuture {
 			throw new NullPointerException("listener can not be null.");
 		}
 		
-		if(isDone()) {
-			invoke.getAsyncInvokeExecutor().execute(new Runnable() {
-				@Override
-				public void run() {
-					listener.operationComplete(DefaultMessageFuture.this);
-				}
-			});
-		}
-		else {
-			this.listeners.put(listener, invoke.getAsyncInvokeExecutor());
+		synchronized (this) {
+			if (isDone()) {
+				invoke.getAsyncInvokeExecutor().execute(new Runnable() {
+					@Override
+					public void run() {
+						listener.operationComplete(DefaultMessageFuture.this);
+					}
+				});
+			} else {
+				this.listeners.put(listener, invoke.getAsyncInvokeExecutor());
+			}
 		}
 	
 	}
