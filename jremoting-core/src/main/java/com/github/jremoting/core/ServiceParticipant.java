@@ -13,6 +13,19 @@ public abstract class ServiceParticipant {
 	private int retry;
 	private int failover;
 	
+	private String serviceName;
+	private String serviceId;
+	
+	public String getServiceId() {
+		return serviceId;
+	}
+
+
+	public void setServiceId(String serviceId) {
+		this.serviceId = serviceId;
+	}
+
+
 	public ServiceParticipant(String interfaceName, String version, String group) {
 		this.interfaceName = interfaceName;
 		this.version = version;
@@ -22,14 +35,18 @@ public abstract class ServiceParticipant {
 		else {
 			this.group = group;
 		}
+		
+		this.serviceName = this.interfaceName + ":" + this.version;
+		this.serviceId = this.serviceName + ":" + this.group;
 	}
 
 	
 	public String getAddress() {
 		return address;
 	}
+	
 	public String getServiceName() {
-		return this.interfaceName + ":" + this.version + ":" + this.group;
+		return serviceName;
 	}
 	
 	public void setAddress(String address) {
@@ -82,6 +99,20 @@ public abstract class ServiceParticipant {
 
 	public void setVersion(String version) {
 		this.version = version;
+	}
+	
+	@Override
+	public boolean equals(Object obj)  {
+		if(obj == null || !(obj instanceof ServiceParticipant)) {
+			return false;
+		}
+		ServiceParticipant that = (ServiceParticipant)obj;
+		
+		return this.serviceId.equals(that.serviceId);
+	}
+	@Override
+	public  int hashCode() {
+		return this.serviceId.hashCode();
 	}
 
 }

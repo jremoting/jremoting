@@ -1,0 +1,34 @@
+Thread Name :[Signal Dispatcher], ID[4]
+
+Thread Name :[main], ID[1]
+	java.io.FileInputStream.readBytes(Native Method)
+	java.io.FileInputStream.read(FileInputStream.java:220)
+	java.io.BufferedInputStream.fill(BufferedInputStream.java:218)
+	java.io.BufferedInputStream.read(BufferedInputStream.java:237)
+	com.github.jremoting.util.JvmUtil.main(JvmUtil.java:43)
+
+Thread Name :[JRemoting-JVM-Dumper-1-thread-1], ID[10]
+	java.lang.Thread.dumpThreads(Native Method)
+	java.lang.Thread.getAllStackTraces(Thread.java:1530)
+	com.github.jremoting.util.JvmUtil.jstack(JvmUtil.java:156)
+	com.github.jremoting.util.JvmUtil$2.run(JvmUtil.java:111)
+	java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.java:886)
+	java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:908)
+	java.lang.Thread.run(Thread.java:662)
+
+Thread Name :[Attach Listener], ID[5]
+
+Thread Name :[Finalizer], ID[3]
+	java.lang.Object.wait(Native Method)
+	java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:118)
+	java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:134)
+	java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:159)
+
+Thread Name :[Reference Handler], ID[2]
+	java.lang.Object.wait(Native Method)
+	java.lang.Object.wait(Object.java:485)
+	java.lang.ref.Reference$ReferenceHandler.run(Reference.java:116)
+
+**********************************Memory Used**********************************
+Heap Memory Used: init = 129263744(126234K) used = 3901104(3809K) committed = 123928576(121024K) max = 1839923200(1796800K)
+NonHeap Memory Used: init = 24313856(23744K) used = 5828216(5691K) committed = 24313856(23744K) max = 136314880(133120K)

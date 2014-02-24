@@ -18,7 +18,7 @@ import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcServer;
 import com.github.jremoting.core.ServiceProvider;
-import com.github.jremoting.core.ServiceRegistry;
+import com.github.jremoting.core.Registry;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
 import com.github.jremoting.util.LifeCycleSupport;
@@ -34,7 +34,7 @@ public class DefaultRpcServer implements RpcServer {
 	private final Protocal protocal;
 	private final ExecutorService serviceExecutor;
 	private final ServerInvokeFilterChain invokeFilterChain;
-	private final ServiceRegistry registry;
+	private final Registry registry;
 	private final String serverAddress;
 	private volatile Channel serverChannel;
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
@@ -122,7 +122,7 @@ public class DefaultRpcServer implements RpcServer {
 
 	@Override
 	public void register(ServiceProvider provider) {
-		this.providers.put(provider.getServiceName(), provider);
+		this.providers.put(provider.getServiceId(), provider);
 		provider.setAddress(serverAddress);
 		this.start();
 		if(this.registry != null) {

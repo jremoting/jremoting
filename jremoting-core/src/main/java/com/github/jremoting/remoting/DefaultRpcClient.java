@@ -11,7 +11,7 @@ import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.ServiceConsumer;
-import com.github.jremoting.core.ServiceRegistry;
+import com.github.jremoting.core.Registry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
 import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.concurrent.EventExecutor;
@@ -20,7 +20,7 @@ public class DefaultRpcClient implements RpcClient {
 	
 	private final Serializer defaultSerializer;
 	private final ClientInvokeFilterChain invokeFilterChain;
-	private final ServiceRegistry registry;
+	private final Registry registry;
 	private final MessageChannel messageChannel;
 	private final ExecutorService asyncInvokeExecutor;
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
@@ -49,17 +49,14 @@ public class DefaultRpcClient implements RpcClient {
 		
 		invoke.setAsyncInvokeExecutor(asyncInvokeExecutor);
 
-		
+		DefaultMessageFuture future = new DefaultMessageFuture(invoke);
+		invoke.setResultFuture(future);
 		
 		if(invoke.isAsync()) {
-			DefaultMessageFuture future = new DefaultMessageFuture(invoke);
-			invoke.setResultFuture(future);
 			this.invokeFilterChain.beginInvoke(invoke);
 			return future;
 		}
 		else {
-			DefaultMessageFuture future = new DefaultMessageFuture(invoke);
-			invoke.setResultFuture(future);
 			return this.invokeFilterChain.invoke(invoke);
 		}
 	}

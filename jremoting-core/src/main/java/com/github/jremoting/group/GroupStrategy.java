@@ -5,10 +5,10 @@ import java.util.List;
 import com.github.jremoting.core.ServiceParticipant;
 
 public class GroupStrategy {
-	private final List<GroupRule> groupRules;
-	private final String localIp;
-	public GroupStrategy(List<GroupRule> groupRules, String localIp) {
-		this.groupRules = groupRules;
+	private  List<GroupRule> groupRules;
+	private  String localIp;
+	
+	public GroupStrategy(String appConfig, String serviceConfig, String localIp) {
 		this.localIp = localIp;
 	}
 	

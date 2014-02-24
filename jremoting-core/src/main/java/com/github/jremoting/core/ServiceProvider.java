@@ -5,6 +5,9 @@ import java.util.concurrent.ExecutorService;
 public class  ServiceProvider extends ServiceParticipant   {
 
 	
+	public ServiceProvider(String interfaceName, String version, String group) {
+		super(interfaceName, version, group);
+	}
 	public ServiceProvider(String interfaceName, String version,RpcServer rpcServer, Object target) {
 		super(interfaceName, version, null);
 		this.rpcServer = rpcServer;
@@ -14,13 +17,12 @@ public class  ServiceProvider extends ServiceParticipant   {
 		super(interfaceName, version, group);
 		this.rpcServer = rpcServer;
 		this.target = target;
-		
 	}
 	
-	private final Object target;
+	private Object target;
 	private boolean supportAsync= false;
 	private ExecutorService executor;
-	private final RpcServer rpcServer;
+	private RpcServer rpcServer;
 	
 	public void start() {
 		this.rpcServer.register(this);

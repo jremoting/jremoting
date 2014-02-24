@@ -9,7 +9,7 @@ import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Message;
 import com.github.jremoting.core.Protocal;
 import com.github.jremoting.core.ServiceParticipant;
-import com.github.jremoting.core.ServiceRegistry;
+import com.github.jremoting.core.Registry;
 import com.github.jremoting.exception.ProtocalException;
 import com.github.jremoting.exception.SerializeException;
 import com.github.jremoting.exception.ServerErrorException;
@@ -50,8 +50,8 @@ public class DubboProtocal implements Protocal {
 
     public static final byte SERVER_ERROR      = 80;
         
-    private final ServiceRegistry registry;
-    public DubboProtocal(ServiceRegistry registry) {
+    private final Registry registry;
+    public DubboProtocal(Registry registry) {
     	this.registry = registry;
     }
 
@@ -254,7 +254,7 @@ public class DubboProtocal implements Protocal {
 	}
 
 	@Override
-	public ServiceRegistry getRegistry() {
+	public Registry getRegistry() {
 		return registry;
 	}
 

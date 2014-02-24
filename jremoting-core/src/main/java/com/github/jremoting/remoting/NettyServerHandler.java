@@ -53,7 +53,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
 		if(msg instanceof Invoke) {
 			final Invoke invoke = (Invoke)msg;
-			ServiceProvider provider = providers.get(invoke.getServiceName());
+			ServiceProvider provider = providers.get(invoke.getServiceId());
 			
 			if(provider == null) {
 				InvokeResult errorResult = new InvokeResult(new ServiceUnavailableException("no provider found"), invoke.getId(),
