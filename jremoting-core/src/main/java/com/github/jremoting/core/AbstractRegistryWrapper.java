@@ -61,17 +61,17 @@ public abstract class AbstractRegistryWrapper implements Registry , RegistryList
 	}
 
 	@Override
-	public String getAppConfig(String appName, String key) {
-		return this.wrappedRegistry.getAppConfig(appName, key);
+	public String getAppConfig(String appName, String fileName) {
+		return this.wrappedRegistry.getAppConfig(appName, fileName);
 	}
 
 	@Override
-	public String getServiceConfig(String serviceName, String key) {
-		return this.wrappedRegistry.getServiceConfig(serviceName, key);
+	public String getServiceConfig(String serviceName, String fileName) {
+		return this.wrappedRegistry.getServiceConfig(serviceName, fileName);
 	}
 	@Override
-	public String getGlobalConfig(String key) {
-		return this.wrappedRegistry.getGlobalConfig(key);
+	public String getGlobalConfig(String fileName) {
+		return this.wrappedRegistry.getGlobalConfig(fileName);
 	}
 
 	@Override
@@ -85,16 +85,16 @@ public abstract class AbstractRegistryWrapper implements Registry , RegistryList
 	}
 
 	@Override
-	public void onAppConfigChanged(String appName, String key, String newValue) {
+	public void onAppConfigChanged(String appName, String fileName, String newContent) {
 
 	}
 
 	@Override
-	public void onServiceConfigChanged(String serviceName,String key, String newValue) {
+	public void onServiceConfigChanged(String serviceName,String fileName, String newContent) {
 
 	}
 	@Override
-	public void onGlobalConfigChanged(String key, String newValue) {
+	public void onGlobalConfigChanged(String fileName, String newContent) {
 		
 	}
 	

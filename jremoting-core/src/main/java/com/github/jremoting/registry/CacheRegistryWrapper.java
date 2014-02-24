@@ -35,37 +35,37 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public String getGlobalConfig(String key) {
-		String config = cachedGlobalConfigs.get(key);
-		if(config == null) {
-			config = super.getGlobalConfig(key);
-			cachedGlobalConfigs.put(key, config);
+	public String getGlobalConfig(String fileName) {
+		String content = cachedGlobalConfigs.get(fileName);
+		if(content == null) {
+			content = super.getGlobalConfig(fileName);
+			cachedGlobalConfigs.put(fileName, content);
 		}
-		return config;
+		return content;
 	}
 	
 	@Override
-	public String getAppConfig(String appName, String key) {
+	public String getAppConfig(String appName, String fileName) {
 		ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(appName);
-		String config = appConfigs.get(key);
-		if(key == null) {
-		    config = super.getAppConfig(appName, key);
-			appConfigs.put(key, config);
+		String content = appConfigs.get(fileName);
+		if(fileName == null) {
+			content = super.getAppConfig(appName, fileName);
+			appConfigs.put(fileName, content);
 		}
-		return config;
+		return content;
 	}
 
 	@Override
-	public String getServiceConfig(String serviceName, String key) {
+	public String getServiceConfig(String serviceName, String fileName) {
 		ConcurrentHashMap<String, String> serviceConifgs = getCachedServiceConfigs(serviceName);
 		
-		String config = serviceConifgs.get(key);
-		if(config == null) {
-			config = super.getServiceConfig(serviceName, key);
-			serviceConifgs.put(key, config);
+		String content = serviceConifgs.get(fileName);
+		if(content == null) {
+			content = super.getServiceConfig(serviceName, fileName);
+			serviceConifgs.put(fileName, content);
 		}
 		
-		return config;
+		return content;
 	}
 	
 	@Override
@@ -75,20 +75,20 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onGlobalConfigChanged(String key, String newValue) {
-		cachedGlobalConfigs.put(key, newValue);
+	public void onGlobalConfigChanged(String fileName, String newContent) {
+		cachedGlobalConfigs.put(fileName, newContent);
 	}
 	
 	@Override
-	public void onAppConfigChanged(String appName, String key, String newValue) {
+	public void onAppConfigChanged(String appName, String fileName, String newContent) {
 		ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(appName);
-		appConfigs.put(key, newValue);
+		appConfigs.put(fileName, newContent);
 	}
 
 	@Override
-	public void onServiceConfigChanged(String serviceName,String key, String newValue) {
+	public void onServiceConfigChanged(String serviceName,String fileName, String newContent) {
 		ConcurrentHashMap<String, String> serviceConifgs = getCachedServiceConfigs(serviceName);
-		serviceConifgs.put(key, newValue);
+		serviceConifgs.put(fileName, newContent);
 	}
 	
 	private ConcurrentHashMap<String, String> getCachedAppConfigs(String appName) {
