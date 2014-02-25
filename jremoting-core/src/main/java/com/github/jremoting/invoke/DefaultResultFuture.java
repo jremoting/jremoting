@@ -1,4 +1,4 @@
-package com.github.jremoting.transport;
+package com.github.jremoting.invoke;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,13 +9,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.github.jremoting.core.Invoke;
-import com.github.jremoting.core.MessageFuture;
+import com.github.jremoting.core.InvokeResultFuture;
 import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.concurrent.FutureListener;
 
-public class DefaultMessageFuture implements MessageFuture {
+public class DefaultResultFuture implements InvokeResultFuture {
 	
 	private final Invoke invoke;
 	private volatile Object result;
@@ -28,11 +28,11 @@ public class DefaultMessageFuture implements MessageFuture {
 	
 	private final Map<FutureListener<Object>, Executor> listeners = new HashMap<FutureListener<Object>, Executor>();
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMessageFuture.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultResultFuture.class);
 	
 	
 
-	public DefaultMessageFuture(Invoke invoke) {
+	public DefaultResultFuture(Invoke invoke) {
 		this.invoke = invoke;
 	}
 	
@@ -114,12 +114,12 @@ public class DefaultMessageFuture implements MessageFuture {
 			public void run() {
 				try {
 					//run invoke filters's enInvoke first then run user callback 
-					DefaultMessageFuture.this.invoke.getInvokeChain().endInvoke(invoke, result);
+					DefaultResultFuture.this.invoke.getInvokeChain().endInvoke(invoke, result);
 				} catch (Throwable th) {
 					LOGGER.error("error happens when run client filter's endInvoke chain , msg->" + th.getMessage(), th);
 				}
 
-				synchronized (DefaultMessageFuture.this) {
+				synchronized (DefaultResultFuture.this) {
 					if (isDone()) {
 						notifyListeners();
 					}
@@ -139,7 +139,7 @@ public class DefaultMessageFuture implements MessageFuture {
 				@Override
 				public void run() {
 					try {
-						listener.operationComplete(DefaultMessageFuture.this);
+						listener.operationComplete(DefaultResultFuture.this);
 					} catch (Throwable th) {
 						LOGGER.error(
 								"error happens when run user's callback , msg->"
@@ -170,7 +170,7 @@ public class DefaultMessageFuture implements MessageFuture {
 
 					@Override
 					public void run() {
-						listener.operationComplete(DefaultMessageFuture.this);
+						listener.operationComplete(DefaultResultFuture.this);
 					}
 				});
 			} else {
@@ -191,7 +191,7 @@ public class DefaultMessageFuture implements MessageFuture {
 				invoke.getAsyncInvokeExecutor().execute(new Runnable() {
 					@Override
 					public void run() {
-						listener.operationComplete(DefaultMessageFuture.this);
+						listener.operationComplete(DefaultResultFuture.this);
 					}
 				});
 			} else {

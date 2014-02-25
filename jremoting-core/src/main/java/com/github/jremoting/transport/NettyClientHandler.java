@@ -11,6 +11,7 @@ import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.exception.ConnectionLossException;
 import com.github.jremoting.exception.ConnectionWriteException;
 import com.github.jremoting.exception.TimeoutException;
+import com.github.jremoting.invoke.DefaultResultFuture;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
@@ -25,7 +26,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 
 public class NettyClientHandler extends ChannelDuplexHandler {
 
-	private final Map<Long, DefaultMessageFuture> futures = new HashMap<Long, DefaultMessageFuture>();
+	private final Map<Long, DefaultResultFuture> futures = new HashMap<Long, DefaultResultFuture>();
 	private static final Logger LOGGER = LoggerFactory.getLogger(NettyClientHandler.class);
 
 	@Override
@@ -33,7 +34,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 
 		String remoteAddress = NetUtil.toStringAddress(ctx.channel().remoteAddress());
 		ConnectionLossException exception = new ConnectionLossException("connection lost remoteAddress->" + remoteAddress);
-		for (DefaultMessageFuture future : futures.values()) {
+		for (DefaultResultFuture future : futures.values()) {
 			future.onResult(exception);
 		}
 		LOGGER.info("connection inactive remoteAddress->" + remoteAddress);
@@ -49,7 +50,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 		@Override
 		public void operationComplete(ChannelFuture future) throws Exception {
 			if(!future.isSuccess()) {
-				DefaultMessageFuture msgFuture = futures.remove(msgId);
+				DefaultResultFuture msgFuture = futures.remove(msgId);
 				if(msgFuture != null) {
 					msgFuture.onResult(new ConnectionWriteException("msgId:" + msgId, future.cause()));
 				}
@@ -66,7 +67,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         	final Invoke invoke  = (Invoke)msg;
 		
         	if(invoke.getInvokeCount() == 0) {
-        		futures.put(invoke.getId(), (DefaultMessageFuture)invoke.getResultFuture());
+        		futures.put(invoke.getId(), (DefaultResultFuture)invoke.getResultFuture());
         	}
         	
         	invoke.incrementInvokeCount();
@@ -75,7 +76,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
 			ctx.executor().schedule(new Runnable() {
 				@Override
 				public void run() {
-					DefaultMessageFuture timoutFuture = futures.remove(invoke.getId());
+					DefaultResultFuture timoutFuture = futures.remove(invoke.getId());
 					if (timoutFuture != null) {
 						timoutFuture.onResult(new TimeoutException("invoke timeout :" + invoke.getTimeout()));
 					}
@@ -91,7 +92,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     	if (msg instanceof InvokeResult) {
 			InvokeResult invokeResult = (InvokeResult)msg;
-			DefaultMessageFuture future = futures.remove(invokeResult.getId());
+			DefaultResultFuture future = futures.remove(invokeResult.getId());
 			if(future != null) {
 				future.onResult(invokeResult.getResult());
 			}

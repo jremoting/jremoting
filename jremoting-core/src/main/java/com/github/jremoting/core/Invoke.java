@@ -33,7 +33,7 @@ public class Invoke extends Message {
 	private boolean isAsync = false;
 
 	private Executor asyncInvokeExecutor;
-	private MessageFuture resultFuture;
+	private InvokeResultFuture resultFuture;
 	private Map<String, Object> asyncContexts;
 	private InvokeFilter invokeChain;
 
@@ -151,11 +151,11 @@ public class Invoke extends Message {
 		return consumer.getRetry();
 	}
 
-	public MessageFuture getResultFuture() {
+	public InvokeResultFuture getResultFuture() {
 		return resultFuture;
 	}
 
-	public void setResultFuture(MessageFuture resultFuture) {
+	public void setResultFuture(InvokeResultFuture resultFuture) {
 		if(this.resultFuture != null) {
 			throw new IllegalStateException("invoke can only bind to one result future!");
 		}
