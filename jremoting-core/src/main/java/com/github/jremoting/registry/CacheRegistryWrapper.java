@@ -48,7 +48,7 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	public String getAppConfig(String appName, String fileName) {
 		ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(appName);
 		String content = appConfigs.get(fileName);
-		if(fileName == null) {
+		if(content == null) {
 			content = super.getAppConfig(appName, fileName);
 			appConfigs.put(fileName, content);
 		}

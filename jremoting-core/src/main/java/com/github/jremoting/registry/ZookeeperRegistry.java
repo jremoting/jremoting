@@ -184,7 +184,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	@Override
 	public String getAppConfig(String appName, String fileName) {
 		String appDir = pathManager.getAppConfigDir() + appName;
-		String configFile = appDir + "/" + fileName;
+		String configFile = appDir + "/"  + fileName;
 		watchedFiles.add(configFile);
 		return this.getDataAndWatched(configFile);
 	}
@@ -205,7 +205,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	@Override
 	public String getGlobalConfig(String fileName) {
 		String glocalDir = pathManager.getGlobalConfigDir();
-		String configFile = glocalDir + "/" + fileName;
+		String configFile = glocalDir + fileName;
 		watchedFiles.add(configFile);
 		return this.getDataAndWatched(configFile);
 	}
@@ -256,7 +256,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	private void handleDataChangedEvent(CuratorEvent event) {
 		
 		if(event.getPath().startsWith(pathManager.getGlobalConfigDir())) {
-			String fileName = pathManager.getGlobalConfigDir().replace(pathManager.getGlobalConfigDir(), "");
+			String fileName = event.getPath().replace(pathManager.getGlobalConfigDir(), "");
 			String newContent = bytesToString(event.getData());
 			for(RegistryListener listener : listeners) {
 				listener.onGlobalConfigChanged(fileName, newContent);
@@ -264,8 +264,8 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		}
 		if(event.getPath().startsWith(pathManager.getAppConfigDir())) {
 			String[] paths = event.getPath().split("/");
-			String appName = paths[1];
-			String fileName = paths[2];
+			String appName = paths[2];
+			String fileName = paths[3];
 			String newContent = bytesToString(event.getData());
 			for(RegistryListener listener : listeners) {
 				listener.onAppConfigChanged(appName, fileName, newContent);
@@ -273,8 +273,8 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		}
 		if(event.getPath().startsWith(pathManager.getServiceConfigDir())) {
 			String[] paths = event.getPath().split("/");
-			String serviceName = paths[1];
-			String fileName = paths[2];
+			String serviceName = paths[2];
+			String fileName = paths[3];
 			String newContent = bytesToString(event.getData());
 			for(RegistryListener listener : listeners) {
 				listener.onServiceConfigChanged(serviceName, fileName, newContent);
@@ -390,8 +390,9 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	}
 	
 	private String getDataAndWatched(String filePath) {
-		 try {
-			byte[] data =  this.client.getData().watched().forPath(filePath);
+		try {
+			ensurePath(filePath);
+			byte[] data = this.client.getData().watched().forPath(filePath);
 			return bytesToString(data);
 		} catch (Exception e) {
 			throw new RegistryExcpetion("get data failed for path:" + filePath, e);
@@ -400,6 +401,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	
 	private void getDataAndWatchedInBackgroud(String filePath) {
 		 try {
+			ensurePath(filePath);
 			this.client.getData().watched().inBackground().forPath(filePath);
 		} catch (Exception e) {
 			throw new RegistryExcpetion("get data failed for path:" + filePath, e);

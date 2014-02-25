@@ -7,13 +7,18 @@
 	<bean id="jsonSerializer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
 	<bean id="hessianSerializer" class="com.github.jremoting.serializer.HessianSerializer" ></bean>
 
-	<bean id="registry" class="com.github.jremoting.registry.CacheRegistryWrapper">
+	<bean id="registry" class="com.github.jremoting.core.test.TestRegistryWrapper">
 		<constructor-arg>
-			<bean class="com.github.jremoting.registry.ZookeeperRegistry">
-				<constructor-arg name="zookeeperConnectionString" value="127.0.0.1:2181" />
+			<bean class="com.github.jremoting.registry.CacheRegistryWrapper">
+				<constructor-arg>
+					<bean class="com.github.jremoting.registry.ZookeeperRegistry">
+						<constructor-arg name="zookeeperConnectionString" value="127.0.0.1:2181" />
+					</bean>
+				</constructor-arg>
 			</bean>
 		</constructor-arg>
 	</bean>
+
 	
 	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
 		<constructor-arg name="registry" ref="registry" />
