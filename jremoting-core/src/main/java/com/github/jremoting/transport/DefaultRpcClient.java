@@ -51,7 +51,7 @@ public class DefaultRpcClient implements RpcClient {
 		
 		invoke.setAsyncInvokeExecutor(asyncInvokeExecutor);
 
-		DefaultMessageFuture future = new DefaultMessageFuture(invoke);
+		DefaultResultFuture future = new DefaultResultFuture(invoke);
 		invoke.setResultFuture(future);
 		
 		if(invoke.isAsync()) {
