@@ -23,7 +23,9 @@ public class JRemotingClientTest {
 		
 		RpcClient rpcClient = context.getBean(RpcClient.class);
 		
-		ServiceConsumer consumer =  new ServiceConsumer("com.github.jremoting.core.test.TestService", "1.0", rpcClient).start();
+		ServiceConsumer consumer =  new ServiceConsumer("com.github.jremoting.core.test.TestService", "1.0", rpcClient);
+		consumer.setAppName("test_consumer");
+		consumer.start();
 		
 		HashMap<String, Object> genericInput = new HashMap<String, Object>();
 		genericInput.put("id", 1221);
@@ -51,6 +53,8 @@ public class JRemotingClientTest {
 		input.setMsg("async test");
 		Future<HelloOutput> future =  asyncTestService.$hello(new HelloInput(), 1212);
 		System.out.println("async:" + JSON.toJSONString(future.get()));
+		
+		System.in.read();
 		
 		//异步callback调用
 		final AtomicReference<Future<HelloOutput>> holder = new AtomicReference<Future<HelloOutput>>();

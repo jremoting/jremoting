@@ -17,8 +17,8 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	private ConcurrentHashMap<String, ConcurrentHashMap<String, String>> cachedServiceConfigs = new ConcurrentHashMap<String, ConcurrentHashMap<String,String>>();
 	private ConcurrentHashMap<String, String> cachedGlobalConfigs = new ConcurrentHashMap<String, String>();
 
-	public CacheRegistryWrapper(Registry originalRegistry) {
-		super(originalRegistry);
+	public CacheRegistryWrapper(Registry wrappedRegistry) {
+		super(wrappedRegistry);
 	}
 	
 	@Override
@@ -28,7 +28,7 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 			return providers;
 		}
 		else {
-			providers = super.getProviders(invoke);
+			providers = this.wrappedRegistry.getProviders(invoke);
 			cachedProviders.put(invoke.getServiceId(), providers);
 			return providers;
 		}
@@ -38,7 +38,7 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	public String getGlobalConfig(String fileName) {
 		String content = cachedGlobalConfigs.get(fileName);
 		if(content == null) {
-			content = super.getGlobalConfig(fileName);
+			content = this.wrappedRegistry.getGlobalConfig(fileName);
 			cachedGlobalConfigs.put(fileName, content);
 		}
 		return content;
@@ -49,7 +49,7 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 		ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(appName);
 		String content = appConfigs.get(fileName);
 		if(content == null) {
-			content = super.getAppConfig(appName, fileName);
+			content = this.wrappedRegistry.getAppConfig(appName, fileName);
 			appConfigs.put(fileName, content);
 		}
 		return content;
@@ -61,7 +61,7 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 		
 		String content = serviceConifgs.get(fileName);
 		if(content == null) {
-			content = super.getServiceConfig(serviceName, fileName);
+			content = this.wrappedRegistry.getServiceConfig(serviceName, fileName);
 			serviceConifgs.put(fileName, content);
 		}
 		

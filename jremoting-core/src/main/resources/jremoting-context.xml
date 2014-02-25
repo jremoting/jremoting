@@ -7,7 +7,7 @@
 	<bean id="jsonSerializer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
 	<bean id="hessianSerializer" class="com.github.jremoting.serializer.HessianSerializer" ></bean>
 
-	<bean id="registry" class="com.github.jremoting.core.test.TestRegistryWrapper">
+	<bean id="registry" class="com.github.jremoting.group.GroupRegistryWrapper">
 		<constructor-arg>
 			<bean class="com.github.jremoting.registry.CacheRegistryWrapper">
 				<constructor-arg>

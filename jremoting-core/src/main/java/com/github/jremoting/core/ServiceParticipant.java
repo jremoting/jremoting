@@ -3,7 +3,9 @@ package com.github.jremoting.core;
 public abstract class ServiceParticipant {
 
 	public static final String DEFAULT_GROUP = "default";
+	public static final String DEFAULT_APP_NAME = "jremoting";
 	
+	private String appName = DEFAULT_APP_NAME;
 	private final String interfaceName;
 	private final String version;
 	private String group;
@@ -102,6 +104,14 @@ public abstract class ServiceParticipant {
 	@Override
 	public  int hashCode() {
 		return this.serviceId.hashCode();
+	}
+
+	public String getAppName() {
+		return appName;
+	}
+
+	public void setAppName(String appName) {
+		this.appName = appName;
 	}
 
 }

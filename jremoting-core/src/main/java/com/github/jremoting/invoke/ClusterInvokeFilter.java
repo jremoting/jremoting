@@ -25,7 +25,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		List<ServiceProvider> providers = invoke.getRegistry().getProviders(invoke);
 		
 		if(providers == null || providers.isEmpty()) {
-			throw new RemotingException("no provier for service " + invoke.getServiceName());
+			throw new RemotingException("no provier for service " + invoke.getServiceId());
 		}
 		
 

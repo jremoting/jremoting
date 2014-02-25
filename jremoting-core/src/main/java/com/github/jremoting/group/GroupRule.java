@@ -1,51 +1,29 @@
 package com.github.jremoting.group;
 
 import java.util.List;
-import com.github.jremoting.util.WildcardUtil;
+
+import com.github.jremoting.core.ServiceParticipant;
 
 public class GroupRule {
+	
+	private  List<GroupRuleItem> ruleItems;
 
-	private List<String> serviceNames;
-	private List<String> ips;
-	private String group;
+	public List<GroupRuleItem> getRuleItems() {
+		return ruleItems;
+	}
 
-	public List<String> getIps() {
-		return ips;
+	public void setRuleItems(List<GroupRuleItem> ruleItems) {
+		this.ruleItems = ruleItems;
 	}
-	public void setIps(List<String> ips) {
-		this.ips = ips;
-	}
-	public String getGroup() {
-		return group;
-	}
-	public void setGroup(String group) {
-		this.group = group;
-	}
-	public boolean isMatch(String serviceName, String localIp) {
-		
-		boolean matchServiceName = false;
-		for (String name: serviceNames) {
-			if(name.equals(serviceName)) {
-				matchServiceName = true;
+	
+	public String getNewGroup(ServiceParticipant participant, String localIp) {
+		for (GroupRuleItem item: ruleItems) {
+			if(item.isMatch(participant.getServiceName(), localIp)) {
+				if(!item.getGroup().equals(participant.getGroup())) {
+					return item.getGroup();
+				}
 			}
 		}
-		
-		if(!matchServiceName) {
-			return false;
-		}
-		
-		for(String ipPattern: ips) {
-			if (WildcardUtil.equalsOrMatch(localIp, ipPattern)) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	public List<String> getServiceNames() {
-		return serviceNames;
-	}
-	public void setServiceNames(List<String> serviceNames) {
-		this.serviceNames = serviceNames;
+		return participant.getGroup();
 	}
 }

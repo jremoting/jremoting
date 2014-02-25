@@ -1,16 +1,11 @@
 package com.github.jremoting.core;
 
-import java.util.concurrent.CountDownLatch;
-
 import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class ServiceConsumer extends ServiceParticipant {
 	
 	private Serializer serializer;
 	
-	private final CountDownLatch initLatch = new CountDownLatch(1);
-	
-	private boolean init = false;
 	private final RpcClient rpcClient;
 	
 	private String remoteAddress;
@@ -50,19 +45,6 @@ public class ServiceConsumer extends ServiceParticipant {
 		invoke.setAsync(true);
 		invoke.setConsumer(this);
 		return (ListenableFuture<?>)rpcClient.invoke(invoke);
-	}
-
-	public void waitFirstSubscribeFinishIfNeeded() throws InterruptedException  {
-		if(!init) {
-			initLatch.await();
-		}
-	}
-	
-	public void setFirstSubscribeFinished() {
-		if(!init) {
-			init = true;
-			initLatch.countDown();
-		}
 	}
 
 	public Serializer getSerializer() {
