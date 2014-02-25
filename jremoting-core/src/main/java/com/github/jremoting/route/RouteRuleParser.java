@@ -1,5 +1,6 @@
 package com.github.jremoting.route;
 
-public class RouteRuleParser {
 
+public interface RouteRuleParser {
+	RouteRule parse(String content);
 }

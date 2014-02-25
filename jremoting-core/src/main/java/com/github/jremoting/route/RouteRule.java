@@ -1,5 +1,7 @@
 package com.github.jremoting.route;
 
-public class RouteRule {
+import java.util.Map;
 
+public interface RouteRule {
+	Map<String, String[]> createRouteTables();
 }

@@ -23,6 +23,13 @@ public class  ServiceProvider extends ServiceParticipant   {
 	private boolean supportAsync= false;
 	private ExecutorService executor;
 	private RpcServer rpcServer;
+	private String ip;
+	
+	@Override
+	public void setAddress(String address) {
+		super.setAddress(address);
+		this.setIp(address.split(":")[0]);
+	}
 	
 	public void start() {
 		this.rpcServer.register(this);
@@ -43,4 +50,12 @@ public class  ServiceProvider extends ServiceParticipant   {
 	public void setExecutor(ExecutorService executor) {
 		this.executor = executor;
 	}
+	public String getIp() {
+		return ip;
+	}
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+	
+	
 }
