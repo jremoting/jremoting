@@ -1,4 +1,4 @@
-package com.github.jremoting.remoting;
+package com.github.jremoting.transport;
 
 import java.util.HashMap;
 import java.util.Map;

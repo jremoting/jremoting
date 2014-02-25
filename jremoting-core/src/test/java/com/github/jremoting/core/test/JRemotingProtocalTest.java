@@ -6,8 +6,8 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Test;
 
 import com.github.jremoting.protocal.JRemotingProtocal;
-import com.github.jremoting.remoting.NettyMessageCodec;
 import com.github.jremoting.serializer.JsonSerializer;
+import com.github.jremoting.transport.NettyMessageCodec;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.core.Serializer;

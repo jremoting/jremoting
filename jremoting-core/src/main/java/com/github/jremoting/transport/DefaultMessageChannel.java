@@ -1,4 +1,4 @@
-package com.github.jremoting.remoting;
+package com.github.jremoting.transport;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
