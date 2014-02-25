@@ -238,9 +238,36 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 			LOGGER.debug(event.toString());
 		}
 	}
+
+	@Override
+	public void stateChanged(CuratorFramework client, ConnectionState newState) {
+		
+		if(newState == ConnectionState.RECONNECTED) {
+			try {
+				
+				RegistryEvent registryEvent = new RegistryEvent();
+				registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.RECOVER);
+
+				for(RegistryListener listener : listeners) {
+					listener.onEvent(registryEvent);
+				}
+				
+				this.recover();
+
+			} catch (Exception e) {
+				LOGGER.error("republish local participant failed!", e);
+			}
+		}
+	}
+	
+	@Override
+	public void unhandledError(String message, Throwable e) {
+		LOGGER.error(message, e);
+	}
+	
 	
 	private void handleChildrenChangedEvent(CuratorEvent event) {
-	
+		
 		List<ServiceProvider> newProviders = new ArrayList<ServiceProvider>(event.getChildren().size());
 		for (String fileName : event.getChildren()) {
 			ServiceProvider provider = pathManager.decode(fileName);
@@ -303,47 +330,6 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		}
 	}
 	
-	private ConnectionState currentState;
-	
-	private String bytesToString(byte[] data) {
-		try {
-			return new String(data,"utf-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RegistryExcpetion("should not happen" , e);
-		}
-	}
-
-	@Override
-	public void stateChanged(CuratorFramework client, ConnectionState newState) {
-		switch (newState) {
-		case CONNECTED:
-			currentState = ConnectionState.CONNECTED;
-		case LOST:
-			currentState = ConnectionState.LOST;
-			break;
-		case RECONNECTED:
-			if (currentState == ConnectionState.LOST) {
-				try {
-					
-					RegistryEvent registryEvent = new RegistryEvent();
-					registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.RECOVER);
-
-					for(RegistryListener listener : listeners) {
-						listener.onEvent(registryEvent);
-					}
-					
-					this.recover();
-
-				} catch (Exception e) {
-					LOGGER.error("republish local participant failed!", e);
-				}
-			}
-			currentState = ConnectionState.RECONNECTED;
-		default:
-			break;
-		}
-	}
-	
 	private void recover() {
 		
 		for (ServiceProvider provider : publishedProviders) {
@@ -374,11 +360,17 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 			throw new RegistryExcpetion("ensure path failed for path:" + path, e);
 		}
 	}
-
-	@Override
-	public void unhandledError(String message, Throwable e) {
-		LOGGER.error(message, e);
+	
+	private String bytesToString(byte[] data) {
+		try {
+			return new String(data,"utf-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RegistryExcpetion("should not happen" , e);
+		}
 	}
+
+
+
 	
 	
 	private List<String> getChildrenAndWatched(String dir) {

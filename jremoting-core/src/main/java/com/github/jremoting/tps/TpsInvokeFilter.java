@@ -2,10 +2,15 @@ package com.github.jremoting.tps;
 
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
+import com.github.jremoting.core.Registry;
 import com.github.jremoting.core.RegistryEvent;
 import com.github.jremoting.core.RegistryListener;
 
 public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryListener {
+	
+	public TpsInvokeFilter(Registry registry) {
+		registry.addListener(this);
+	}
 	
 	@Override
 	public Object invoke(Invoke invoke) {

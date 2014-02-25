@@ -1,7 +1,7 @@
 package com.github.jremoting.group;
 
-import com.alibaba.fastjson.JSON;
 import com.github.jremoting.core.ServiceParticipant;
+import com.github.jremoting.util.JsonUtil;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.StringUtil;
@@ -28,7 +28,7 @@ public class GroupStrategy {
 		
 		if (StringUtil.isNotEmpty(this.appConfig)) {
 			try {
-				this.appGroupRule = JSON.parseObject(this.appConfig,
+				this.appGroupRule = JsonUtil.fromJson(this.appConfig,
 						GroupRule.class);
 			} catch (Exception e) {
 				logger.error("parse app group rule failed appName:"
@@ -38,7 +38,7 @@ public class GroupStrategy {
 
 		if (StringUtil.isNotEmpty(this.serviceConfig)) {
 			try {
-				this.serviceGroupRule = JSON.parseObject(this.appConfig,
+				this.serviceGroupRule = JsonUtil.fromJson(this.appConfig,
 						GroupRule.class);
 			} catch (Exception e) {
 				logger.error("parse service group rule failed serviceName:"
