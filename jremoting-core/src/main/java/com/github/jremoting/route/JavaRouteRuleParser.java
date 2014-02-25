@@ -23,8 +23,10 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 
+
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
+import com.github.jremoting.util.StringUtil;
 
 
 public class JavaRouteRuleParser implements RouteRuleParser {
@@ -43,6 +45,9 @@ public class JavaRouteRuleParser implements RouteRuleParser {
 	public RouteRule complieRouteRule(String classSource) {
 
 		try {
+			if(StringUtil.isEmpty(classSource)) {
+				return null;
+			}
 
 			String packageName = "com.github.jremoting.routerule"
 					+ id.incrementAndGet();
