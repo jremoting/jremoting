@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Registry;
+import com.github.jremoting.core.RegistryEvent;
+import com.github.jremoting.core.RegistryEvent.EventType;
 import com.github.jremoting.core.ServiceProvider;
 
 public class WeightRegistryWrapper extends AbstractRegistryWrapper {
@@ -34,14 +36,17 @@ public class WeightRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onServiceConfigChanged(String serviceName,String fileName, String newContent) {
-		if(!configFileName.equals(fileName)) {
+	public void onEvent(RegistryEvent event) {
+		if(event.getType() != EventType.SERVICE_CONFIG_CHANGED) {
+			return;
+		}
+		if(!configFileName.equals(event.getFileName())) {
 			return;
 		}
 		
-		WeightStrategy strategy = new WeightStrategy(newContent);
+		WeightStrategy strategy = new WeightStrategy(event.getNewContent());
 		
-		cachedWeightStrategies.put(serviceName, strategy);
+		cachedWeightStrategies.put(event.getServiceName(), strategy);
 
 	}
 

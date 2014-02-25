@@ -24,6 +24,7 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Registry;
+import com.github.jremoting.core.RegistryEvent;
 import com.github.jremoting.core.RegistryListener;
 import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.ServiceProvider;
@@ -248,8 +249,13 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		
 		String serviceId = pathManager.parseServiceId(event.getPath());
 		
+		RegistryEvent registryEvent = new RegistryEvent();
+		registryEvent.setServiceId(serviceId);
+		registryEvent.setNewProviders(newProviders);
+		registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.PROVIDERS_CHANGED);
+		
 		for(RegistryListener listener : listeners) {
-			listener.onProvidersChanged(serviceId, newProviders);
+			listener.onEvent(registryEvent);
 		}
 	}
 	
@@ -258,8 +264,12 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		if(event.getPath().startsWith(pathManager.getGlobalConfigDir())) {
 			String fileName = event.getPath().replace(pathManager.getGlobalConfigDir(), "");
 			String newContent = bytesToString(event.getData());
+			RegistryEvent registryEvent = new RegistryEvent();
+			registryEvent.setFileName(fileName);
+			registryEvent.setNewContent(newContent);
+			registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.GLOBAL_CONFIG_CHANGED);
 			for(RegistryListener listener : listeners) {
-				listener.onGlobalConfigChanged(fileName, newContent);
+				listener.onEvent(registryEvent);
 			}
 		}
 		if(event.getPath().startsWith(pathManager.getAppConfigDir())) {
@@ -267,8 +277,14 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 			String appName = paths[2];
 			String fileName = paths[3];
 			String newContent = bytesToString(event.getData());
+			RegistryEvent registryEvent = new RegistryEvent();
+			registryEvent.setAppName(appName);
+			registryEvent.setFileName(fileName);
+			registryEvent.setNewContent(newContent);
+			registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.APP_CONFIG_CHANGED);
+			
 			for(RegistryListener listener : listeners) {
-				listener.onAppConfigChanged(appName, fileName, newContent);
+				listener.onEvent(registryEvent);
 			}
 		}
 		if(event.getPath().startsWith(pathManager.getServiceConfigDir())) {
@@ -276,8 +292,13 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 			String serviceName = paths[2];
 			String fileName = paths[3];
 			String newContent = bytesToString(event.getData());
+			RegistryEvent registryEvent = new RegistryEvent();
+			registryEvent.setServiceName(serviceName);
+			registryEvent.setFileName(fileName);
+			registryEvent.setNewContent(newContent);
+			registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.SERVICE_CONFIG_CHANGED);
 			for(RegistryListener listener : listeners) {
-				listener.onServiceConfigChanged(serviceName, fileName, newContent);
+				listener.onEvent(registryEvent);
 			}
 		}
 	}
@@ -303,9 +324,12 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		case RECONNECTED:
 			if (currentState == ConnectionState.LOST) {
 				try {
+					
+					RegistryEvent registryEvent = new RegistryEvent();
+					registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.RECOVER);
 
 					for(RegistryListener listener : listeners) {
-						listener.onRecover();
+						listener.onEvent(registryEvent);
 					}
 					
 					this.recover();

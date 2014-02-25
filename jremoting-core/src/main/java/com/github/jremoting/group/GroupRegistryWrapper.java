@@ -5,6 +5,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Registry;
+import com.github.jremoting.core.RegistryEvent;
+import com.github.jremoting.core.RegistryEvent.EventType;
 import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.util.NetUtil;
@@ -72,50 +74,40 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onRecover() {
-		for (ServiceProvider provider : publishedProviders) {
-			String appConfig =  this.wrappedRegistry.getAppConfig(provider.getAppName(), fileName);
-			String serviceConfig = this.wrappedRegistry.getServiceConfig(provider.getServiceName(), fileName);
+	public void onEvent(RegistryEvent event) {
+		if(event.getType() == EventType.APP_CONFIG_CHANGED && this.fileName.equals(event.getFileName()) ) {
+			republishIfGroupChanged();
+			resubscribeIfGroupChanged();
+		}
+		else if(event.getType() == EventType.SERVICE_CONFIG_CHANGED && this.fileName.equals(event.getFileName())){
+			republishIfGroupChanged();
+			resubscribeIfGroupChanged();
+		}
+		else if (event.getType() == EventType.RECOVER) {
+			for (ServiceProvider provider : publishedProviders) {
+				String appConfig =  this.wrappedRegistry.getAppConfig(provider.getAppName(), fileName);
+				String serviceConfig = this.wrappedRegistry.getServiceConfig(provider.getServiceName(), fileName);
+				
+				GroupStrategy strategy = new GroupStrategy(provider.getAppName(),appConfig
+						,provider.getServiceName() ,serviceConfig, localIp);
+				String newGroup = strategy.getNewGroup(provider);
+				if(!newGroup.equals(provider.getGroup())) {
+					provider.setGroup(newGroup);
+				}
+			}
 			
-			GroupStrategy strategy = new GroupStrategy(provider.getAppName(),appConfig
-					,provider.getServiceName() ,serviceConfig, localIp);
-			String newGroup = strategy.getNewGroup(provider);
-			if(!newGroup.equals(provider.getGroup())) {
-				provider.setGroup(newGroup);
+			for (ServiceConsumer consumer : subcribedConsumers) {
+				String appConfig = this.wrappedRegistry.getAppConfig(consumer.getAppName(), fileName);
+				String serviceConfig = this.wrappedRegistry.getServiceConfig(consumer.getServiceName(), fileName);
+				
+				GroupStrategy strategy = new GroupStrategy(consumer.getAppName(),appConfig
+						,consumer.getServiceName() ,serviceConfig, localIp);
+				String newGroup = strategy.getNewGroup(consumer);
+				if(!newGroup.equals(consumer.getGroup())) {
+					consumer.setGroup(newGroup);
+				}
 			}
 		}
-		
-		for (ServiceConsumer consumer : subcribedConsumers) {
-			String appConfig = this.wrappedRegistry.getAppConfig(consumer.getAppName(), fileName);
-			String serviceConfig = this.wrappedRegistry.getServiceConfig(consumer.getServiceName(), fileName);
-			
-			GroupStrategy strategy = new GroupStrategy(consumer.getAppName(),appConfig
-					,consumer.getServiceName() ,serviceConfig, localIp);
-			String newGroup = strategy.getNewGroup(consumer);
-			if(!newGroup.equals(consumer.getGroup())) {
-				consumer.setGroup(newGroup);
-			}
-		}
-	}
-	
-	@Override
-	public void onAppConfigChanged(String appName, String fileName, String newContent) {
-		if(!fileName.equals(fileName)) {
-			return;
-		}
-	
-		republishIfGroupChanged();
-		resubscribeIfGroupChanged();
-	}
-	
-	@Override
-	public void onServiceConfigChanged(String serviceName, String fileName, String newContent) {
-		if(!fileName.equals(fileName)) {
-			return;
-		}
-
-		republishIfGroupChanged();
-		resubscribeIfGroupChanged();
 	}
 	
 	private void republishIfGroupChanged() {

@@ -75,26 +75,7 @@ public abstract class AbstractRegistryWrapper implements Registry , RegistryList
 	}
 	
 	@Override
-	public void onProvidersChanged(String serviceId,
-			List<ServiceProvider> newProviders) {
-	}
-
-	@Override
-	public void onAppConfigChanged(String appName, String fileName, String newContent) {
-
-	}
-
-	@Override
-	public void onServiceConfigChanged(String serviceName,String fileName, String newContent) {
-
-	}
-	@Override
-	public void onGlobalConfigChanged(String fileName, String newContent) {
-		
-	}
-	
-	@Override
-	public void onRecover() {
+	public void onEvent(RegistryEvent event) {
 		
 	}
 

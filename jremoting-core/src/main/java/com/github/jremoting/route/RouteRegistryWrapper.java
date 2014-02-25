@@ -6,7 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Registry;
+import com.github.jremoting.core.RegistryEvent;
 import com.github.jremoting.core.ServiceProvider;
+import com.github.jremoting.core.RegistryEvent.EventType;
 
 public class RouteRegistryWrapper extends AbstractRegistryWrapper {
 
@@ -42,34 +44,29 @@ public class RouteRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onServiceConfigChanged(String serviceName, String fileName,
-			String newContent) {
-		if (!configFileName.equals(fileName)) {
-			return;
-		}
-		
-		RouteRule routeRule = routeRuleParser.parse(newContent);
-		
-		for (String serviceId : cachedRouteStrategies.keySet()) {
-			if(serviceId.contains(serviceName)) {
-				RouteStrategy oldStrategy = cachedRouteStrategies.get(serviceName);
-				List<ServiceProvider> allProviders = oldStrategy.getAllProviders();
+	public void onEvent(RegistryEvent event) {
+		if(event.getType() == EventType.SERVICE_CONFIG_CHANGED && configFileName.equals(event.getFileName())) {
+			RouteRule routeRule = routeRuleParser.parse(event.getNewContent());
+			
+			for (String serviceId : cachedRouteStrategies.keySet()) {
+				if(serviceId.contains(event.getServiceName())) {
+					RouteStrategy oldStrategy = cachedRouteStrategies.get(event.getServiceName());
+					List<ServiceProvider> allProviders = oldStrategy.getAllProviders();
 
-				RouteStrategy newStrategy = new RouteStrategy(allProviders, routeRule);
-				cachedRouteStrategies.put(serviceId, newStrategy);
+					RouteStrategy newStrategy = new RouteStrategy(allProviders, routeRule);
+					cachedRouteStrategies.put(serviceId, newStrategy);
+				}
 			}
 		}
 		
-	}
-	
-	@Override
-	public void onProvidersChanged(String serviceId, List<ServiceProvider> newProviders) {
-		RouteStrategy oldStrategy = cachedRouteStrategies.get(serviceId);
-		RouteRule routeRule = oldStrategy.getRouteRule();
+		if(event.getType() == EventType.PROVIDERS_CHANGED) {
+			RouteStrategy oldStrategy = cachedRouteStrategies.get(event.getServiceId());
+			RouteRule routeRule = oldStrategy.getRouteRule();
 
-		RouteStrategy newStrategy = new RouteStrategy(newProviders, routeRule);
+			RouteStrategy newStrategy = new RouteStrategy(event.getNewProviders(), routeRule);
 
-		cachedRouteStrategies.put(serviceId, newStrategy);
+			cachedRouteStrategies.put(event.getServiceId(), newStrategy);
+		}
 	}
-	
+
 }

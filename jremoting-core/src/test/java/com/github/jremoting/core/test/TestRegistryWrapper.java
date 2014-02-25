@@ -1,7 +1,9 @@
 package com.github.jremoting.core.test;
 
+import com.alibaba.fastjson.JSON;
 import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Registry;
+import com.github.jremoting.core.RegistryEvent;
 
 public class TestRegistryWrapper extends AbstractRegistryWrapper {
 
@@ -24,19 +26,9 @@ public class TestRegistryWrapper extends AbstractRegistryWrapper {
 	
 	
 	@Override
-	public void onAppConfigChanged(String appName, String fileName, String newContent) {
-		System.out.println(String.format("appName:%s, fileName:%s,newContent:%s", appName,fileName, newContent));
+	public void onEvent(RegistryEvent event) {
+		System.out.println(JSON.toJSONString(event));
 	}
 
-	@Override
-	public void onServiceConfigChanged(String serviceName,String fileName, String newContent) {
-		System.out.println(String.format("serviceName:%s, fileName:%s,newContent:%s", serviceName,fileName, newContent));
-
-	}
-	@Override
-	public void onGlobalConfigChanged(String fileName, String newContent) {
-		System.out.println(String.format("fileName:%s,newContent:%s",fileName, newContent));
-
-	}
 
 }

@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.github.jremoting.core.AbstractRegistryWrapper;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Registry;
+import com.github.jremoting.core.RegistryEvent;
+import com.github.jremoting.core.RegistryEvent.EventType;
 import com.github.jremoting.core.ServiceProvider;
 
 
@@ -69,27 +71,23 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	}
 	
 	@Override
-	public void onProvidersChanged(String serviceId,
-			List<ServiceProvider> newProviders) {
-		cachedProviders.put(serviceId, newProviders);
+	public void onEvent(RegistryEvent event) {
+		if(event.getType() == EventType.PROVIDERS_CHANGED) {
+			cachedProviders.put(event.getServiceId(), event.getNewProviders());
+		}
+		else if (event.getType() == EventType.GLOBAL_CONFIG_CHANGED) {
+			cachedGlobalConfigs.put(event.getFileName(), event.getNewContent());
+		}
+		else if (event.getType() == EventType.APP_CONFIG_CHANGED) {
+			ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(event.getAppName());
+			appConfigs.put(event.getFileName(), event.getNewContent());
+		}
+		else if (event.getType() == EventType.SERVICE_CONFIG_CHANGED) {
+			ConcurrentHashMap<String, String> serviceConifgs = getCachedServiceConfigs(event.getServiceName());
+			serviceConifgs.put(event.getFileName(), event.getNewContent());
+		}
 	}
 	
-	@Override
-	public void onGlobalConfigChanged(String fileName, String newContent) {
-		cachedGlobalConfigs.put(fileName, newContent);
-	}
-	
-	@Override
-	public void onAppConfigChanged(String appName, String fileName, String newContent) {
-		ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(appName);
-		appConfigs.put(fileName, newContent);
-	}
-
-	@Override
-	public void onServiceConfigChanged(String serviceName,String fileName, String newContent) {
-		ConcurrentHashMap<String, String> serviceConifgs = getCachedServiceConfigs(serviceName);
-		serviceConifgs.put(fileName, newContent);
-	}
 	
 	private ConcurrentHashMap<String, String> getCachedAppConfigs(String appName) {
 		ConcurrentHashMap<String, String> configs = cachedAppConfigs.get(appName);
