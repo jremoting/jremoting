@@ -11,6 +11,7 @@ import com.github.jremoting.core.InvokeResult;
 import com.github.jremoting.exception.ConnectionLossException;
 import com.github.jremoting.exception.ConnectionWriteException;
 import com.github.jremoting.exception.TimeoutException;
+import com.github.jremoting.invoke.DefaultResultFuture;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;

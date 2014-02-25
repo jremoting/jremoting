@@ -13,6 +13,7 @@ import com.github.jremoting.core.Serializer;
 import com.github.jremoting.core.ServiceConsumer;
 import com.github.jremoting.core.Registry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
+import com.github.jremoting.invoke.DefaultResultFuture;
 import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.NetUtil;
 import com.github.jremoting.util.concurrent.EventExecutor;
