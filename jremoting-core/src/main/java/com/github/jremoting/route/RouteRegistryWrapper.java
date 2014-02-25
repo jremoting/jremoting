@@ -19,6 +19,11 @@ public class RouteRegistryWrapper extends AbstractRegistryWrapper {
 		this.routeRuleParser = routeRuleParser;
 	}
 	
+	public RouteRegistryWrapper(Registry wrappedRegistry) {
+		super(wrappedRegistry);
+		this.routeRuleParser = new JavaRouteRuleParser();
+	}
+	
 	@Override
 	public List<ServiceProvider> getProviders(Invoke invoke) {
 		RouteStrategy routeStrategy = cachedRouteStrategies.get(invoke.getServiceId());
