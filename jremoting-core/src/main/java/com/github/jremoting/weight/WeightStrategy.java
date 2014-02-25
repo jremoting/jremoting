@@ -3,8 +3,8 @@ package com.github.jremoting.weight;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alibaba.fastjson.JSON;
 import com.github.jremoting.core.ServiceProvider;
+import com.github.jremoting.util.JsonUtil;
 import com.github.jremoting.util.StringUtil;
 
 public class WeightStrategy {
@@ -17,7 +17,7 @@ public class WeightStrategy {
 		}
 		else {
 			try {
-				this.weightRule = JSON.parseObject(rule, WeightRule.class);
+				this.weightRule = JsonUtil.fromJson(rule, WeightRule.class);
 			} catch (Exception e) {
 				this.weightRule = null;
 			}
