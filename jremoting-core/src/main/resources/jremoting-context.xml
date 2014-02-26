@@ -44,7 +44,7 @@
 		<constructor-arg name="queueSize" value="20"></constructor-arg>
 	</bean>
 
-	<bean id="rpcClient" class="com.github.jremoting.remoting.DefaultRpcClient">
+	<bean id="rpcClient" class="com.github.jremoting.transport.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="defaultSerializer" ref="hessianSerializer" />
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
@@ -56,7 +56,7 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="rpcServer" class="com.github.jremoting.remoting.DefaultRpcServer">
+	<bean id="rpcServer" class="com.github.jremoting.transport.DefaultRpcServer">
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
 		<constructor-arg name="serviceExecutor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
