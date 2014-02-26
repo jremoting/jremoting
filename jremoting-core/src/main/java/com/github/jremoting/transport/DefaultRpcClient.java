@@ -15,7 +15,6 @@ import com.github.jremoting.core.Registry;
 import com.github.jremoting.invoke.ClientInvokeFilterChain;
 import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.NetUtil;
-import com.github.jremoting.util.concurrent.EventExecutor;
 
 public class DefaultRpcClient implements RpcClient {
 	

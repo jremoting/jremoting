@@ -36,7 +36,7 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="eventExecutor" class="com.github.jremoting.util.concurrent.EventExecutor"></bean>
+	<bean id="eventExecutor" class="com.github.jremoting.transport.EventExecutor"></bean>
 	
 	<bean id="executor" class="com.github.jremoting.util.concurrent.Executors" factory-method="newExecutor">
 		<constructor-arg name="corePoolSize" value="3"></constructor-arg>

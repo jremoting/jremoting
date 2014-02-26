@@ -23,7 +23,6 @@ import com.github.jremoting.util.LifeCycleSupport;
 import com.github.jremoting.util.Logger;
 import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.NetUtil;
-import com.github.jremoting.util.concurrent.EventExecutor;
 
 public class DefaultRpcServer implements RpcServer {
 
