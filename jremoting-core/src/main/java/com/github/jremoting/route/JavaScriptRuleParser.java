@@ -31,14 +31,14 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 
 		if (routeRule instanceof MethodRouteRule) {
 			MethodRouteRule methodRouteRule = (MethodRouteRule) routeRule;
-			String result = methodRouteRule.defineMethodRule("hello",
+			String result = methodRouteRule.selectRouteTable("hello",
 					new String[] { "int" });
 			System.out.println("method rule return:" + result);
 		}
 
 		if (routeRule instanceof ParameterRouteRule) {
 			ParameterRouteRule parameterRouteRule = (ParameterRouteRule) routeRule;
-			String result = parameterRouteRule.defineParameterRule("hello",
+			String result = parameterRouteRule.selectRouteTable("hello",
 					new String[] { "int" }, new Object[] { new ServiceConsumer(
 							"interfaceName", "version", "group", null) });
 
@@ -56,12 +56,12 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 	}
 
 	public interface JavaScriptRuleAdapter {
+		
 		Map<String, String[]> defineRouteTables();
 
-		String defineMethodRule(String methodName, String[] parameterTypeNames);
+		String methodRule(String methodName, String[] parameterTypeNames);
 
-		String defineParameterRule(String methodName,
-				String[] parameterTypeNames, Object[] args);
+		String parameterRule(String methodName,String[] parameterTypeNames, Object[] args);
 
 		boolean containsMethodRule();
 
@@ -91,9 +91,9 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 			return new MethodAndParameterRouteRule() {
 
 				@Override
-				public String defineMethodRule(String methodName,
+				public String selectRouteTable(String methodName,
 						String[] parameterTypeNames) {
-					return ruleAdapter.defineMethodRule(methodName,
+					return ruleAdapter.methodRule(methodName,
 							parameterTypeNames);
 				}
 
@@ -103,9 +103,9 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 				}
 
 				@Override
-				public String defineParameterRule(String methodName,
+				public String selectRouteTable(String methodName,
 						String[] parameterTypeNames, Object[] args) {
-					return ruleAdapter.defineParameterRule(methodName,
+					return ruleAdapter.parameterRule(methodName,
 							parameterTypeNames, args);
 				}
 
@@ -119,9 +119,9 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 				}
 
 				@Override
-				public String defineMethodRule(String methodName,
+				public String selectRouteTable(String methodName,
 						String[] parameterTypeNames) {
-					return ruleAdapter.defineMethodRule(methodName,
+					return ruleAdapter.methodRule(methodName,
 							parameterTypeNames);
 				}
 			};
@@ -134,9 +134,9 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 				}
 
 				@Override
-				public String defineParameterRule(String methodName,
+				public String selectRouteTable(String methodName,
 						String[] parameterTypeNames, Object[] args) {
-					return ruleAdapter.defineParameterRule(methodName,
+					return ruleAdapter.parameterRule(methodName,
 							parameterTypeNames, args);
 				}
 			};
@@ -172,10 +172,10 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 		builder.append("		}                                                                                        ");
 		builder.append("		return map;                                                                              ");
 		builder.append("	},                                                                                           ");
-		builder.append("	defineMethodRule:function(methodName,parameterTypeNames) {                                   ");
+		builder.append("	methodRule:function(methodName,parameterTypeNames) {                                   ");
 		builder.append("		return obj.defineMethodRule(methodName,parameterTypeNames);                              ");
 		builder.append("	},                                                                                           ");
-		builder.append("	defineParameterRule:function(methodName,parameterTypeNames,args) {                           ");
+		builder.append("	parameterRule:function(methodName,parameterTypeNames,args) {                           ");
 		builder.append("		return  obj.defineParameterRule(methodName,parameterTypeNames,args);                     ");
 		builder.append("	},                                                                                           ");
 		builder.append("	containsMethodRule:function() {                                                              ");

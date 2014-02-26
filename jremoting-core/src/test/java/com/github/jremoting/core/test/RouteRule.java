@@ -10,7 +10,7 @@ import com.github.jremoting.route.ServiceRouteRule;
 public class RouteRule implements MethodRouteRule, ServiceRouteRule, ParameterRouteRule  {
 
 	@Override
-	public String defineMethodRule(String methodName,
+	public String selectRouteTable(String methodName,
 			String[] parameterTypeNames) {
 		
 		if("hello".equals(methodName)){
@@ -29,7 +29,7 @@ public class RouteRule implements MethodRouteRule, ServiceRouteRule, ParameterRo
 	}
 
 	@Override
-	public String defineParameterRule(String methodName,
+	public String selectRouteTable(String methodName,
 			String[] parameterTypeNames, Object[] args) {
 		return null;
 	}

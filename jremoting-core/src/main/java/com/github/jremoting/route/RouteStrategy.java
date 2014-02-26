@@ -54,7 +54,7 @@ public class RouteStrategy {
 		}
 		
 		if(this.parameterRouteRule != null) {
-			String tableName = this.parameterRouteRule.defineParameterRule(invoke.getMethodName(), 
+			String tableName = this.parameterRouteRule.selectRouteTable(invoke.getMethodName(), 
 					invoke.getParameterTypeNames(), invoke.getArgs());
 			if(tableName != null) {
 				List<ServiceProvider> parameterTargetProviders = this.tableNameToProviderMap.get(tableName);
@@ -65,7 +65,7 @@ public class RouteStrategy {
 		}
 		
 		if(this.methodRouteRule != null) {
-			String tableName = this.methodRouteRule.defineMethodRule(invoke.getMethodName(), invoke.getParameterTypeNames());
+			String tableName = this.methodRouteRule.selectRouteTable(invoke.getMethodName(), invoke.getParameterTypeNames());
 			if(tableName != null) {
 				List<ServiceProvider> methodTargetProviders = this.tableNameToProviderMap.get(tableName);
 				if(methodTargetProviders != null && methodTargetProviders.size() > 0) {
