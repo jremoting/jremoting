@@ -15,7 +15,7 @@ public class RouteRuleParserTest {
 		JavaRouteRuleParser parser = new JavaRouteRuleParser();
 		RouteRule rule = parser.complieRouteRule(source);
 
-		System.out.println(JSON.toJSONString(rule.createRouteTables()));
+		System.out.println(JSON.toJSONString(rule.defineRouteTables()));
 	}
 
 	static String readFile(String fileName) throws IOException {

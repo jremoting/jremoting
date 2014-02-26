@@ -10,7 +10,7 @@ import com.github.jremoting.route.ServiceRouteRule;
 public class RouteRule implements MethodRouteRule, ServiceRouteRule, ParameterRouteRule  {
 
 	@Override
-	public String selectRouteTable(String methodName,
+	public String defineMethodRule(String methodName,
 			String[] parameterTypeNames) {
 		
 		if("hello".equals(methodName)){
@@ -21,14 +21,15 @@ public class RouteRule implements MethodRouteRule, ServiceRouteRule, ParameterRo
 	}
 
 	@Override
-	public Map<String, String[]> createRouteTables() {
+	public Map<String, String[]> defineRouteTables() {
 		Map<String, String[]> tables = new HashMap<String, String[]>();
 		tables.put("G1", new String[]{"121212","121212"});
 		return tables;
+
 	}
 
 	@Override
-	public String selectRouteTable(String methodName,
+	public String defineParameterRule(String methodName,
 			String[] parameterTypeNames, Object[] args) {
 		return null;
 	}

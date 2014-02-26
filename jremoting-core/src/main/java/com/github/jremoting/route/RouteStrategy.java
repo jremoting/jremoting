@@ -40,7 +40,7 @@ public class RouteStrategy {
 				this.parameterRouteRule = null;
 			}
 			
-			initTableNameToProvidersCache(routeRule.createRouteTables());
+			initTableNameToProvidersCache(routeRule.defineRouteTables());
 		}	
 	}
 	
@@ -54,7 +54,7 @@ public class RouteStrategy {
 		}
 		
 		if(this.parameterRouteRule != null) {
-			String tableName = this.parameterRouteRule.selectRouteTable(invoke.getMethodName(), 
+			String tableName = this.parameterRouteRule.defineParameterRule(invoke.getMethodName(), 
 					invoke.getParameterTypeNames(), invoke.getArgs());
 			if(tableName != null) {
 				List<ServiceProvider> parameterTargetProviders = this.tableNameToProviderMap.get(tableName);
@@ -65,7 +65,7 @@ public class RouteStrategy {
 		}
 		
 		if(this.methodRouteRule != null) {
-			String tableName = this.methodRouteRule.selectRouteTable(invoke.getMethodName(), invoke.getParameterTypeNames());
+			String tableName = this.methodRouteRule.defineMethodRule(invoke.getMethodName(), invoke.getParameterTypeNames());
 			if(tableName != null) {
 				List<ServiceProvider> methodTargetProviders = this.tableNameToProviderMap.get(tableName);
 				if(methodTargetProviders != null && methodTargetProviders.size() > 0) {
@@ -83,7 +83,7 @@ public class RouteStrategy {
 		return allProviders;
 	}
 	
-	private void initTableNameToProvidersCache(Map<String, String[]> routeTables) {
+	private void initTableNameToProvidersCache(Map<String,String[]> routeTables) {
 		if(routeTables == null || routeTables.isEmpty()) {
 			this.tableNameToProviderMap = null;
 			return;
@@ -91,7 +91,7 @@ public class RouteStrategy {
 		this.tableNameToProviderMap = new HashMap<String, List<ServiceProvider>>();
 		
 		for (String tableName : routeTables.keySet()) {
-			String[] patterns = routeTables.get(tableName);
+			 String[] patterns = routeTables.get(tableName);
 			if(patterns != null && patterns.length > 0) {
 				List<ServiceProvider> matchedProviders = new ArrayList<ServiceProvider>();
 				for (ServiceProvider provider: allProviders) {
