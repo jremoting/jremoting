@@ -1,6 +1,9 @@
 package com.github.jremoting.transport;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -37,6 +40,8 @@ public class DefaultRpcServer implements RpcServer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
+	
+	private final Map<String, ServiceProvider> providers = new ConcurrentHashMap<String, ServiceProvider>();
 
 	public DefaultRpcServer(EventExecutor eventExecutor,
 			ExecutorService serviceExecutor,
@@ -111,6 +116,20 @@ public class DefaultRpcServer implements RpcServer {
 		this.parentGroup.shutdownGracefully();
 		//shutdown service executor thread pool refuse new invoke
 		this.serviceExecutor.shutdown();
+		
+		Collection<ServiceProvider> localProviders = null;
+		if(this.registry != null) {
+			localProviders = this.registry.getLocalProviders().values();
+		}
+		else {
+			localProviders = this.providers.values();
+		}
+		
+		for (ServiceProvider provider : localProviders) {
+			if(provider.getExecutor() != null) {
+				provider.getExecutor().shutdown();
+			}
+		}
 		//
 		this.childGroup.shutdownGracefully();
 		LOGGER.info("jremoting rpc server closed normally");
@@ -123,6 +142,9 @@ public class DefaultRpcServer implements RpcServer {
 		if(this.registry != null) {
 			this.registry.start();
 			this.registry.publish(provider);
+		}
+		else {
+			providers.put(provider.getServiceId(), provider);
 		}
 	}
 }

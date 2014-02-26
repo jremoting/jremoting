@@ -51,6 +51,7 @@
 		<constructor-arg name="asyncInvokeExecutor" ref="executor" />
 		<constructor-arg name="invokeFilters">
 			<list>
+				<bean class="com.github.jremoting.invoke.RetryInvokeFilter" />
 				<bean class="com.github.jremoting.invoke.ClusterInvokeFilter" />
 			</list>
 		</constructor-arg>
