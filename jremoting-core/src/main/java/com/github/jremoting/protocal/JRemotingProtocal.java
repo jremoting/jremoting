@@ -1,6 +1,7 @@
 package com.github.jremoting.protocal;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
@@ -129,6 +130,7 @@ public class JRemotingProtocal implements Protocal {
 		output.writeString(invoke.getVersion());
 		output.writeString(invoke.getGroup());
 		output.writeString(invoke.getMethodName());
+		output.writeObject(invoke.getAttachments());
 		output.writeInt(argLength);
 
 		if(argLength == 0) {
@@ -227,12 +229,16 @@ public class JRemotingProtocal implements Protocal {
 		String version =  input.readString();
 		String group = input.readString();
 		String methodName =  input.readString();
+		@SuppressWarnings("unchecked")
+		Map<String, String> attachments = (Map<String, String>) input.readObject(HashMap.class);
+		
 		int argsLength = input.readInt();
 		
 		
 		if(argsLength == 0) {
 			Invoke invoke = new Invoke(interfaceName,version,group,methodName,serializer, EMPTY_OBJECT_ARRAY, EMPTY_TYPE_ARRAY);
 			invoke.setId(msgId);
+			invoke.setAttachments(attachments);
 			return invoke;
 		}
 		
@@ -247,6 +253,7 @@ public class JRemotingProtocal implements Protocal {
 
 		Invoke invoke = new Invoke(interfaceName, version, group,methodName, serializer,args , parameterTypes);
 		invoke.setId(msgId);
+		invoke.setAttachments(attachments);
 		return invoke;
 	}
 

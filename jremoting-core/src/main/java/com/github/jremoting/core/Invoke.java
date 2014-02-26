@@ -12,17 +12,18 @@ public class Invoke extends Message {
 	private final String methodName;
 	private final String interfaceName;
 	private final String group;
-	
+	private Map<String, String> attachments;
 
 
 	private  Object[] args;
 	private final Class<?>[] parameterTypes;
 	private final String[] parameterTypeNames;
-	
-	
-	//run time field used
+
+
 	private final String serviceName;
 	private final String serviceId;
+
+	//run time field used
 	private ServiceConsumer consumer;
 	private Registry registry;
 	private ServiceProvider provider;
@@ -223,6 +224,13 @@ public class Invoke extends Message {
 	
 	public boolean onProviderSide() {
 		return this.consumer == null;
+	}
+
+	public Map<String, String> getAttachments() {
+		return attachments;
+	}
+	public void setAttachments(Map<String, String> attachments) {
+		this.attachments = attachments;
 	}
 	
 }
