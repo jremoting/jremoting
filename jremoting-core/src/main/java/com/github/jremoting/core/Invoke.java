@@ -217,4 +217,12 @@ public class Invoke extends Message {
 		return serviceId; 
 	}
 	
+	public boolean onConsumerSide() {
+		return this.consumer != null;
+	}
+	
+	public boolean onProviderSide() {
+		return this.consumer == null;
+	}
+	
 }
