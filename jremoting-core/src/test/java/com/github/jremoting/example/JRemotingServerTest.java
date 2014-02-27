@@ -1,4 +1,4 @@
-package com.github.jremoting.core.test;
+package com.github.jremoting.example;
 
 import java.io.IOException;
 

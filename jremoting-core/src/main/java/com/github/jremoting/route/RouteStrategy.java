@@ -14,9 +14,10 @@ public class RouteStrategy {
 	private  final List<ServiceProvider> allProviders;
 	
 	private  Map<String, List<ServiceProvider>> tableNameToProviderMap;
+	private ServiceRouteRule serviceRouteRule;
 	private  MethodRouteRule methodRouteRule;
 	private  ParameterRouteRule parameterRouteRule;
-	private boolean isEmpty = true;
+	private boolean isEmpty = false;
 	private final RouteRule routeRule;
 	
 	public RouteStrategy(List<ServiceProvider> allProviders, RouteRule routeRule) {
@@ -30,14 +31,13 @@ public class RouteStrategy {
 			if(routeRule instanceof MethodRouteRule) {
 				this.methodRouteRule = (MethodRouteRule)routeRule;
 			}
-			else {
-				this.methodRouteRule = null;
-			}
+		
 			if(routeRule instanceof ParameterRouteRule) {
 				this.parameterRouteRule = (ParameterRouteRule)routeRule;
 			}
-			else {
-				this.parameterRouteRule = null;
+			
+			if(routeRule instanceof ServiceRouteRule) {
+				this.serviceRouteRule = (ServiceRouteRule)routeRule;
 			}
 			
 			initTableNameToProvidersCache(routeRule.defineRouteTables());
@@ -74,12 +74,15 @@ public class RouteStrategy {
 			}
 		}
 		
-		List<ServiceProvider> serviceTargetProviders = this.tableNameToProviderMap.get(0);
-		
-		if(serviceTargetProviders != null && serviceTargetProviders.size() > 0) {
-			return serviceTargetProviders;
+		if(this.serviceRouteRule != null) {
+			String tableName = this.serviceRouteRule.selectRouteTable();
+			List<ServiceProvider> serviceTargetProviders = this.tableNameToProviderMap.get(tableName);
+			
+			if(serviceTargetProviders != null && serviceTargetProviders.size() > 0) {
+				return serviceTargetProviders;
+			}
 		}
-
+	
 		return allProviders;
 	}
 	

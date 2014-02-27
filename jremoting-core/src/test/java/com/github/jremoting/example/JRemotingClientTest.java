@@ -1,4 +1,4 @@
-package com.github.jremoting.core.test;
+package com.github.jremoting.example;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,8 +11,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.alibaba.fastjson.JSON;
 import com.github.jremoting.core.RpcClient;
 import com.github.jremoting.core.ServiceConsumer;
-import com.github.jremoting.core.test.TestService.HelloInput;
-import com.github.jremoting.core.test.TestService.HelloOutput;
+import com.github.jremoting.example.TestService.HelloInput;
+import com.github.jremoting.example.TestService.HelloOutput;
 import com.github.jremoting.util.concurrent.FutureListener;
 import com.github.jremoting.util.concurrent.ListenableFuture;
 

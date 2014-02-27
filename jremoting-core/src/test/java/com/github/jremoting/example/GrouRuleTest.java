@@ -1,4 +1,4 @@
-package com.github.jremoting.core.test;
+package com.github.jremoting.example;
 
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;

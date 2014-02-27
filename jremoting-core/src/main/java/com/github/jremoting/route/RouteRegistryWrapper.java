@@ -23,7 +23,7 @@ public class RouteRegistryWrapper extends AbstractRegistryWrapper {
 	
 	public RouteRegistryWrapper(Registry wrappedRegistry) {
 		super(wrappedRegistry);
-		this.routeRuleParser = new JavaRouteRuleParser();
+		this.routeRuleParser = new JavaScriptRuleParser();
 	}
 	
 	@Override

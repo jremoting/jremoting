@@ -1,10 +1,10 @@
-package com.github.jremoting.core.test;
+package com.github.jremoting.example;
 
 
 import java.util.concurrent.Future;
 
-import com.github.jremoting.core.test.TestService.HelloInput;
-import com.github.jremoting.core.test.TestService.HelloOutput;
+import com.github.jremoting.example.TestService.HelloInput;
+import com.github.jremoting.example.TestService.HelloOutput;
 import com.github.jremoting.util.concurrent.ListenableFuture;
 /**
  * client async interface
