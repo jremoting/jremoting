@@ -6,14 +6,10 @@
 	
 	<import resource="classpath:jremoting-context.xml"/>
 	
-	<bean id="testService" class="com.github.jremoting.spring.JRemotingConsumerBean" init-method="start">
-	
-		<constructor-arg name="interfaceName" value="com.github.jremoting.example.TestService" />
+	<bean id="helloService" class="com.github.jremoting.spring.JRemotingConsumerBean" init-method="start">
+		<constructor-arg name="interfaceName" value="com.github.jremoting.example.HelloService" />
 		<constructor-arg name="version" value="1.0" />
 		<constructor-arg name="rpcClient" ref="rpcClient" />
-		<property name="asyncInterfaceName" value="com.github.jremoting.example.AsyncTestService"></property>
-		<property name="appName" value="test_consumer"></property>
+		<property name="asyncInterfaceName" value="com.github.jremoting.example.AsyncHelloService"></property>
 	</bean>
-
-	
 </beans>
