@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.alibaba.fastjson.JSON;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.Registry;
 import com.github.jremoting.core.ServiceProvider;
