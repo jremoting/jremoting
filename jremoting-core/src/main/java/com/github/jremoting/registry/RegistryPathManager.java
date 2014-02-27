@@ -28,13 +28,7 @@ public class RegistryPathManager {
 	public String getServiceConfigDir() {
 		return "/services/";
 	}
-	
-	public String parseServiceId(String providerDir) {
-		String[] paths = providerDir.split("/");
-		String serviceId = paths[1];
-		return serviceId;
-	}
-	
+		
 	public String getProviderDir(ServiceParticipant participant) {
 		return "/" + participant.getServiceId() + "/providers" ;
 	}
@@ -65,7 +59,7 @@ public class RegistryPathManager {
 		return encodeUrl(url.toString());
 	}
 	
-	private String encodeUrl(String url) {
+	protected String encodeUrl(String url) {
 		try {
 			return URLEncoder.encode(url, "utf-8");
 		} catch (UnsupportedEncodingException e) {
@@ -73,7 +67,7 @@ public class RegistryPathManager {
 		}
 	}
 	
-	private String decodeUrl(String url) {
+	protected String decodeUrl(String url) {
 		try {
 			return URLDecoder.decode(url, "utf-8");
 		} catch (UnsupportedEncodingException e) {

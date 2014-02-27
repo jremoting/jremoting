@@ -1,14 +1,11 @@
 package com.github.jremoting.registry;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import com.github.jremoting.core.ServiceParticipant;
 import com.github.jremoting.core.ServiceProvider;
-import com.github.jremoting.exception.RegistryExcpetion;
 import com.github.jremoting.util.URL;
 
 
@@ -35,12 +32,6 @@ public class DubboZookeeperRegistry extends ZookeeperRegistry {
 		
 		public String getServiceConfigDir() {
 			return "/services/";
-		}
-		
-		public String parseServiceId(String providerDir) {
-			String[] paths = providerDir.split("/");
-			String serviceId = paths[1];
-			return serviceId;
 		}
 		
 		public String getProviderDir(ServiceParticipant participant) {
@@ -76,22 +67,6 @@ public class DubboZookeeperRegistry extends ZookeeperRegistry {
 			
 			URL url = new URL(protocol, participant.getAddress(), participant.getInterfaceName(), args);
 			return encodeUrl(url.toString());
-		}
-		
-		private String encodeUrl(String url) {
-			try {
-				return URLEncoder.encode(url, "utf-8");
-			} catch (UnsupportedEncodingException e) {
-				throw new RegistryExcpetion("should not happen");
-			}
-		}
-		
-		private String decodeUrl(String url) {
-			try {
-				return URLDecoder.decode(url, "utf-8");
-			} catch (UnsupportedEncodingException e) {
-				throw new RegistryExcpetion("should not happen");
-			}
 		}
 		
 		public ServiceProvider decode(String fileName) {

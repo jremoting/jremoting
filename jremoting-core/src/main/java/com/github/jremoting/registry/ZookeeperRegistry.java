@@ -2,6 +2,7 @@ package com.github.jremoting.registry;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -266,24 +267,33 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 	}
 	
 	
-	private void handleChildrenChangedEvent(CuratorEvent event) {
+	protected void handleChildrenChangedEvent(CuratorEvent event) {
 		
-		List<ServiceProvider> newProviders = new ArrayList<ServiceProvider>(event.getChildren().size());
-		for (String fileName : event.getChildren()) {
+		
+		Map<String, List<ServiceProvider>> changedProvidersMap = new HashMap<String, List<ServiceProvider>>();
+		
+		for (int i = 0; i < event.getChildren().size(); i++) {
+			String fileName = event.getChildren().get(i);
 			ServiceProvider provider = pathManager.decode(fileName);
-			newProviders.add(provider);
+			List<ServiceProvider> providers = changedProvidersMap.get(provider.getServiceId());
+			if(providers == null) {
+				providers = new ArrayList<ServiceProvider>();
+				changedProvidersMap.put(provider.getServiceId(), providers);
+			}
+			providers.add(provider);
 		}
 		
-		String serviceId = pathManager.parseServiceId(event.getPath());
-		
-		RegistryEvent registryEvent = new RegistryEvent();
-		registryEvent.setServiceId(serviceId);
-		registryEvent.setNewProviders(newProviders);
-		registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.PROVIDERS_CHANGED);
-		
-		for(RegistryListener listener : listeners) {
-			listener.onEvent(registryEvent);
+		for (String serviceId : changedProvidersMap.keySet()) {
+			RegistryEvent registryEvent = new RegistryEvent();
+			registryEvent.setServiceId(serviceId);
+			registryEvent.setNewProviders(changedProvidersMap.get(serviceId));
+			registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.PROVIDERS_CHANGED);
+			
+			for(RegistryListener listener : listeners) {
+				listener.onEvent(registryEvent);
+			}
 		}
+		
 	}
 	
 	private void handleDataChangedEvent(CuratorEvent event) {

@@ -8,10 +8,10 @@
 	
 	<bean id="testService" class="com.github.jremoting.spring.JRemotingConsumerBean" init-method="start">
 	
-		<constructor-arg name="interfaceName" value="com.github.jremoting.core.test.TestService" />
+		<constructor-arg name="interfaceName" value="com.github.jremoting.example.TestService" />
 		<constructor-arg name="version" value="1.0" />
 		<constructor-arg name="rpcClient" ref="rpcClient" />
-		<property name="asyncInterfaceName" value="com.github.jremoting.core.test.AsyncTestService"></property>
+		<property name="asyncInterfaceName" value="com.github.jremoting.example.AsyncTestService"></property>
 		<property name="appName" value="test_consumer"></property>
 	</bean>
 

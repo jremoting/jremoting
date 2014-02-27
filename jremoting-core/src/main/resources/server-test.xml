@@ -7,7 +7,7 @@
 	<import resource="classpath:jremoting-context.xml"/>
 	
 	<bean id="testServiceProvider" class="com.github.jremoting.spring.JRemotingProviderBean" init-method="start">
-		<constructor-arg name="interfaceName" value="com.github.jremoting.core.test.TestService" />
+		<constructor-arg name="interfaceName" value="com.github.jremoting.example.TestService" />
 		<constructor-arg name="version" value="1.0" />
 		<constructor-arg name="target" ref="testService" />
 		<constructor-arg name="rpcServer" ref="rpcServer" />
@@ -15,7 +15,7 @@
 		<property name="appName" value="test_provider"></property>
 	</bean>
 	
-	<bean id="testService" class="com.github.jremoting.core.test.TestServiceImpl"></bean>
+	<bean id="testService" class="com.github.jremoting.example.TestServiceImpl"></bean>
 	
 	
 </beans>

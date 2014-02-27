@@ -23,7 +23,7 @@ public class JRemotingClientTest {
 		
 		RpcClient rpcClient = context.getBean(RpcClient.class);
 		
-		ServiceConsumer consumer =  new ServiceConsumer("com.github.jremoting.core.test.TestService", "1.0", rpcClient);
+		ServiceConsumer consumer =  new ServiceConsumer("com.github.jremoting.example.TestService", "1.0", rpcClient);
 		consumer.setAppName("test_consumer");
 		consumer.start();
 		
@@ -33,7 +33,7 @@ public class JRemotingClientTest {
 		
 		//同步调用泛型调用
 		Object result = consumer.invoke("hello",
-				new String[]{"com.github.jremoting.core.test.TestService$HelloInput", "int"}, 
+				new String[]{"com.github.jremoting.example.TestService$HelloInput", "int"}, 
 				new Object[]{genericInput, 2112});
 	
 		System.out.println(JSON.toJSONString(result));
