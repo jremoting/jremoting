@@ -1,4 +1,7 @@
-jremoting是一个类似dubbo的rpc服务治理框架,主要功能包括
+jremoting是一个类似dubbo的rpc服务治理框架,并且可以与dubbo相互调用。jremoting的实现是参考了dubbo的许多概念，但是代码相比
+dubbo更简洁，模型也更精简更灵活。底层nio通信是基于netty 4.x实现的。注册中心同开源版本的dubbo一样基于zookeeper实现。
+
+主要功能包括
   1. 透明方式的rpc调用,支持consumer端异步调用与provider的异步实现
   2. 服务的动态发现
   3. 负载均衡+ failover
