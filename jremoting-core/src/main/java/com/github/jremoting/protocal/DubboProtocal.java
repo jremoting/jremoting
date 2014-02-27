@@ -22,6 +22,7 @@ import com.github.jremoting.serializer.HessianSerializer;
 import com.github.jremoting.util.ReflectUtils;
 
 
+
 public class DubboProtocal implements Protocal {
 	 // header length.
     protected static final int      HEADER_LENGTH      = 16;
@@ -98,8 +99,7 @@ public class DubboProtocal implements Protocal {
 				output.writeString(invoke.getInterfaceName());
 				output.writeString(invoke.getVersion());
 				output.writeString(invoke.getMethodName());
-				output.writeString(ReflectUtils.getDesc(invoke
-						.getParameterTypes()));
+				output.writeString(ReflectUtils.getDesc(invoke.getParameterTypeNames()));
 				if (invoke.getArgs() != null) {
 					for (int i = 0; i < invoke.getArgs().length; i++) {
 						output.writeObject(invoke.getArgs()[i]);

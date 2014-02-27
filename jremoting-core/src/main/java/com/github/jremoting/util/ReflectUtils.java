@@ -368,6 +368,31 @@ public class ReflectUtils {
 				sb.append(getDesc(c));
 			return sb.toString();
 		}
+		
+		public static String getDesc(String[] types) {
+			StringBuilder ret = new StringBuilder(64);
+			for (String t : types) {
+				if( "void".equals(t) ) ret.append(JVM_VOID);
+				else if( "boolean".equals(t) ) ret.append(JVM_BOOLEAN);
+				else if( "byte".equals(t) ) ret.append(JVM_BYTE);
+				else if( "char".equals(t) ) ret.append(JVM_CHAR);
+				else if( "double".equals(t) ) ret.append(JVM_DOUBLE);
+				else if( "float".equals(t) ) ret.append(JVM_FLOAT);
+				else if( "int".equals(t) ) ret.append(JVM_INT);
+				else if( "long".equals(t) ) ret.append(JVM_LONG);
+				else if( "short".equals(t) ) ret.append(JVM_SHORT);
+				else {
+					if(t.startsWith("[")) {
+						ret.append(t.replace('.', '/'));
+					}
+					else {
+						ret.append('L').append(t.replace('.', '/')).append(';');
+					}
+				}
+				
+			}
+			return ret.toString();
+		}
 
 		/**
 		 * get method desc.

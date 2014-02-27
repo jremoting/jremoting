@@ -4,10 +4,12 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans.xsd">
 	
+	<!-- 定义serializer,默认提供json与hessian序列化 -->
 	<bean id="jsonSerializer" class="com.github.jremoting.serializer.JsonSerializer" ></bean>
 	<bean id="hessianSerializer" class="com.github.jremoting.serializer.HessianSerializer" ></bean>
 
 
+	<!-- 定义服务注册中心,底层采用zookeeper来实现，服务的动态发现与配置的动态推送。除了CacheRegistryWrapper,与ZookeeperRegistry为必选，其他实现分组，路由，权重为可选 -->
 	<bean id="registry" class="com.github.jremoting.route.RouteRegistryWrapper">
 		<constructor-arg>
 			<bean class="com.github.jremoting.group.GroupRegistryWrapper">
@@ -25,7 +27,7 @@
 	</bean>
 
 
-	
+	<!-- 定义协议 ，并给协议关联序列化与注册中心-->
 	<bean id="jremotingProtocal" class="com.github.jremoting.protocal.JRemotingProtocal">
 		<constructor-arg name="registry" ref="registry" />
 		<constructor-arg name="serializers">
@@ -36,14 +38,17 @@
 		</constructor-arg>
 	</bean>
 
+	<!-- 定义io线程池 底层netty处理io事件与ChannelHandler的线程池 -->
 	<bean id="eventExecutor" class="com.github.jremoting.transport.EventExecutor"></bean>
 	
+	<!-- 定义用户线程池，可用于consumer端的异步回调处理，或者provider端的服务方法处理-->
 	<bean id="executor" class="com.github.jremoting.util.concurrent.Executors" factory-method="newExecutor">
 		<constructor-arg name="corePoolSize" value="3"></constructor-arg>
 		<constructor-arg name="maxPoolSize" value="20"></constructor-arg>
 		<constructor-arg name="queueSize" value="20"></constructor-arg>
 	</bean>
 
+	<!-- 定义rpc client对象，用户定制consumer端需要的各种组件，包括协议，默认序列化方式，异步调用线程池，调用拦截器 -->
 	<bean id="rpcClient" class="com.github.jremoting.transport.DefaultRpcClient">
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
 		<constructor-arg name="defaultSerializer" ref="hessianSerializer" />
@@ -51,12 +56,15 @@
 		<constructor-arg name="asyncInvokeExecutor" ref="executor" />
 		<constructor-arg name="invokeFilters">
 			<list>
+				<!-- 实现重试功能的拦截器 -->
 				<bean class="com.github.jremoting.invoke.RetryInvokeFilter" />
+				<!-- 实现软负载与failover的拦截器 , 负载方式为在可用provider间随机调用-->
 				<bean class="com.github.jremoting.invoke.ClusterInvokeFilter" />
 			</list>
 		</constructor-arg>
 	</bean>
 
+	<!-- 定义rpc server对象，定制server端的各种组件，包括协议，执行provider方法的线程池，调用拦截器 -->
 	<bean id="rpcServer" class="com.github.jremoting.transport.DefaultRpcServer">
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
 		<constructor-arg name="serviceExecutor" ref="executor" />
@@ -67,6 +75,7 @@
 		</constructor-arg>
 	</bean>
 	
+	<!-- 监听spring容器的关闭事件，同时关闭jremoting需要关闭的资源，包括监听,注册中心，线程池 -->
 	<bean id="jremmotingLifeCycle" class="com.github.jremoting.spring.JRemotingLifeCycleBean">
 		<property name="rpcClients">
 			<list>
