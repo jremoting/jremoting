@@ -5,11 +5,15 @@ import java.util.List;
 
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.util.JsonUtil;
+import com.github.jremoting.util.Logger;
+import com.github.jremoting.util.LoggerFactory;
 import com.github.jremoting.util.StringUtil;
 
 public class WeightStrategy {
 	
 	private  WeightRule weightRule;
+	
+	private final Logger logger = LoggerFactory.getLogger(WeightStrategy.class);
 	
 	public WeightStrategy(String rule) {
 		if(StringUtil.isEmpty(rule)) {
@@ -19,6 +23,7 @@ public class WeightStrategy {
 			try {
 				this.weightRule = JsonUtil.fromJson(rule, WeightRule.class);
 			} catch (Exception e) {
+				logger.error("invalid weight json:" + e.getMessage(),e);
 				this.weightRule = null;
 			}
 		}
