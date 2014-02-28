@@ -19,7 +19,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		// if invoke already has remote address then skip registry for debug use
 		if(invoke.getConsumer().isDevMode() && invoke.getConsumer().getRemoteAddress() != null) {
 			return getNext().invoke(invoke);
-		}
+		} 
 		
 		List<ServiceProvider> providers = invoke.getRegistry().getProviders(invoke);
 		
