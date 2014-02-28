@@ -18,8 +18,8 @@ public abstract class ServiceParticipant {
 	private final String serviceName;
 	private String serviceId;
 	
-
-
+	private boolean devMode =Boolean.parseBoolean(System.getProperty("jremoting.dev.mode", "false"));
+	
 	public ServiceParticipant(String interfaceName, String version, String group) {
 		this.interfaceName = interfaceName;
 		this.version = version;
@@ -112,6 +112,14 @@ public abstract class ServiceParticipant {
 
 	public void setAppName(String appName) {
 		this.appName = appName;
+	}
+
+	public boolean isDevMode() {
+		return devMode;
+	}
+
+	public void setDevMode(boolean devMode) {
+		this.devMode = devMode;
 	}
 
 }

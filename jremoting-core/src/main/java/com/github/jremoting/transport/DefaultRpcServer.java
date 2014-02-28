@@ -78,7 +78,7 @@ public class DefaultRpcServer implements RpcServer {
 					public void initChannel(SocketChannel ch) throws Exception {
 						ch.pipeline().addLast(
 								new NettyMessageCodec(protocal),
-								new NettyServerHandler(serviceExecutor,invokeFilterChain, registry));
+								new NettyServerHandler(serviceExecutor,invokeFilterChain, registry,providers));
 					}
 				});
 		
@@ -113,7 +113,11 @@ public class DefaultRpcServer implements RpcServer {
 			this.serverChannel.close();
 		}
 		
-		this.parentGroup.shutdownGracefully();
+		try {
+			this.parentGroup.shutdownGracefully().sync();
+		} catch (InterruptedException e) {
+			//ignore
+		}
 		//shutdown service executor thread pool refuse new invoke
 		this.serviceExecutor.shutdown();
 		
@@ -131,7 +135,11 @@ public class DefaultRpcServer implements RpcServer {
 			}
 		}
 		//
-		this.childGroup.shutdownGracefully();
+		try {
+			this.childGroup.shutdownGracefully().sync();
+		} catch (InterruptedException e) {
+			//ignore
+		}
 		LOGGER.info("jremoting rpc server closed normally");
 	}
 
@@ -139,6 +147,12 @@ public class DefaultRpcServer implements RpcServer {
 	public void register(ServiceProvider provider) {
 		provider.setAddress(serverAddress);
 		this.start();
+		
+		if(provider.isDevMode()) {
+			providers.put(provider.getServiceId(), provider);
+			return;
+		}
+		
 		if(this.registry != null) {
 			this.registry.start();
 			this.registry.publish(provider);

@@ -18,7 +18,8 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	@Override
 	public Object invoke(Invoke invoke) {
 		// if invoke already has remote address then skip registry for debug use
-		if(invoke.getRemoteAddress() != null) {
+		if(invoke.getConsumer().isDevMode() && invoke.getConsumer().getAddress() != null) {
+			invoke.setRemoteAddress(invoke.getConsumer().getAddress());
 			return getNext().invoke(invoke);
 		}
 		
@@ -79,7 +80,8 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	@Override
 	public Object beginInvoke(Invoke invoke) {
 		// if invoke already has remote address then skip registry for debug use
-		if (invoke.getRemoteAddress() != null) {
+		if(invoke.getConsumer().isDevMode() && invoke.getConsumer().getAddress() != null) {
+			invoke.setRemoteAddress(invoke.getConsumer().getAddress());
 			return getNext().beginInvoke(invoke);
 		}
 

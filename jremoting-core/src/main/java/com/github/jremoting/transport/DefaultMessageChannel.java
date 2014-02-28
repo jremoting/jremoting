@@ -97,6 +97,10 @@ public class DefaultMessageChannel implements MessageChannel  {
 
 	@Override
 	public void close() {
-		eventLoopGroup.shutdownGracefully();
+		try {
+			eventLoopGroup.shutdownGracefully().sync();
+		} catch (InterruptedException e) {
+			//ignore
+		}
 	}
 }

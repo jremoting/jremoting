@@ -65,7 +65,13 @@ public class DefaultRpcClient implements RpcClient {
 	@Override
 	public void register(ServiceConsumer consumer) {
 	
+		if(consumer.isDevMode()) {
+			return;
+		}
+		
 		this.start();
+
+		
 		if(this.registry != null) {
 			consumer.setAddress(localIp);
 			this.registry.subscribe(consumer);

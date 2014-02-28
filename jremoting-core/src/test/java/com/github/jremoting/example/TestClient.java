@@ -48,7 +48,7 @@ public class TestClient {
 		//如果consumer端，不想依赖provider定义的接口，也可以直接调用远程方法，不过要把复杂对象都用map来代替，返回结果也一样
 		RpcClient rpcClient = context.getBean(RpcClient.class);
 		ServiceConsumer consumer = new ServiceConsumer("com.github.jremoting.example.HelloService", "1.0", rpcClient).start();
-		
+		consumer.setAddress("10.10.53.160:8686");
 		Object obj = consumer.invoke("hello", new String[]{java.lang.String.class.getName()}, new Object[]{"generic invoke!"});
 		
 		System.out.println(obj);

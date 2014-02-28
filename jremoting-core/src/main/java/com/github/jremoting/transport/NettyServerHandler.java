@@ -2,6 +2,7 @@ package com.github.jremoting.transport;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -32,12 +33,14 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 	private final ServerInvokeFilterChain invokeFilterChain;
 	private final Executor executor;
 	private final Registry registry;
+	private final Map<String, ServiceProvider> providers;
 	
 	public NettyServerHandler(Executor executor, ServerInvokeFilterChain invokeFilterChain,
-			 Registry registry) {
+			 Registry registry,Map<String, ServiceProvider> providers) {
 		this.executor = executor;
 		this.invokeFilterChain = invokeFilterChain;
 		this.registry = registry;
+		this.providers = providers;
 	}
 	
 	@Override
@@ -54,6 +57,9 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 		if(msg instanceof Invoke) {
 			final Invoke invoke = (Invoke)msg;
 			ServiceProvider provider = this.registry.getLocalProviders().get(invoke.getServiceId());
+			if(provider == null) {
+				provider = providers.get(invoke.getServiceId());
+			}
 			
 			if(provider == null) {
 				InvokeResult errorResult = new InvokeResult(new ServiceUnavailableException("no provider found"), invoke.getId(),
