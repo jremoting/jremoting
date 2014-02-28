@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
-import com.github.jremoting.core.ServiceParticipant;
 import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.FailoverableException;
 import com.github.jremoting.exception.RemotingException;
@@ -36,7 +35,8 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		//if encounter failoverable exception will try next provider in provider list
 		//if all failed then throw last exception
 		for (int i = 0 ; i < providers.size() ; i++) {
-			ServiceParticipant provider = providers.get(nextProviderIndex % providers.size());
+			ServiceProvider provider = providers.get(nextProviderIndex % providers.size());
+			invoke.setProvider(provider);
 			invoke.setRemoteAddress(provider.getAddress());
 			
 			try {
@@ -92,8 +92,9 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 			context = new ClusterAsyncInvokeContext(providers, (int)invoke.getId());
 			invoke.setAsyncContext(ClusterAsyncInvokeContext.CONTEXT_KEY, context);
 		}
-	
-		invoke.setRemoteAddress(context.providers.get(context.nextProviderIndex++ % context.providers.size()).getAddress());
+		ServiceProvider provider = context.providers.get(context.nextProviderIndex++ % context.providers.size());
+		invoke.setRemoteAddress(provider.getAddress());
+		invoke.setProvider(provider);
 		context.tryTimes--;
 		return getNext().beginInvoke(invoke);
 	}

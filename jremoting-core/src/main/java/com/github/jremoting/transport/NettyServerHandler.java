@@ -68,7 +68,9 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 				return;
 			}
 			
+			invoke.setProvider(provider);
 			invoke.setTarget(provider.getTarget());
+			invoke.setRemoteAddress(NetUtil.toStringAddress(ctx.channel().remoteAddress()));
 		
 			findTargetMethod(invoke, provider);
 			
