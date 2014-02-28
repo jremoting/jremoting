@@ -87,7 +87,7 @@ public class JvmUtil {
 			@Override
 			public void run() {
 				
-				String jremotingDumpDir  =  System.getProperty("jremoting.dir");
+				String jremotingDumpDir  =  System.getProperty("jremoting.dump.dir");
 				if(jremotingDumpDir == null) {
 					jremotingDumpDir = System.getProperty("user.dir");
 			    	if(jremotingDumpDir == null) {

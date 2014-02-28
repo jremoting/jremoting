@@ -13,6 +13,7 @@ import com.github.jremoting.util.concurrent.ListenableFuture;
 public class TestClient {
 	public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
 		
+		
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("client-context.xml");
 		
 		HelloService helloService = context.getBean(HelloService.class);

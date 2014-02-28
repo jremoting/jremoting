@@ -69,7 +69,7 @@
 		<constructor-arg name="eventExecutor" ref="eventExecutor" />
 		<constructor-arg name="serviceExecutor" ref="executor" />
 		<constructor-arg name="protocal" ref="jremotingProtocal" />
-		<constructor-arg name="port" value="8687" />
+		<constructor-arg name="port" value="8686" />
 		<constructor-arg name="invokeFilters">
 			<list></list>
 		</constructor-arg>

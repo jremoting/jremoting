@@ -3,7 +3,7 @@ package com.github.jremoting.core;
 public abstract class ServiceParticipant {
 
 	public static final String DEFAULT_GROUP = "default";
-	public static final String DEFAULT_APP_NAME = "jremoting";
+	public static final String DEFAULT_APP_NAME = System.getProperty("jremoting.app.name","jremoting");
 	
 	private String appName = DEFAULT_APP_NAME;
 	private final String interfaceName;
