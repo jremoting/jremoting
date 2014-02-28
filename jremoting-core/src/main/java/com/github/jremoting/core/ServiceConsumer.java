@@ -8,6 +8,8 @@ public class ServiceConsumer extends ServiceParticipant {
 	
 	private final RpcClient rpcClient;
 	
+	private String remoteAddress;
+	
 	public ServiceConsumer(String interfaceName, String version, RpcClient rpcClient) {
 		super(interfaceName, version, null);
 		this.rpcClient = rpcClient;
@@ -29,6 +31,7 @@ public class ServiceConsumer extends ServiceParticipant {
 				args, parameterTypeNames);
 		invoke.setTimeout(this.getTimeout());
 		invoke.setConsumer(this);
+		invoke.setRemoteAddress(this.getRemoteAddress());
 		return rpcClient.invoke(invoke);
 	}
 
@@ -39,6 +42,7 @@ public class ServiceConsumer extends ServiceParticipant {
 		invoke.setTimeout(this.getTimeout());
 		invoke.setAsync(true);
 		invoke.setConsumer(this);
+		invoke.setRemoteAddress(this.getRemoteAddress());
 		return (ListenableFuture<?>)rpcClient.invoke(invoke);
 	}
 
@@ -52,5 +56,13 @@ public class ServiceConsumer extends ServiceParticipant {
 
 	public RpcClient getRpcClient() {
 		return rpcClient;
+	}
+
+	public String getRemoteAddress() {
+		return remoteAddress;
+	}
+
+	public void setRemoteAddress(String remoteAddress) {
+		this.remoteAddress = remoteAddress;
 	}
 }
