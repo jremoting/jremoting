@@ -65,7 +65,7 @@ public class DefaultRpcClient implements RpcClient {
 	@Override
 	public void register(ServiceConsumer consumer) {
 	
-		if(consumer.isDevMode() && consumer.getAddress() != null) {
+		if(consumer.isDevMode() && consumer.getRemoteAddress() != null) {
 			return;
 		}
 		
