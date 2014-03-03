@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -120,6 +121,10 @@ public class DefaultRpcServer implements RpcServer {
 		}
 		//shutdown service executor thread pool refuse new invoke
 		this.serviceExecutor.shutdown();
+		try {
+			this.serviceExecutor.awaitTermination(10, TimeUnit.SECONDS);
+		} catch (InterruptedException ignore) {
+		}
 		
 		Collection<ServiceProvider> localProviders = null;
 		if(this.registry != null) {
@@ -132,6 +137,10 @@ public class DefaultRpcServer implements RpcServer {
 		for (ServiceProvider provider : localProviders) {
 			if(provider.getExecutor() != null) {
 				provider.getExecutor().shutdown();
+				try {
+					provider.getExecutor().awaitTermination(15, TimeUnit.SECONDS);
+				} catch (InterruptedException ignore) {
+				}
 			}
 		}
 		//
