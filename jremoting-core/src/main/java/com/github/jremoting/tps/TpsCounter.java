@@ -8,14 +8,16 @@ public class TpsCounter {
 	private final AtomicReference<Counter> currentCounter;
 	private final long timeWindow;
 	private final int rate;
+	private final AtomicInteger peak;
 	
-	public TpsCounter(long timeWindow, int rate) {
+	public TpsCounter(long timeWindow, int rate, int peak) {
 		this.timeWindow = timeWindow;
 		this.rate = rate;
 		this.currentCounter = new AtomicReference<Counter>(new Counter(timeWindow, rate));
+		this.peak = new AtomicInteger(peak);
 	}
 	
-	public boolean check() {
+	public boolean beginInvoke() {
 		Counter oldCounter = currentCounter.get();
 		if(oldCounter.isExpired()) {
 			Counter newCounter = new Counter(timeWindow, rate);
@@ -30,7 +32,17 @@ public class TpsCounter {
 			};
 		}
 		
+		int leftPeak =  peak.decrementAndGet();
+		if(leftPeak < 0) {
+			peak.incrementAndGet();
+			return false;
+		}
+		
 		return currentCounter.get().grant();
+	}
+	
+	public void endInvoke() {
+		peak.incrementAndGet();
 	}
 
 	private static class Counter {

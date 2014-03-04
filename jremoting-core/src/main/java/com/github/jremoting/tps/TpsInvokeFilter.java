@@ -32,12 +32,17 @@ public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryLis
 	@Override
 	public Object invoke(Invoke invoke) {
 		
-		checkTpsRule(invoke);
-	
-		return getNext().invoke(invoke);
+		TpsRule tpsRule = beginTpsInvoke(invoke);
+		
+		Object invokeResult = getNext().invoke(invoke);
+		
+		tpsRule.endInvoke(invoke);
+		
+		return invokeResult;
+		
 	}
 
-	private void checkTpsRule(Invoke invoke) {
+	private TpsRule beginTpsInvoke(Invoke invoke) {
 		if(cachedTpsRule == null) {
 			String config = this.registry.getAppConfig(SystemProperties.APP_NAME, configFileName);
 			cachedTpsRule = TpsRules.parseJsonRule(config);
@@ -50,19 +55,33 @@ public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryLis
 			tpsRules.put(invoke.getServiceName(), tpsRule);
 		}
 		
-		if(!tpsRule.check(invoke)) {
+		if(!tpsRule.beginInvoke(invoke)) {
 			throw new RemotingException("tps error");
 		}
+		return tpsRule;
 	}
+
+
 
 	@Override
 	public Object beginInvoke(Invoke invoke) {
-		checkTpsRule(invoke);
+		
+		TpsRule tpsRule = beginTpsInvoke(invoke);
+
+		invoke.setAsyncContext(CONTEXT_KEY, tpsRule);
 		return getNext().beginInvoke(invoke);
 	}
+	
+	private static final String CONTEXT_KEY = TpsInvokeFilter.class.getName();
 
 	@Override
 	public void endInvoke(Invoke invoke, Object result) {
+		TpsRule tpsRule = (TpsRule) invoke.getAsyncContext(CONTEXT_KEY);
+		
+		if(tpsRule !=null) {
+			tpsRule.endInvoke(invoke);
+		}
+		
 		getPrev().endInvoke(invoke, result);
 	}
 
