@@ -76,6 +76,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			invoke.setProvider(provider);
 			invoke.setTimeout(provider.getTimeout());
 			invoke.setTarget(provider.getTarget());
+			invoke.setInvokeChain(invokeFilterChain);
 			invoke.setRemoteAddress(NetUtil.toStringAddress(ctx.channel().remoteAddress()));
 		
 			findTargetMethod(invoke, provider);
@@ -212,7 +213,16 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			public void run() {
 				Invoke asyncInvoke = asyncInvokes.remove(invoke.getId());
 				if(asyncInvoke != null) {
+					
 					TimeoutException timeoutException = new TimeoutException("server timeout!");
+					
+					try {
+						asyncInvoke.getInvokeChain().endInvoke(asyncInvoke, timeoutException);
+					} catch (Throwable th) {
+						LOGGER.error("error happens when run server filter's endInvoke chain , msg->" + th.getMessage(), th);
+					}
+					
+					
 					InvokeResult errorResult = new InvokeResult(timeoutException, invoke.getId(),
 						invoke.getSerializer());
 					ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
