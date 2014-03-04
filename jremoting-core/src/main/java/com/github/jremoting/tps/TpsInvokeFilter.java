@@ -9,7 +9,6 @@ import com.github.jremoting.core.Registry;
 import com.github.jremoting.core.RegistryEvent;
 import com.github.jremoting.core.RegistryEvent.EventType;
 import com.github.jremoting.core.RegistryListener;
-import com.github.jremoting.exception.RemotingException;
 import com.github.jremoting.tps.TpsRules.TpsRule;
 
 public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryListener {
@@ -55,9 +54,8 @@ public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryLis
 			tpsRules.put(invoke.getServiceName(), tpsRule);
 		}
 		
-		if(!tpsRule.beginInvoke(invoke)) {
-			throw new RemotingException("tps error");
-		}
+		tpsRule.beginInvoke(invoke);
+		
 		return tpsRule;
 	}
 

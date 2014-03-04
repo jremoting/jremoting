@@ -3,6 +3,8 @@ package com.github.jremoting.tps;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.github.jremoting.exception.RemotingException;
+
 public class TpsCounter {
 	
 	private final AtomicReference<Counter> currentCounter;
@@ -17,11 +19,11 @@ public class TpsCounter {
 		this.peak = new AtomicInteger(peak);
 	}
 	
-	public boolean beginInvoke() {
+	public void beginInvoke() {
 		int leftPeak =  peak.decrementAndGet();
 		if(leftPeak < 0) {
 			peak.incrementAndGet();
-			return false;
+			throw new RemotingException("tps peak error");
 		}
 		
 		Counter oldCounter = currentCounter.get();
@@ -38,7 +40,9 @@ public class TpsCounter {
 			};
 		}
 		
-		return currentCounter.get().grant();
+		if(!currentCounter.get().grant()) {
+			throw new RemotingException("tps rate error");
+		}
 	}
 	
 	public void endInvoke() {

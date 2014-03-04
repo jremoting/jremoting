@@ -48,8 +48,10 @@ public class TpsRules {
 			}
 		}
 		
-		public boolean beginInvoke(Invoke invoke) {
-			return counter == null ? true : counter.beginInvoke();
+		public void beginInvoke(Invoke invoke) {
+			if(counter != null) {
+				counter.beginInvoke();
+			}
 		}
 		
 		public void endInvoke(Invoke invoke) {
@@ -78,8 +80,7 @@ public class TpsRules {
 			this.peak = peak;
 		}
 		public static TpsRule DUMMY = new TpsRule() {
-			public boolean beginInvoke(Invoke invoke) {
-				return true;
+			public void beginInvoke(Invoke invoke) {
 			}
 			public void endInvoke(Invoke invoke) {
 				
@@ -110,14 +111,13 @@ public class TpsRules {
 		}
 		
 		
-		public boolean beginInvoke(Invoke invoke) {
-			if(!super.beginInvoke(invoke)) {
-				return false;
-			}
+		public void beginInvoke(Invoke invoke) {
+			
+			super.beginInvoke(invoke);
 			
 			TpsRule methodRule = getMethodRule(invoke.getMethodName());
 			
-			return methodRule.beginInvoke(invoke);
+			methodRule.beginInvoke(invoke);
 		}
 		
 		public void endInvoke(Invoke invoke) {
@@ -162,10 +162,6 @@ public class TpsRules {
 		
 		public boolean isMatch(String methodName) {
 			return this.methodName.equals(methodName);
-		}
-		
-		public boolean beginInvoke(Invoke invoke) {
-			return false;
 		}
 	}
 
