@@ -3,8 +3,10 @@ package com.github.jremoting.transport;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import com.github.jremoting.core.HeartbeatMessage;
 import com.github.jremoting.core.Invoke;
@@ -14,6 +16,7 @@ import com.github.jremoting.core.ServiceProvider;
 import com.github.jremoting.exception.ServerBusyException;
 import com.github.jremoting.exception.ServerErrorException;
 import com.github.jremoting.exception.ServiceUnavailableException;
+import com.github.jremoting.exception.TimeoutException;
 import com.github.jremoting.invoke.ServerInvokeFilterChain;
 import com.github.jremoting.util.JvmUtil;
 import com.github.jremoting.util.Logger;
@@ -34,6 +37,8 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 	private final Executor executor;
 	private final Registry registry;
 	private final Map<String, ServiceProvider> providers;
+	
+	private final Map<Long, Invoke> asyncInvokes = new ConcurrentHashMap<Long, Invoke>();
 	
 	public NettyServerHandler(Executor executor, ServerInvokeFilterChain invokeFilterChain,
 			 Registry registry,Map<String, ServiceProvider> providers) {
@@ -69,6 +74,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			}
 			
 			invoke.setProvider(provider);
+			invoke.setTimeout(provider.getTimeout());
 			invoke.setTarget(provider.getTarget());
 			invoke.setRemoteAddress(NetUtil.toStringAddress(ctx.channel().remoteAddress()));
 		
@@ -161,7 +167,10 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			@Override
 			public void onSuccess(Object result) {
 				try {
-					invokeFilterChain.endInvoke(invoke, result);
+					Invoke asyncInvoke = asyncInvokes.remove(invoke.getId());
+					if(asyncInvoke != null) {
+						invokeFilterChain.endInvoke(invoke, result);
+					}
 				} catch (Throwable th) {
 					LOGGER.error("error happens when run server filter's endInvoke chain , msg->" + th.getMessage(), th);
 				}
@@ -175,7 +184,11 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			@Override
 			public void onFailure(Throwable t) {
 				try {
-					invokeFilterChain.endInvoke(invoke, t);
+					Invoke asyncInvoke = asyncInvokes.remove(invoke.getId());
+					if(asyncInvoke != null) {
+						invokeFilterChain.endInvoke(invoke, t);
+					}
+					
 				} catch (Throwable th) {
 					LOGGER.error("error happens when run server filter's endInvoke chain , msg->" + th.getMessage(), th);
 				}
@@ -191,6 +204,22 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 		asyncArgs[invoke.getArgs().length] = callback;
 
 		invoke.setArgs(asyncArgs);
+		
+		asyncInvokes.put(invoke.getId(), invoke);
+		
+		ctx.executor().schedule(new Runnable() {
+			@Override
+			public void run() {
+				Invoke asyncInvoke = asyncInvokes.remove(invoke.getId());
+				if(asyncInvoke != null) {
+					TimeoutException timeoutException = new TimeoutException("server timeout!");
+					InvokeResult errorResult = new InvokeResult(timeoutException, invoke.getId(),
+						invoke.getSerializer());
+					ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+				}
+			}
+		}, invoke.getTimeout(), TimeUnit.MILLISECONDS);
+		
 		invokeFilterChain.beginInvoke(invoke);
 	}
 	
