@@ -3,7 +3,7 @@ package com.github.jremoting.core;
 public abstract class ServiceParticipant {
 
 	public static final String DEFAULT_GROUP = "default";
-	public static final String DEFAULT_APP_NAME = System.getProperty("jremoting.app.name","jremoting");
+	public static final String DEFAULT_APP_NAME = SystemProperties.APP_NAME;
 	
 	private String appName = DEFAULT_APP_NAME;
 	private final String interfaceName;
@@ -18,7 +18,7 @@ public abstract class ServiceParticipant {
 	private final String serviceName;
 	private String serviceId;
 	
-	private boolean devMode =Boolean.parseBoolean(System.getProperty("jremoting.dev.mode", "false"));
+	private boolean devMode = SystemProperties.DEV_MODE;
 	
 	public ServiceParticipant(String interfaceName, String version, String group) {
 		this.interfaceName = interfaceName;

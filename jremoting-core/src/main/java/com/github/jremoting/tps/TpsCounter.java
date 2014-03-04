@@ -5,38 +5,37 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class TpsCounter {
 	
-	private final AtomicReference<Token> currentToken;
+	private final AtomicReference<Counter> currentCounter;
 	private final long timeWindow;
 	private final int rate;
 	
 	public TpsCounter(long timeWindow, int rate) {
 		this.timeWindow = timeWindow;
 		this.rate = rate;
-		this.currentToken = new AtomicReference<TpsCounter.Token>(new Token(timeWindow, rate));
+		this.currentCounter = new AtomicReference<Counter>(new Counter(timeWindow, rate));
 	}
 	
 	public boolean check() {
-		Token oldToken = currentToken.get();
-		if(oldToken.isExpired()) {
-			Token newToken = new Token(timeWindow, rate);
-			while (!currentToken.compareAndSet(oldToken, newToken)) {
-				oldToken = currentToken.get();
-				if(!oldToken.isExpired()) {
+		Counter oldCounter = currentCounter.get();
+		if(oldCounter.isExpired()) {
+			Counter newCounter = new Counter(timeWindow, rate);
+			while (!currentCounter.compareAndSet(oldCounter, newCounter)) {
+				oldCounter = currentCounter.get();
+				if(!oldCounter.isExpired()) {
 					break;
 				}
 				else {
-					newToken = new Token(timeWindow, rate);
+					newCounter = new Counter(timeWindow, rate);
 				}
 			};
 		}
 		
-		return currentToken.get().grant();
+		return currentCounter.get().grant();
 	}
-	
-	
-	private static class Token {
+
+	private static class Counter {
 		
-		public Token(long timeWindow,int rate) {
+		public Counter(long timeWindow,int rate) {
 			this.startTime =System.currentTimeMillis();
 			this.timeWindow = timeWindow;
 			this.rate = new AtomicInteger(rate);
@@ -48,7 +47,8 @@ public class TpsCounter {
 			return System.currentTimeMillis() - this.startTime > timeWindow;
 		}
 		public boolean grant() {
-			return this.rate.decrementAndGet() > 0;
+			return this.rate.decrementAndGet() >= 0;
 		}
 	}
+	
 }
