@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.alibaba.fastjson.JSON;
 import com.github.jremoting.core.Invoke;
+import com.github.jremoting.util.JsonUtil;
 
 public class TpsRules {
 	
 	public static TpsRules parseJsonRule(String rule) {
 
 		try {
-			TpsRules result  = JSON.parseObject(rule, TpsRules.class);
+			TpsRules result  = JsonUtil.fromJson(rule, TpsRules.class);
 			return result;
 		}
 		catch(Exception e) {
