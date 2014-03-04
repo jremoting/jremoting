@@ -18,6 +18,12 @@ public class TpsCounter {
 	}
 	
 	public boolean beginInvoke() {
+		int leftPeak =  peak.decrementAndGet();
+		if(leftPeak < 0) {
+			peak.incrementAndGet();
+			return false;
+		}
+		
 		Counter oldCounter = currentCounter.get();
 		if(oldCounter.isExpired()) {
 			Counter newCounter = new Counter(timeWindow, rate);
@@ -30,12 +36,6 @@ public class TpsCounter {
 					newCounter = new Counter(timeWindow, rate);
 				}
 			};
-		}
-		
-		int leftPeak =  peak.decrementAndGet();
-		if(leftPeak < 0) {
-			peak.incrementAndGet();
-			return false;
 		}
 		
 		return currentCounter.get().grant();
