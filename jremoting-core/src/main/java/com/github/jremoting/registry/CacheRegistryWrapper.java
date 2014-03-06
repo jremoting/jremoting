@@ -18,6 +18,8 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	private ConcurrentHashMap<String, ConcurrentHashMap<String, String>> cachedAppConfigs = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
 	private ConcurrentHashMap<String, ConcurrentHashMap<String, String>> cachedServiceConfigs = new ConcurrentHashMap<String, ConcurrentHashMap<String,String>>();
 	private ConcurrentHashMap<String, String> cachedGlobalConfigs = new ConcurrentHashMap<String, String>();
+	
+	private ConcurrentHashMap<String, Object> cacheInitLocks = new ConcurrentHashMap<String, Object>();
 
 	public CacheRegistryWrapper(Registry wrappedRegistry) {
 		super(wrappedRegistry);
@@ -30,9 +32,16 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 			return providers;
 		}
 		else {
-			providers = this.wrappedRegistry.getProviders(invoke);
-			cachedProviders.put(invoke.getServiceId(), providers);
-			return providers;
+			Object lock = getCacheInitLock(invoke.getServiceId());
+			synchronized (lock) {
+				providers = cachedProviders.get(invoke.getServiceId());
+				if (providers != null) {
+					return providers;
+				}
+				providers = this.wrappedRegistry.getProviders(invoke);
+				cachedProviders.put(invoke.getServiceId(), providers);
+				return providers;
+			}
 		}
 	}
 	
@@ -40,8 +49,14 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 	public String getGlobalConfig(String fileName) {
 		String content = cachedGlobalConfigs.get(fileName);
 		if(content == null) {
-			content = this.wrappedRegistry.getGlobalConfig(fileName);
-			cachedGlobalConfigs.put(fileName, content);
+			Object lock = getCacheInitLock(fileName);
+			synchronized (lock) {
+				content = cachedGlobalConfigs.get(fileName);
+				if(content == null) {
+					content = this.wrappedRegistry.getGlobalConfig(fileName);
+					cachedGlobalConfigs.put(fileName, content);
+				}
+			}
 		}
 		return content;
 	}
@@ -51,8 +66,14 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 		ConcurrentHashMap<String, String> appConfigs = getCachedAppConfigs(appName);
 		String content = appConfigs.get(fileName);
 		if(content == null) {
-			content = this.wrappedRegistry.getAppConfig(appName, fileName);
-			appConfigs.put(fileName, content);
+			Object lock = getCacheInitLock(appName + "/" +fileName);
+			synchronized (lock) {
+				content = appConfigs.get(fileName);
+				if(content == null) {
+					content = this.wrappedRegistry.getAppConfig(appName, fileName);
+					appConfigs.put(fileName, content);
+				}
+			}
 		}
 		return content;
 	}
@@ -63,8 +84,14 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 		
 		String content = serviceConifgs.get(fileName);
 		if(content == null) {
-			content = this.wrappedRegistry.getServiceConfig(serviceName, fileName);
-			serviceConifgs.put(fileName, content);
+			Object lock = getCacheInitLock(serviceName + "/" + fileName);
+			synchronized (lock) {
+				content = serviceConifgs.get(fileName);
+				if(content == null) {
+					content = this.wrappedRegistry.getServiceConfig(serviceName, fileName);
+					serviceConifgs.put(fileName, content);
+				}
+			}
 		}
 		
 		return content;
@@ -88,6 +115,16 @@ public class CacheRegistryWrapper extends AbstractRegistryWrapper {
 		}
 	}
 	
+	
+	private Object getCacheInitLock(String filePath) {
+		Object lock = cacheInitLocks.get(filePath);
+		if(lock == null) {
+			cacheInitLocks.putIfAbsent(filePath, new Object());
+			lock = cacheInitLocks.get(filePath);
+		}
+		
+		return lock;
+	}
 	
 	private ConcurrentHashMap<String, String> getCachedAppConfigs(String appName) {
 		ConcurrentHashMap<String, String> configs = cachedAppConfigs.get(appName);
