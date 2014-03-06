@@ -62,7 +62,7 @@ public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryLis
 
 
 	@Override
-	public Object beginInvoke(Invoke invoke) {
+	public void beginInvoke(Invoke invoke) {
 		
 		TpsRule tpsRule = getTpsRule(invoke);
 
@@ -70,7 +70,7 @@ public class TpsInvokeFilter extends AbstractInvokeFilter implements RegistryLis
 		
 		invoke.setAsyncContext(CONTEXT_KEY, tpsRule);
 		
-		return getNext().beginInvoke(invoke);
+		 getNext().beginInvoke(invoke);
 	}
 	
 	private static final String CONTEXT_KEY = TpsInvokeFilter.class.getName();

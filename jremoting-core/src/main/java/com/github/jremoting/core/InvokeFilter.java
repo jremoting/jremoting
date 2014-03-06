@@ -13,7 +13,7 @@ public interface InvokeFilter {
 
 	Object invoke(Invoke invoke);
 	
-	Object beginInvoke(Invoke invoke);
+	void beginInvoke(Invoke invoke);
 	
 	void endInvoke(Invoke invoke, Object result);
 	

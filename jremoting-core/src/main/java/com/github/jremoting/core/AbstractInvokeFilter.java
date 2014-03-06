@@ -20,8 +20,8 @@ public abstract  class AbstractInvokeFilter implements InvokeFilter {
 	}
 
 	@Override
-	public Object beginInvoke(Invoke invoke) {
-		return getNext().beginInvoke(invoke);
+	public void beginInvoke(Invoke invoke) {
+		 getNext().beginInvoke(invoke);
 	}
 
 	@Override

@@ -75,10 +75,11 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	}
 	
 	@Override
-	public Object beginInvoke(Invoke invoke) {
+	public void beginInvoke(Invoke invoke) {
 		
 		if(invoke.getConsumer().isDevMode() && invoke.getConsumer().getRemoteAddress() != null) {
-			return getNext().beginInvoke(invoke);
+			 getNext().beginInvoke(invoke);
+			 return;
 		}
 
 		ClusterAsyncInvokeContext context = (ClusterAsyncInvokeContext) invoke
@@ -92,7 +93,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		invoke.setRemoteAddress(provider.getAddress());
 		invoke.setProvider(provider);
 		context.tryTimes--;
-		return getNext().beginInvoke(invoke);
+	    getNext().beginInvoke(invoke);
 	}
 
 	@Override

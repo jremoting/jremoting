@@ -34,7 +34,7 @@ public class RetryInvokeFilter extends AbstractInvokeFilter {
 	}
 	
 	@Override
-	public Object beginInvoke(Invoke invoke) {
+	public void beginInvoke(Invoke invoke) {
 		
 		RetryAsyncInvokeContext context = (RetryAsyncInvokeContext) invoke.getAsyncContext(RetryAsyncInvokeContext.CONTEXT_KEY);
 		if(context == null) {
@@ -43,7 +43,7 @@ public class RetryInvokeFilter extends AbstractInvokeFilter {
 		}
 		context.tryTimes--;
 		
-		return getNext().beginInvoke(invoke);
+	    getNext().beginInvoke(invoke);
 	}
 
 	@Override

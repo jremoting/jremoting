@@ -6,7 +6,6 @@ import java.util.List;
 import com.github.jremoting.core.AbstractInvokeFilter;
 import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
-import com.github.jremoting.util.concurrent.ListenableFuture;
 
 
 public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
@@ -33,8 +32,8 @@ public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
 	}
 	
 	@Override
-	public Object beginInvoke(Invoke invoke) {
-		return this.head.beginInvoke(invoke);
+	public void beginInvoke(Invoke invoke) {
+		 this.head.beginInvoke(invoke);
 	}
 
 	@Override
@@ -60,11 +59,11 @@ public class ServerInvokeFilterChain extends AbstractInvokeFilter   {
 				throw new RuntimeException(e.getCause());
 			}
 		}
-		@SuppressWarnings("unchecked")
+		
 		@Override
-		public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+		public void beginInvoke(Invoke invoke) {
 			try {
-			    return (ListenableFuture<Object>)invoke.getTargetMethod().invoke(invoke.getTarget(), invoke.getArgs());
+			    invoke.getTargetMethod().invoke(invoke.getTarget(), invoke.getArgs());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

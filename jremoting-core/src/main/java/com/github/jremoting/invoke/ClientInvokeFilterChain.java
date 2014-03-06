@@ -11,7 +11,6 @@ import com.github.jremoting.core.Invoke;
 import com.github.jremoting.core.InvokeFilter;
 import com.github.jremoting.core.MessageChannel;
 import com.github.jremoting.exception.RemotingException;
-import com.github.jremoting.util.concurrent.ListenableFuture;
 
 public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 
@@ -39,9 +38,9 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 	}
 	
 	@Override
-	public Object beginInvoke(Invoke invoke) {
+	public void beginInvoke(Invoke invoke) {
 		invoke.setInvokeChain(this);
-		return this.head.beginInvoke(invoke);
+	    this.head.beginInvoke(invoke);
 	}
 
 	@Override
@@ -83,9 +82,8 @@ public class ClientInvokeFilterChain extends AbstractInvokeFilter {
 		}
 		
 		@Override
-		public ListenableFuture<Object> beginInvoke(Invoke invoke) {
+		public void beginInvoke(Invoke invoke) {
 			messageChannel.send(invoke);
-			return invoke.getResultFuture();
 		}
 	}
 }
