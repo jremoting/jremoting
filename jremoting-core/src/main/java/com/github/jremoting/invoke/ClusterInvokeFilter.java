@@ -16,7 +16,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	
 	@Override
 	public Object invoke(Invoke invoke) {
-		// if invoke already has remote address then skip registry for debug use
+		
 		if(invoke.getConsumer().isDevMode() && invoke.getConsumer().getRemoteAddress() != null) {
 			return getNext().invoke(invoke);
 		} 
@@ -26,9 +26,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 		if(providers == null || providers.isEmpty()) {
 			throw new RemotingException("no provier for service " + invoke.getServiceId());
 		} 
-		
 
-		
 		int nextProviderIndex = (int)(invoke.getId());
 		
 		//if encounter failoverable exception will try next provider in provider list
@@ -78,7 +76,7 @@ public class ClusterInvokeFilter extends AbstractInvokeFilter {
 	
 	@Override
 	public Object beginInvoke(Invoke invoke) {
-		// if invoke already has remote address then skip registry for debug use
+		
 		if(invoke.getConsumer().isDevMode() && invoke.getConsumer().getRemoteAddress() != null) {
 			return getNext().beginInvoke(invoke);
 		}

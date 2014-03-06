@@ -245,16 +245,7 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		
 		if(newState == ConnectionState.RECONNECTED) {
 			try {
-				
-				RegistryEvent registryEvent = new RegistryEvent();
-				registryEvent.setType(com.github.jremoting.core.RegistryEvent.EventType.RECOVER);
-
-				for(RegistryListener listener : listeners) {
-					listener.onEvent(registryEvent);
-				}
-				
 				this.recover();
-
 			} catch (Exception e) {
 				LOGGER.error("republish local participant failed!", e);
 			}

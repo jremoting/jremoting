@@ -7,8 +7,7 @@ public class RegistryEvent {
 		PROVIDERS_CHANGED,
 		GLOBAL_CONFIG_CHANGED,
 		APP_CONFIG_CHANGED,
-		SERVICE_CONFIG_CHANGED,
-		RECOVER
+		SERVICE_CONFIG_CHANGED
 	}
 	
 	private EventType type;

@@ -83,31 +83,6 @@ public class GroupRegistryWrapper extends AbstractRegistryWrapper {
 			republishIfGroupChanged();
 			resubscribeIfGroupChanged();
 		}
-		else if (event.getType() == EventType.RECOVER) {
-			for (ServiceProvider provider : publishedProviders) {
-				String appConfig =  this.wrappedRegistry.getAppConfig(provider.getAppName(), fileName);
-				String serviceConfig = this.wrappedRegistry.getServiceConfig(provider.getServiceName(), fileName);
-				
-				GroupStrategy strategy = new GroupStrategy(provider.getAppName(),appConfig
-						,provider.getServiceName() ,serviceConfig, localIp);
-				String newGroup = strategy.getNewGroup(provider);
-				if(!newGroup.equals(provider.getGroup())) {
-					provider.setGroup(newGroup);
-				}
-			}
-			
-			for (ServiceConsumer consumer : subcribedConsumers) {
-				String appConfig = this.wrappedRegistry.getAppConfig(consumer.getAppName(), fileName);
-				String serviceConfig = this.wrappedRegistry.getServiceConfig(consumer.getServiceName(), fileName);
-				
-				GroupStrategy strategy = new GroupStrategy(consumer.getAppName(),appConfig
-						,consumer.getServiceName() ,serviceConfig, localIp);
-				String newGroup = strategy.getNewGroup(consumer);
-				if(!newGroup.equals(consumer.getGroup())) {
-					consumer.setGroup(newGroup);
-				}
-			}
-		}
 	}
 	
 	private void republishIfGroupChanged() {
