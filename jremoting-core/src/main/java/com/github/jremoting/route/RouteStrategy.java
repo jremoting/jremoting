@@ -14,9 +14,6 @@ public class RouteStrategy {
 	private  final List<ServiceProvider> allProviders;
 	
 	private  Map<String, List<ServiceProvider>> tableNameToProviderMap;
-	private ServiceRouteRule serviceRouteRule;
-	private  MethodRouteRule methodRouteRule;
-	private  ParameterRouteRule parameterRouteRule;
 	private boolean isEmpty = false;
 	private final RouteRule routeRule;
 	
@@ -28,18 +25,7 @@ public class RouteStrategy {
 			isEmpty = true;
 		}
 		else {
-			if(routeRule instanceof MethodRouteRule) {
-				this.methodRouteRule = (MethodRouteRule)routeRule;
-			}
-		
-			if(routeRule instanceof ParameterRouteRule) {
-				this.parameterRouteRule = (ParameterRouteRule)routeRule;
-			}
-			
-			if(routeRule instanceof ServiceRouteRule) {
-				this.serviceRouteRule = (ServiceRouteRule)routeRule;
-			}
-			
+	
 			initTableNameToProvidersCache(routeRule.defineRouteTables());
 		}	
 	}
@@ -53,33 +39,14 @@ public class RouteStrategy {
 			return allProviders;
 		}
 		
-		if(this.parameterRouteRule != null) {
-			String tableName = this.parameterRouteRule.selectRouteTable(invoke.getMethodName(), 
+		if(this.routeRule != null) {
+			String tableName = this.routeRule.selectRouteTable(invoke.getMethodName(), 
 					invoke.getParameterTypeNames(), invoke.getArgs());
 			if(tableName != null) {
 				List<ServiceProvider> parameterTargetProviders = this.tableNameToProviderMap.get(tableName);
 				if(parameterTargetProviders != null && parameterTargetProviders.size() > 0) {
 					return parameterTargetProviders;
 				}
-			}
-		}
-		
-		if(this.methodRouteRule != null) {
-			String tableName = this.methodRouteRule.selectRouteTable(invoke.getMethodName(), invoke.getParameterTypeNames());
-			if(tableName != null) {
-				List<ServiceProvider> methodTargetProviders = this.tableNameToProviderMap.get(tableName);
-				if(methodTargetProviders != null && methodTargetProviders.size() > 0) {
-					return methodTargetProviders;
-				}
-			}
-		}
-		
-		if(this.serviceRouteRule != null) {
-			String tableName = this.serviceRouteRule.selectRouteTable();
-			List<ServiceProvider> serviceTargetProviders = this.tableNameToProviderMap.get(tableName);
-			
-			if(serviceTargetProviders != null && serviceTargetProviders.size() > 0) {
-				return serviceTargetProviders;
 			}
 		}
 	
