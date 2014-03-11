@@ -10,20 +10,22 @@ public class TpsCounter {
 	private final AtomicReference<Counter> currentCounter;
 	private final long timeWindow;
 	private final int rate;
-	private final AtomicInteger peak;
+	private final AtomicInteger currentPeak;
+	private final int peak;
 	
 	public TpsCounter(long timeWindow, int rate, int peak) {
 		this.timeWindow = timeWindow;
 		this.rate = rate;
 		this.currentCounter = new AtomicReference<Counter>(new Counter(timeWindow, rate));
-		this.peak = new AtomicInteger(peak);
+		this.peak = peak;
+		this.currentPeak = new AtomicInteger(0);
 	}
 	
 	public void beginInvoke() {
-		int leftPeak =  peak.decrementAndGet();
-		if(leftPeak < 0) {
-			peak.incrementAndGet();
-			throw new RemotingException("tps peak error");
+
+		if(currentPeak.incrementAndGet() > peak) {
+			currentPeak.decrementAndGet();
+			throw new RemotingException("tps peak overflow");
 		}
 		
 		Counter oldCounter = currentCounter.get();
@@ -41,12 +43,12 @@ public class TpsCounter {
 		}
 		
 		if(!currentCounter.get().grant()) {
-			throw new RemotingException("tps rate error");
+			throw new RemotingException("tps rate overflow");
 		}
 	}
 	
 	public void endInvoke() {
-		peak.incrementAndGet();
+		currentPeak.decrementAndGet();
 	}
 
 	private static class Counter {

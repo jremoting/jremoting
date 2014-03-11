@@ -87,7 +87,7 @@ public class RouteRegistryWrapperTest {
 		builder.append("			all : ['10.10.2.*']                                           ");
 		builder.append("		}                                                                   ");
 		builder.append("	} ,                                                                     ");
-		builder.append("	defineServiceRule: function(){return 'all';}                            ");
+		builder.append("	selectRouteTable: function(){return 'all';}                            ");
 		builder.append("}                                                                           ");
 		
 		
@@ -115,7 +115,7 @@ public class RouteRegistryWrapperTest {
 		builder.append("			write : ['10.10.2.*']                                           ");
 		builder.append("		}                                                                   ");
 		builder.append("	},                                                                      ");
-		builder.append("	defineMethodRule :function(methodName,parameterTypeNames) {             ");
+		builder.append("	selectRouteTable :function(methodName,parameterTypeNames) {             ");
 		builder.append("		if(methodName.indexOf('get') == 0) {                                 ");
 		builder.append("			return 'read';                                                  ");
 		builder.append("		}                                                                   ");
@@ -163,7 +163,7 @@ public class RouteRegistryWrapperTest {
 		builder.append("			write : ['*']                                                   ");
 		builder.append("		}                                                                   ");
 		builder.append("	},                                                                      ");
-		builder.append("	defineParameterRule :function(methodName,parameterTypeNames,args) {     ");
+		builder.append("	selectRouteTable :function(methodName,parameterTypeNames,args) {     ");
 		builder.append("		if(methodName == 'hello' && args[0].name == 'aaa' && (args[0].son&&args[0].son.name=='bbb')) {             ");
 		builder.append("			return 'write';                                                 ");
 		builder.append("		}                                                                   ");
@@ -203,22 +203,14 @@ public class RouteRegistryWrapperTest {
 		builder.append("			write : ['10.10.2.*']                                           ");
 		builder.append("		}                                                                   ");
 		builder.append("	},                                                                      ");
-		builder.append("	defineServiceRule :function() {   return 'service';          },			");
-		builder.append("	defineMethodRule :function(methodName,parameterTypeNames) {             ");
-		builder.append("		if(methodName.indexOf('get') >= 0) {                                ");
-		builder.append("			return 'read';                                                  ");
-		builder.append("		}                                                                   ");
-		builder.append("		else {                                                              ");
-		builder.append("			return null                                                     ");
-		builder.append("		}                                                                   ");
-		builder.append("	},                                                                      ");
-		builder.append("	defineParameterRule :function(methodName,parameterTypeNames,args) {     ");
+		builder.append("	selectRouteTable :function(methodName,parameterTypeNames,args) {     ");
 		builder.append("		if(args[0].name && args[0].name == 'aaa') {             			");
 		builder.append("			return 'write';                                                 ");
 		builder.append("		}                                                                   ");
-		builder.append("		else {                                                              ");
-		builder.append("			return null;                                                    ");
+		builder.append("		if(methodName.indexOf('get') >= 0) {                                ");
+		builder.append("			return 'read';                                                  ");
 		builder.append("		}                                                                   ");
+		builder.append("	 	return 'service';                                                   ");
 		builder.append("	}                                                                       ");
 		builder.append("}                                                                           ");
 
