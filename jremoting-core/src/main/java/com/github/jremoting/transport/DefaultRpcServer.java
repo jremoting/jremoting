@@ -8,8 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -37,7 +35,6 @@ public class DefaultRpcServer implements RpcServer {
 	private final ServerInvokeFilterChain invokeFilterChain;
 	private final Registry registry;
 	private final String serverAddress;
-	private volatile Channel serverChannel;
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRpcServer.class);
 	
 	private final LifeCycleSupport lifeCycleSupport = new LifeCycleSupport();
@@ -85,8 +82,7 @@ public class DefaultRpcServer implements RpcServer {
 		
 		
 		try {
-		 	ChannelFuture future = bootstrap.bind(NetUtil.toInetSocketAddress(serverAddress)).sync();
-		 	serverChannel = future.channel();
+		 	bootstrap.bind(NetUtil.toInetSocketAddress(serverAddress)).sync();
 		 	
 			LOGGER.info("jremoting rpc server begin to listen address:" + this.serverAddress);
 		 	
@@ -109,11 +105,7 @@ public class DefaultRpcServer implements RpcServer {
 		if(this.registry != null) {
 			this.registry.close();
 		}
-		//close server channel and server channel io thread to refuse new connection
-		if(this.serverChannel != null) {
-			this.serverChannel.close();
-		}
-		
+	
 		try {
 			this.parentGroup.shutdownGracefully().sync();
 		} catch (InterruptedException e) {
