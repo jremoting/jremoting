@@ -56,19 +56,44 @@ public class JavaScriptRuleParser implements RouteRuleParser {
 		builder.append("var obj = ");
 		builder.append(jsObject);
 		builder.append(";\n");
-	
+		builder.append(JS_ADAPTER_DEFINE);
 
 		ScriptEngineManager manager = new ScriptEngineManager();
 		ScriptEngine engine = manager.getEngineByName("JavaScript");
 		engine.eval(builder.toString());
 
-		Object obj = engine.get("obj");
+		Object adapter = engine.get("adapter");
 		Invocable inv = (Invocable) engine;
-	    RouteRule routeRule = inv.getInterface(obj,RouteRule.class);
+	    RouteRule routeRule = inv.getInterface(adapter,RouteRule.class);
 		
 		return routeRule;
 
 	}
 	
+
+	private static final String JS_ADAPTER_DEFINE;
+	static {
+		StringBuilder builder = new StringBuilder();
+		builder.append("var adapter = {																					 ");
+		builder.append("	defineRouteTables:function() {																 ");
+		builder.append("		var map = new java.util.HashMap();														 ");
+		builder.append("		var tables = obj.defineRouteTables();													 ");
+		builder.append("		for(var tableName in tables) {															 ");
+		builder.append("			var ipPatterns = tables[tableName];													 ");
+		builder.append("			var array = java.lang.reflect.Array.newInstance(java.lang.String, ipPatterns.length);");
+		builder.append("			for(var i = 0 ; i < ipPatterns.length; i++) {                                        ");
+		builder.append("				array[i] = ipPatterns[i];                                                        ");
+		builder.append("			}                                                                                    ");
+		builder.append("			map.put(tableName,array);                                                            ");
+		builder.append("		}                                                                                        ");
+		builder.append("		return map;                                                                              ");
+		builder.append("	},                                                                                           ");
+		builder.append("	selectRouteTable:function(methodName,parameterTypeNames,args) {                           ");
+		builder.append("		return  obj.selectRouteTable(methodName,parameterTypeNames,args);                     ");
+		builder.append("	}                                                                                           ");
+		builder.append("}                                                                                                ");
+
+		JS_ADAPTER_DEFINE = builder.toString();
+	}
 
 }
