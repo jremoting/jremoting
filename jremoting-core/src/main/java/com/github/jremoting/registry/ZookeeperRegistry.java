@@ -240,16 +240,19 @@ public class ZookeeperRegistry implements Registry, CuratorListener,
 		}
 	}
 
+	private ConnectionState prevConnectionState;
 	@Override
 	public void stateChanged(CuratorFramework client, ConnectionState newState) {
 		
-		if(newState == ConnectionState.RECONNECTED) {
+		if(prevConnectionState == ConnectionState.LOST && newState == ConnectionState.RECONNECTED) {
 			try {
 				this.recover();
 			} catch (Exception e) {
 				LOGGER.error("republish local participant failed!", e);
 			}
 		}
+		
+		prevConnectionState = newState;
 	}
 	
 	@Override
