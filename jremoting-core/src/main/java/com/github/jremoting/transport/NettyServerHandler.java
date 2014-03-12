@@ -230,7 +230,15 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 			}
 		}, invoke.getTimeout(), TimeUnit.MILLISECONDS);
 		
-		invokeFilterChain.beginInvoke(invoke);
+		try {
+			invokeFilterChain.beginInvoke(invoke);
+		} catch (Throwable th) {
+			LOGGER.error("error happens when run server filter's beginInvoke chain , msg->" + th.getMessage(), th);
+			InvokeResult errorResult = new InvokeResult(th, invoke.getId(),
+					invoke.getSerializer());
+				ctx.writeAndFlush(errorResult ).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
+		}
+		
 	}
 	
 	@Override
